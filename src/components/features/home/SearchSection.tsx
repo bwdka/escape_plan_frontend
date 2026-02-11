@@ -8,6 +8,36 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { format } from 'date-fns';
 
+interface CustomInputProps {
+  value?: string;
+  onClick?: () => void;
+  startDate: Date | null;
+  endDate: Date | null;
+}
+
+// Custom Input for the DatePicker to show two separate fields
+const CustomDateInput = forwardRef<HTMLDivElement, CustomInputProps>(({ onClick, startDate, endDate }, ref) => (
+  <div 
+      className="flex flex-1 items-stretch divide-x md:divide-x border-b md:border-b-0 md:border-r border-gray-100 cursor-pointer" 
+      onClick={onClick} 
+      ref={ref}
+  >
+     <div className="flex-1 px-4 py-3 md:py-0 flex flex-col justify-center">
+        <label className="block text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary mb-1">Check in</label>
+        <span className={`text-sm md:text-base font-medium ${startDate ? 'text-gray-900' : 'text-gray-400'}`}>
+          {startDate ? format(startDate, 'MMM d') : 'Add dates'}
+        </span>
+     </div>
+     <div className="flex-1 px-4 py-3 md:py-0 flex flex-col justify-center">
+        <label className="block text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary mb-1">Check out</label>
+        <span className={`text-sm md:text-base font-medium ${endDate ? 'text-gray-900' : 'text-gray-400'}`}>
+          {endDate ? format(endDate, 'MMM d') : 'Add dates'}
+        </span>
+     </div>
+  </div>
+));
+CustomDateInput.displayName = 'CustomDateInput';
+
 export function SearchSection() {
   const router = useRouter();
   const [location, setLocation] = useState('');
@@ -25,32 +55,9 @@ export function SearchSection() {
     router.push(`/search?${params.toString()}`);
   };
 
-  // Custom Input for the DatePicker to show two separate fields
-  const CustomDateInput = forwardRef<HTMLDivElement, any>(({ onClick }, ref) => (
-    <div 
-        className="flex flex-1 items-stretch divide-x md:divide-x border-b md:border-b-0 md:border-r border-gray-100 cursor-pointer" 
-        onClick={onClick} 
-        ref={ref}
-    >
-       <div className="flex-1 px-4 py-3 md:py-0 flex flex-col justify-center">
-          <label className="block text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary mb-1">Check in</label>
-          <span className={`text-sm md:text-base font-medium ${startDate ? 'text-gray-900' : 'text-gray-400'}`}>
-            {startDate ? format(startDate, 'MMM d') : 'Add dates'}
-          </span>
-       </div>
-       <div className="flex-1 px-4 py-3 md:py-0 flex flex-col justify-center">
-          <label className="block text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary mb-1">Check out</label>
-          <span className={`text-sm md:text-base font-medium ${endDate ? 'text-gray-900' : 'text-gray-400'}`}>
-            {endDate ? format(endDate, 'MMM d') : 'Add dates'}
-          </span>
-       </div>
-    </div>
-  ));
-  CustomDateInput.displayName = 'CustomDateInput';
-
   return (
     <section className="relative -mt-10 md:-mt-8 z-20 container mx-auto px-4">
-      <Card className="bg-white rounded-2xl md:rounded-full shadow-2xl border-gray-100 p-2 md:pl-8 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-4 max-w-5xl mx-auto overflow-hidden">
+      <Card className="bg-white/70 backdrop-blur-2xl backdrop-saturate-150 rounded-2xl md:rounded-full shadow-2xl border-white/50 p-2 md:pl-8 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-4 max-w-5xl mx-auto overflow-hidden">
         {/* Location */}
         <div className="flex-1 flex flex-col justify-center px-4 py-3 md:py-0 border-b md:border-b-0 md:border-r border-gray-100">
             <label htmlFor="location" className="block text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary mb-1">Where</label>
@@ -70,7 +77,7 @@ export function SearchSection() {
             startDate={startDate}
             endDate={endDate}
             onChange={(update) => setDateRange(update)}
-            customInput={<CustomDateInput />}
+            customInput={<CustomDateInput startDate={startDate} endDate={endDate} />}
             minDate={new Date()}
             monthsShown={2}
             shouldCloseOnSelect={false}

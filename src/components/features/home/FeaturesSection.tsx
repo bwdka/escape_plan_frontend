@@ -21,7 +21,7 @@ export function FeaturesSection() {
                     <FaHandHoldingHeart className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Best Price Guarantee</h3>
-                <p className="text-gray-500 leading-relaxed">Find a lower price? We'll match it and give you an extra 10% off your booking.</p>
+                <p className="text-gray-500 leading-relaxed">Find a lower price? We&apos;ll match it and give you an extra 10% off your booking.</p>
             </div>
 
             <div className="bg-white p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow text-center">

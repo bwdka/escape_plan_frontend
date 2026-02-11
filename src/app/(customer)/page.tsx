@@ -43,10 +43,12 @@ export default function HomePage() {
         onSelectCategory={setSelectedCategory} 
       />
       
-      <GlampingGrid 
-        title={`${selectedCategory} Stays Popular Right Now`} 
-        glampings={filteredPopular.length > 0 ? filteredPopular : allGlampings.slice(0, 4)} 
-      />
+      <div key={selectedCategory} className="animate-fade-up">
+        <GlampingGrid 
+          title={`${selectedCategory} Stays Popular Right Now`} 
+          glampings={filteredPopular.length > 0 ? filteredPopular : allGlampings.slice(0, 4)} 
+        />
+      </div>
       
       <StatsSection />
       

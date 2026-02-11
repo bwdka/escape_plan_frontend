@@ -1,24 +1,19 @@
 export function StatsSection() {
   return (
-    <section className="bg-gray-50 py-16 mt-20 border-y border-gray-100">
-        <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x-0 md:divide-x divide-gray-200">
-                <div className="p-4">
-                    <div className="text-4xl font-extrabold text-primary mb-2">500+</div>
-                    <div className="text-gray-500 font-medium">Unique Stays</div>
-                </div>
-                <div className="p-4">
-                    <div className="text-4xl font-extrabold text-primary mb-2">50K+</div>
-                    <div className="text-gray-500 font-medium">Happy Guests</div>
-                </div>
-                <div className="p-4">
-                    <div className="text-4xl font-extrabold text-primary mb-2">100+</div>
-                    <div className="text-gray-500 font-medium">Destinations</div>
-                </div>
-                <div className="p-4">
-                    <div className="text-4xl font-extrabold text-primary mb-2">4.9</div>
-                    <div className="text-gray-500 font-medium">Average Rating</div>
-                </div>
+    <section className="py-16 mt-20 relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[
+                    { label: "Unique Stays", value: "500+" },
+                    { label: "Happy Guests", value: "50K+" },
+                    { label: "Destinations", value: "100+" },
+                    { label: "Average Rating", value: "4.9" }
+                ].map((stat, i) => (
+                    <div key={i} className="p-8 rounded-3xl bg-white/40 backdrop-blur-xl backdrop-saturate-150 border border-white/40 shadow-xl text-center hover:scale-105 transition-all duration-500">
+                        <div className="text-4xl font-extrabold text-black mb-2 tracking-tight">{stat.value}</div>
+                        <div className="text-gray-600 font-semibold text-sm uppercase tracking-widest">{stat.label}</div>
+                    </div>
+                ))}
             </div>
         </div>
     </section>

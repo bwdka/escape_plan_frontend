@@ -1,5 +1,6 @@
 import { CustomerNavbar } from "@/components/layouts/CustomerNavbar";
 import { CustomerFooter } from "@/components/layouts/CustomerFooter";
+import { BottomSearchNav } from "@/components/layouts/BottomSearchNav";
 
 export default function CustomerLayout({
   children,
@@ -12,6 +13,7 @@ export default function CustomerLayout({
       <main className="flex-1">
         {children}
       </main>
+      <BottomSearchNav />
       <CustomerFooter />
     </div>
   );

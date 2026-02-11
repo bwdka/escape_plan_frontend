@@ -10,7 +10,7 @@ export function CustomerNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="bg-white border-b sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 transition-all duration-300 bg-white/60 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/20 shadow-sm supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <Link href="/" className="text-2xl font-bold tracking-tighter text-black">
           Escape Plan.
@@ -42,7 +42,7 @@ export function CustomerNavbar() {
                     <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
                         <FaUserCircle className="w-6 h-6" />
                     </button>
-                    <Link href="/login" className="bg-black text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors">
+                    <Link href="/login" className="bg-black text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors shadow-lg active:scale-95">
                         Sign In
                     </Link>
                  </div>

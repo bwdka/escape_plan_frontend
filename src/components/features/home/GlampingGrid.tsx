@@ -51,7 +51,7 @@ export function GlampingGrid({ title, glampings, viewAllLink = '/search' }: Glam
                             
                             <button 
                                 onClick={(e) => handleWishlist(e, item.name || 'Item')}
-                                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white flex items-center justify-center text-gray-600 hover:text-red-500 transition-all shadow-sm z-10"
+                                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/60 backdrop-blur-xl backdrop-saturate-150 border border-white/40 hover:bg-white flex items-center justify-center text-gray-700 hover:text-red-500 transition-all shadow-sm z-10"
                             >
                                 <FaHeart className="w-4 h-4" />
                             </button>

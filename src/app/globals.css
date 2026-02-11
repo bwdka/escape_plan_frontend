@@ -1,6 +1,27 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+html {
+  scroll-behavior: smooth;
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fade-up 0.5s ease-out forwards;
+  }
+  
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -121,5 +142,21 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: 
+      radial-gradient(circle at var(--blob-x-1, 15%) var(--blob-y-1, 50%), oklch(0.95 0.05 200 / 0.5), transparent 25%), 
+      radial-gradient(circle at var(--blob-x-2, 85%) var(--blob-y-2, 30%), oklch(0.95 0.05 280 / 0.5), transparent 25%);
+    background-attachment: fixed;
+    animation: liquid-bg 20s ease-in-out infinite alternate;
+  }
+
+  @keyframes liquid-bg {
+    0% {
+      --blob-x-1: 15%; --blob-y-1: 50%;
+      --blob-x-2: 85%; --blob-y-2: 30%;
+    }
+    100% {
+      --blob-x-1: 25%; --blob-y-1: 40%;
+      --blob-x-2: 75%; --blob-y-2: 45%;
+    }
   }
 }
