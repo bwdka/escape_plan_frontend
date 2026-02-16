@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Escape Plan - Glamping OTA Platform
 
-## Getting Started
+Escape Plan adalah platform Online Travel Agency (OTA) khusus untuk penyewaan glamping. Platform ini menghubungkan pelanggan (Customer) dengan pemilik glamping (Partner) melalui sistem manajemen yang terintegrasi (Admin).
 
-First, run the development server:
+## 🚀 Peran Pengguna (Roles)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 1. Customer (Wisatawan)
+- **Cari & Filter:** Mencari glamping berdasarkan lokasi, tanggal ketersediaan, jumlah tamu, dan fasilitas.
+- **Booking & Payment:** Melakukan reservasi dan pembayaran melalui payment gateway.
+- **Manage Booking:** Melihat riwayat pesanan, status pembayaran, dan e-ticket.
+- **Review:** Memberikan rating dan ulasan setelah menginap.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Partner (Pemilik Glamping)
+- **Listing Management:** Mengelola profil glamping, foto, lokasi, dan fasilitas.
+- **Unit Management:** Mengatur tipe-tipe unit (tenda/kamar), harga per malam, dan jumlah unit.
+- **Availability Calendar:** Mengatur ketersediaan tanggal dan harga dinamis (weekend/weekday).
+- **Booking Management:** Melihat daftar tamu yang akan datang dan riwayat transaksi.
+- **Wallet & Payout:** Memantau penghasilan dan mengajukan penarikan dana (payout).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Admin (Platform Operator)
+- **Moderasi Listing:** Menyetujui atau menolak pendaftaran glamping baru dari Partner.
+- **User Management:** Mengelola data customer dan partner.
+- **Financial Monitoring:** Memantau perputaran uang, komisi platform, dan verifikasi payout.
+- **Dispute Resolution:** Menangani masalah antara customer dan partner.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🔄 Alur Aplikasi (Flow)
 
-To learn more about Next.js, take a look at the following resources:
+### A. Alur Reservasi (Booking Flow)
+1. **Pencarian:** Customer mencari lokasi dan memasukkan tanggal.
+2. **Ketersediaan:** Sistem mengecek `UnitAvailability` untuk memastikan unit tidak penuh pada tanggal tersebut.
+3. **Checkout:** Customer memilih unit, mengisi data diri, dan melihat rincian biaya (termasuk biaya layanan).
+4. **Pembayaran:** Customer membayar via Payment Gateway. Status pesanan berubah menjadi `Paid`.
+5. **Notifikasi:** Partner mendapatkan notifikasi pesanan masuk.
+6. **Check-in:** Customer datang ke lokasi. Dana masih ditahan oleh platform (Escrow).
+7. **Payout:** Setelah H+1 check-in tanpa komplain, dana diteruskan ke `PartnerWallet` (setelah dipotong komisi).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### B. Alur Onboarding Partner
+1. Partner mendaftar dan mengisi profil bisnis.
+2. Partner menambahkan lokasi glamping dan unit-unitnya.
+3. Admin memverifikasi kelayakan listing.
+4. Listing muncul di halaman pencarian customer.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🧪 Rencana Test Case (MVP)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 1. Booking & Availability
+- [ ] Pastikan unit yang sudah dipesan di tanggal X tidak muncul lagi di hasil pencarian tanggal X.
+- [ ] Pastikan perhitungan total harga benar (Harga per malam * jumlah malam + service fee).
+- [ ] Pastikan status booking berubah otomatis setelah pembayaran sukses (Webhook Payment Gateway).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 2. Partner Dashboard
+- [ ] Pastikan partner tidak bisa melihat data pesanan milik partner lain.
+- [ ] Pastikan kalender ketersediaan tersinkronisasi dengan booking yang masuk.
+
+### 3. Keamanan & Bisnis
+- [ ] Pastikan komisi platform terpotong secara otomatis sebelum masuk ke dompet partner.
+- [ ] Pastikan hanya role Admin yang bisa menyetujui penarikan dana (payout).
+
+---
+
+## 📊 Aspek Bisnis
+- **Revenue Stream:** Komisi X% dari setiap transaksi sukses.
+- **Value Proposition:** Kemudahan pencarian glamping yang terkurasi dan sistem pembayaran yang aman (Escrow).
+- **Retention:** Sistem review untuk menjaga kualitas layanan dari partner.

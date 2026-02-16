@@ -13,8 +13,16 @@ export const AuthService = {
   },
 
   async logout() {
-    // Assuming backend also has a logout endpoint, typically:
-    // await api.post('/auth/logout');
-    // For now, we just handle client-side state in the store.
+    return await api.post('/auth/logout');
+  },
+
+  async getProfile() {
+    const response = await api.get('/profile');
+    return response.data;
+  },
+
+  async updateProfile(data: any) {
+    const response = await api.put('/profile', data);
+    return response.data;
   }
 };
