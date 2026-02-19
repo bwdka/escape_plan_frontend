@@ -9,7 +9,7 @@ export interface Glamping {
   vibe: string;
   description?: string;
   images?: string[];
-  amenities?: string[];
+  amenities?: any[];
   partner_id?: number;
 }
 
@@ -34,9 +34,16 @@ export interface GlampingFilterParams {
   page?: number;
 }
 
+export interface Facility {
+    id: number;
+    name: string;
+    icon?: string;
+}
+
 export interface Unit {
     id: number;
     name: string;
+    description?: string;
     capacity: number;
     price_per_night: number;
     max_stock: number;
@@ -64,6 +71,9 @@ export interface GalleryItem {
 export interface GlampingDetail extends Glamping {
     description: string;
     address: string;
+    location_city: string;
+    thumbnail_url: string;
+    review_count: number;
     latitude: number;
     longitude: number;
     policy: {
@@ -73,7 +83,7 @@ export interface GlampingDetail extends Glamping {
     };
     amenities: Amenity[];
     gallery: GalleryItem[];
-    weather_code: string;
+    weather_code?: string;
     units: Unit[];
     addons: Addon[];
 }

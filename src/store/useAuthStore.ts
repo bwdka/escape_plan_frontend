@@ -8,6 +8,7 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
+  setUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -25,6 +26,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     
     set({ user, token, isAuthenticated: true });
   },
+  setUser: (user) => set({ user }),
   logout: () => {
     Cookies.remove('token');
     Cookies.remove('user_role');

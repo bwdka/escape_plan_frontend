@@ -2,35 +2,28 @@ import { FaShieldAlt, FaHandHoldingHeart, FaHeadset } from 'react-icons/fa';
 
 export function FeaturesSection() {
   return (
-    <section className="container mx-auto px-4 py-20">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4">Why Choose Escape Plan?</h2>
-            <p className="text-gray-600 text-lg">We make finding your perfect nature getaway simple, safe, and memorable.</p>
+    <section className="container mx-auto px-4 py-32">
+        <div className="text-center max-w-2xl mx-auto mb-20">
+            <h2 className="text-4xl font-black mb-6 tracking-tighter text-primary">Why Choose <span className="text-accent underline decoration-primary/10 underline-offset-8">Escape Plan?</span></h2>
+            <p className="text-primary/60 text-lg font-medium leading-relaxed">We make finding your perfect nature getaway simple, safe, and memorable.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div className="bg-white p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <FaShieldAlt className="w-8 h-8 text-primary" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {[
+                { icon: FaShieldAlt, title: "Verified Stays", desc: "Every property is personally verified by our team to ensure quality and safety standards." },
+                { icon: FaHandHoldingHeart, title: "Price Match", desc: "Find a lower price? We'll match it and give you an extra 10% off your booking." },
+                { icon: FaHeadset, title: "Concierge 24/7", desc: "Our dedicated support team is always here to help you before, during, and after your stay." }
+            ].map((feature, i) => (
+                <div key={i} className="group relative">
+                    <div className="absolute inset-0 bg-primary/5 rounded-[2.5rem] rotate-2 group-hover:rotate-0 transition-transform duration-500" />
+                    <div className="relative bg-white p-10 rounded-[2.5rem] border border-black/5 shadow-sm group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500 text-center h-full">
+                        <div className="w-20 h-20 bg-accent/10 rounded-3xl flex items-center justify-center mx-auto mb-8 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-12">
+                            <feature.icon className="w-10 h-10 text-accent" />
+                        </div>
+                        <h3 className="text-2xl font-black mb-4 text-primary">{feature.title}</h3>
+                        <p className="text-primary/50 font-medium leading-relaxed">{feature.desc}</p>
+                    </div>
                 </div>
-                <h3 className="text-xl font-bold mb-3">Verified Properties</h3>
-                <p className="text-gray-500 leading-relaxed">Every property is personally verified by our team to ensure quality and safety standards.</p>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <FaHandHoldingHeart className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Best Price Guarantee</h3>
-                <p className="text-gray-500 leading-relaxed">Find a lower price? We&apos;ll match it and give you an extra 10% off your booking.</p>
-            </div>
-
-            <div className="bg-white p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <FaHeadset className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">24/7 Support</h3>
-                <p className="text-gray-500 leading-relaxed">Our dedicated support team is always here to help you before, during, and after your stay.</p>
-            </div>
+            ))}
         </div>
     </section>
   );

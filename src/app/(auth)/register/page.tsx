@@ -73,114 +73,124 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+    <div className="glass p-10 rounded-[2.5rem] border-white/40 shadow-2xl space-y-8">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-black tracking-tighter text-primary">Join the Escape.</h1>
+        <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">Create your luxury account</p>
+      </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                    <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
 
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="john@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                    <Input placeholder="john@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+          </div>
 
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="08123456789" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                    <Input placeholder="08123456789" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
 
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>I want to join as</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="customer">Guest (Book Stays)</SelectItem>
-                    <SelectItem value="partner">Partner (List Property)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>I want to join as</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="customer">Guest (Book Stays)</SelectItem>
+                        <SelectItem value="partner">Partner (List Property)</SelectItem>
+                    </SelectContent>
+                    </Select>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+          </div>
 
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                    <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
 
-          <FormField
-            control={form.control}
-            name="password_confirmation"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <FormField
+                control={form.control}
+                name="password_confirmation"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                    <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+          </div>
 
-          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Creating account...' : 'Register'}
+          <Button type="submit" className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-primary/20 mt-4" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Onboarding...' : 'Start My Journey'}
           </Button>
         </form>
       </Form>
 
-       <div className="mt-6 text-center">
-         <p className="text-sm text-gray-600">
-           Already have an account?{' '}
-           <Link href="/login" className="font-medium text-primary hover:text-primary/90">
-             Sign in
-           </Link>
+       <div className="mt-8 pt-8 border-t border-primary/5 text-center">
+         <p className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">
+           Already a member?
          </p>
+         <Link href="/login" className="font-black text-sm text-accent hover:underline underline-offset-4 decoration-2 transition-all">
+            SIGN IN INSTEAD
+         </Link>
       </div>
     </div>
   );

@@ -18,20 +18,20 @@ interface CategoryTabsProps {
 
 export function CategoryTabs({ selectedCategory, onSelectCategory }: CategoryTabsProps) {
   return (
-    <section className="container mx-auto px-4 mt-16">
-        <div className="flex gap-4 overflow-x-auto pb-4 justify-start md:justify-center no-scrollbar p-2 rounded-full">
+    <section className="container mx-auto px-4 mt-12 relative z-20 flex justify-center">
+        <div className="inline-flex max-w-full gap-3 overflow-x-auto no-scrollbar p-3 glass rounded-[2.5rem] border-white/30 shadow-2xl">
             {categories.map((cat, idx) => (
                 <div 
                     key={idx} 
                     onClick={() => onSelectCategory(cat.value)}
-                    className={`flex flex-col items-center gap-2 cursor-pointer min-w-[100px] px-4 py-3 rounded-2xl transition-all duration-300 group
+                    className={`flex flex-col items-center gap-2 cursor-pointer min-w-[110px] px-5 py-4 rounded-[1.8rem] transition-all duration-500 group
                         ${selectedCategory === cat.value 
-                            ? 'bg-white/60 backdrop-blur-md shadow-sm border border-white/40 opacity-100' 
-                            : 'opacity-50 hover:opacity-100 hover:bg-white/20'
+                            ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-105' 
+                            : 'text-primary/60 hover:text-primary hover:bg-white/40'
                         }`}
                 >
-                    <cat.icon className={`w-5 h-5 transition-colors ${selectedCategory === cat.value ? 'text-black' : 'text-gray-700 group-hover:text-black'}`} />
-                    <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${selectedCategory === cat.value ? 'text-black' : 'text-gray-700 group-hover:text-black'}`}>
+                    <cat.icon className={`w-5 h-5 transition-transform duration-500 ${selectedCategory === cat.value ? 'scale-110' : 'group-hover:scale-110'}`} />
+                    <span className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors`}>
                         {cat.label}
                     </span>
                 </div>

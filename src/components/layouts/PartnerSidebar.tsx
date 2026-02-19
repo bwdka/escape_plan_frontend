@@ -18,12 +18,12 @@ export function PartnerSidebar() {
   const logout = useAuthStore((state) => state.logout);
 
   return (
-    <aside className="w-64 bg-white border-r min-h-screen flex flex-col fixed left-0 top-0 h-full">
-      <div className="h-16 flex items-center px-6 border-b">
-        <span className="font-bold text-lg text-primary">Escape Partner</span>
+    <aside className="w-64 glass border-r border-primary/10 min-h-screen flex flex-col fixed left-0 top-0 h-full z-30">
+      <div className="h-20 flex items-center px-8 border-b border-primary/5 bg-primary/5">
+        <span className="font-black text-xl tracking-tighter text-primary">Escape <span className="text-accent">Partner.</span></span>
       </div>
       
-      <div className="flex-1 py-6 flex flex-col gap-1 px-3">
+      <div className="flex-1 py-10 flex flex-col gap-2 px-4">
         {sidebarItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
@@ -31,10 +31,10 @@ export function PartnerSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                "flex items-center gap-4 px-4 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300",
                 isActive 
-                  ? "bg-primary/10 text-primary" 
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 translate-x-1" 
+                  : "text-primary/50 hover:bg-primary/5 hover:text-primary hover:translate-x-1"
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -44,12 +44,12 @@ export function PartnerSidebar() {
         })}
       </div>
 
-      <div className="p-4 border-t">
+      <div className="p-6 border-t border-primary/5">
         <button 
             onClick={() => logout()}
-            className="flex items-center gap-3 px-3 py-2 w-full text-left text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            className="flex items-center gap-4 px-4 py-3.5 w-full text-left text-xs font-black uppercase tracking-widest text-red-600/70 hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all duration-300 group"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Sign Out
         </button>
       </div>

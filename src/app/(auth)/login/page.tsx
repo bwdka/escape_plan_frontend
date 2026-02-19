@@ -90,26 +90,17 @@ function LoginForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Signing in...' : 'Sign in'}
+          <Button type="submit" className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-primary/20" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Verifying...' : 'Access Account'}
           </Button>
         </form>
       </Form>
 
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or</span>
-          </div>
-        </div>
-        <div className="mt-6 text-center">
-          <Link href="/register" className="font-medium text-primary hover:text-primary/90">
-            Create a new account
+      <div className="mt-8 pt-8 border-t border-primary/5 text-center">
+          <p className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">Don't have an account?</p>
+          <Link href="/register" className="font-black text-sm text-accent hover:underline underline-offset-4 decoration-2 transition-all">
+            JOIN THE ESCAPE
           </Link>
-        </div>
       </div>
     </>
   );
@@ -117,7 +108,11 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+    <div className="glass p-10 rounded-[2.5rem] border-white/40 shadow-2xl space-y-8">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-black tracking-tighter text-primary">Welcome Back.</h1>
+        <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">Sign in to your account</p>
+      </div>
       <Suspense fallback={<div>Loading login form...</div>}>
         <LoginForm />
       </Suspense>

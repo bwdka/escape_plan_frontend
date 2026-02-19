@@ -10,40 +10,42 @@ export function CustomerNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 transition-all duration-300 bg-white/60 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/20 shadow-sm supports-[backdrop-filter]:bg-white/60">
+    <nav className="sticky top-0 z-50 transition-all duration-300 glass border-b border-white/10">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-        <Link href="/" className="text-2xl font-bold tracking-tighter text-black">
+        <Link href="/" className="text-2xl font-bold tracking-tighter text-primary">
           Escape Plan.
         </Link>
         
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
-            <Link href="/search" className="text-sm font-semibold text-black hover:text-gray-600 transition-colors">Stays</Link>
-            <Link href="#" className="text-sm font-semibold text-gray-500 hover:text-black transition-colors">Experiences</Link>
-            <Link href="/partner/register" className="text-sm font-semibold text-gray-500 hover:text-black transition-colors">Become a host</Link>
+            <Link href="/search" className="text-sm font-bold text-foreground/80 hover:text-primary transition-colors">Stays</Link>
+            <Link href="#" className="text-sm font-bold text-foreground/60 hover:text-primary transition-colors">Experiences</Link>
+            <Link href="/partner/register" className="text-sm font-bold text-foreground/60 hover:text-primary transition-colors">Become a host</Link>
             
             {isAuthenticated ? (
                  <div className="relative group">
-                    <button className="flex items-center gap-2 border rounded-full px-2 py-1 hover:shadow-md transition-shadow">
-                        <FaBars className="w-4 h-4 text-gray-500" />
-                        <FaUserCircle className="w-8 h-8 text-gray-500" />
-                    </button>
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border rounded-lg shadow-xl py-2 hidden group-hover:block">
-                        <div className="px-4 py-2 border-b">
-                            <p className="font-semibold text-sm">{user?.name}</p>
-                            <p className="text-xs text-gray-500">{user?.email}</p>
+                    <button className="flex items-center gap-2 border border-primary/20 rounded-full px-3 py-1.5 hover:shadow-lg hover:bg-white/40 transition-all">
+                        <FaBars className="w-4 h-4 text-primary/70" />
+                        <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold shadow-inner">
+                            {user?.name?.charAt(0)}
                         </div>
-                        <Link href="/bookings/my-trips" className="block px-4 py-2 text-sm hover:bg-gray-50">My Trips</Link>
-                        <button onClick={() => logout()} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">Log out</button>
+                    </button>
+                    <div className="absolute right-0 top-full mt-2 w-56 glass rounded-2xl shadow-2xl py-2 hidden group-hover:block animate-fade-up overflow-hidden">
+                        <div className="px-4 py-3 border-b border-black/5 bg-primary/5">
+                            <p className="font-bold text-sm text-primary">{user?.name}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{user?.role}</p>
+                        </div>
+                        <Link href="/bookings/my-trips" className="block px-4 py-2.5 text-sm font-medium hover:bg-primary/10 transition-colors">My Trips</Link>
+                        <button onClick={() => logout()} className="block w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">Log out</button>
                     </div>
                  </div>
             ) : (
                  <div className="flex items-center gap-3">
-                    <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
-                        <FaUserCircle className="w-6 h-6" />
-                    </button>
-                    <Link href="/login" className="bg-black text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors shadow-lg active:scale-95">
-                        Sign In
+                    <Link href="/login" className="text-sm font-bold text-primary hover:opacity-80 px-4">
+                        Login
+                    </Link>
+                    <Link href="/register" className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full text-sm font-bold hover:shadow-xl hover:-translate-y-0.5 transition-all shadow-lg shadow-primary/20 active:scale-95">
+                        Join Now
                     </Link>
                  </div>
             )}

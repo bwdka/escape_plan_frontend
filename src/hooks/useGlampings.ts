@@ -18,3 +18,13 @@ export const useGlampings = (params: GlampingFilterParams) => {
     },
   });
 };
+
+export const useLocations = () => {
+  return useQuery({
+    queryKey: ['locations'],
+    queryFn: async () => {
+      const { data } = await api.get<{ data: string[] }>('/locations');
+      return data.data;
+    },
+  });
+};

@@ -18,12 +18,12 @@ export function AdminSidebar() {
   const logout = useAuthStore((state) => state.logout);
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-100 min-h-screen flex flex-col fixed left-0 top-0 h-full">
-      <div className="h-16 flex items-center px-6 border-b border-slate-800">
-        <span className="font-bold text-lg tracking-wider">ADMIN</span>
+    <aside className="w-64 bg-primary text-primary-foreground min-h-screen flex flex-col fixed left-0 top-0 h-full z-30 shadow-2xl">
+      <div className="h-20 flex items-center px-8 border-b border-white/5">
+        <span className="font-black text-xl tracking-[0.2em]">ADMIN</span>
       </div>
       
-      <div className="flex-1 py-6 flex flex-col gap-1 px-3">
+      <div className="flex-1 py-10 flex flex-col gap-2 px-4">
         {sidebarItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
@@ -31,10 +31,10 @@ export function AdminSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                "flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300",
                 isActive 
-                  ? "bg-slate-800 text-white" 
-                  : "text-slate-400 hover:bg-slate-800/50 hover:text-white"
+                  ? "bg-white/10 text-accent shadow-inner translate-x-1" 
+                  : "text-white/40 hover:bg-white/5 hover:text-white hover:translate-x-1"
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -44,12 +44,12 @@ export function AdminSidebar() {
         })}
       </div>
 
-       <div className="p-4 border-t border-slate-800">
+       <div className="p-6 border-t border-white/5">
         <button 
             onClick={() => logout()}
-            className="flex items-center gap-3 px-3 py-2 w-full text-left text-sm font-medium text-red-400 hover:bg-red-950/30 rounded-md transition-colors"
+            className="flex items-center gap-4 px-4 py-3.5 w-full text-left text-[10px] font-black uppercase tracking-[0.15em] text-red-400 hover:bg-red-500/10 rounded-2xl transition-all duration-300 group"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Logout
         </button>
       </div>

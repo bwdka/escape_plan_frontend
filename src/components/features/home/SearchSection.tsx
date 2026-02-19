@@ -1,49 +1,39 @@
 'use client';
 
-import { useState, forwardRef } from 'react';
-import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
-import { FaSearch } from 'react-icons/fa';
+import { useState, useRef, useEffect } from 'react';
+import { FaSearch, FaMapMarkerAlt } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/card';
-import { format } from 'date-fns';
-
-interface CustomInputProps {
-  value?: string;
-  onClick?: () => void;
-  startDate: Date | null;
-  endDate: Date | null;
-}
-
-// Custom Input for the DatePicker to show two separate fields
-const CustomDateInput = forwardRef<HTMLDivElement, CustomInputProps>(({ onClick, startDate, endDate }, ref) => (
-  <div 
-      className="flex flex-1 items-stretch divide-x md:divide-x border-b md:border-b-0 md:border-r border-gray-100 cursor-pointer" 
-      onClick={onClick} 
-      ref={ref}
-  >
-     <div className="flex-1 px-4 py-3 md:py-0 flex flex-col justify-center">
-        <label className="block text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary mb-1">Check in</label>
-        <span className={`text-sm md:text-base font-medium ${startDate ? 'text-gray-900' : 'text-gray-400'}`}>
-          {startDate ? format(startDate, 'MMM d') : 'Add dates'}
-        </span>
-     </div>
-     <div className="flex-1 px-4 py-3 md:py-0 flex flex-col justify-center">
-        <label className="block text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary mb-1">Check out</label>
-        <span className={`text-sm md:text-base font-medium ${endDate ? 'text-gray-900' : 'text-gray-400'}`}>
-          {endDate ? format(endDate, 'MMM d') : 'Add dates'}
-        </span>
-     </div>
-  </div>
-));
-CustomDateInput.displayName = 'CustomDateInput';
+import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
+import { useLocations } from '@/hooks/useGlampings';
+import { cn } from '@/lib/utils';
 
 export function SearchSection() {
   const router = useRouter();
   const [location, setLocation] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
   const [guests, setGuests] = useState('');
+  
+  const { data: dbLocations } = useLocations();
+  const suggestionRef = useRef<HTMLDivElement>(null);
+
+  // Fallback if DB is empty, but prioritizes DB locations
+  const locations = dbLocations || ["Lembang", "Ciwidey", "Kintamani", "Ubud", "Puncak", "Bogor", "Yogyakarta"];
+
+  const filteredSuggestions = locations.filter(loc => 
+    loc.toLowerCase().includes(location.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -55,42 +45,75 @@ export function SearchSection() {
     router.push(`/search?${params.toString()}`);
   };
 
+  const selectSuggestion = (loc: string) => {
+    setLocation(loc);
+    setShowSuggestions(false);
+  };
+
   return (
-    <section className="relative -mt-10 md:-mt-8 z-20 container mx-auto px-4">
-      <Card className="bg-white/70 backdrop-blur-2xl backdrop-saturate-150 rounded-2xl md:rounded-full shadow-2xl border-white/50 p-2 md:pl-8 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-4 max-w-5xl mx-auto overflow-hidden">
+    <section className="relative -mt-20 md:-mt-16 z-30 container mx-auto px-4 max-w-6xl">
+      <div className="glass rounded-[2rem] md:rounded-full border-white/40 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.15)] p-2 md:p-3 md:pl-10 flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-2 max-w-5xl mx-auto group/search">
+        
         {/* Location */}
-        <div className="flex-1 flex flex-col justify-center px-4 py-3 md:py-0 border-b md:border-b-0 md:border-r border-gray-100">
-            <label htmlFor="location" className="block text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary mb-1">Where</label>
+        <div className="flex-1 relative flex flex-col justify-center px-6 py-4 md:py-0 border-b md:border-b-0 md:border-r border-primary/5 hover:bg-white/40 rounded-[1.5rem] md:rounded-none transition-colors">
+            <label htmlFor="location" className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary/40 mb-1">Where to?</label>
             <input 
                 type="text" 
                 id="location" 
+                autoComplete="off"
                 placeholder="Search destinations" 
-                className="w-full outline-none text-sm md:text-base text-gray-900 placeholder-gray-400 font-medium bg-transparent"
+                className="w-full outline-none text-sm md:text-base text-primary placeholder-primary/20 font-black bg-transparent"
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={(e) => {
+                    setLocation(e.target.value);
+                    setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
             />
+
+            {/* Suggestions Dropdown - SOLID Background */}
+            {showSuggestions && filteredSuggestions.length > 0 && (
+                <div 
+                    ref={suggestionRef}
+                    className="absolute top-full left-0 mt-4 w-full md:w-[300px] bg-white rounded-[2rem] border border-black/5 shadow-2xl overflow-hidden py-4 z-50 animate-fade-up"
+                >
+                    <p className="px-6 pb-2 text-[9px] font-black uppercase tracking-widest text-primary/30">Available Sanctuaries</p>
+                    <div className="max-h-[300px] overflow-y-auto no-scrollbar">
+                        {filteredSuggestions.map((loc, i) => (
+                            <button
+                                key={i}
+                                className="w-full px-6 py-3 flex items-center gap-4 hover:bg-primary/5 transition-colors text-left group"
+                                onClick={() => selectSuggestion(loc)}
+                            >
+                                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
+                                    <FaMapMarkerAlt size={12} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-primary">{loc}</p>
+                                    <p className="text-[9px] font-bold text-primary/30 uppercase tracking-wider italic">Glamping Paradise</p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
         
-        {/* Combined Date Picker Triggering Custom Input */}
-        <DatePicker
-            selectsRange={true}
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(update) => setDateRange(update)}
-            customInput={<CustomDateInput startDate={startDate} endDate={endDate} />}
-            minDate={new Date()}
-            monthsShown={2}
-            shouldCloseOnSelect={false}
+        {/* Custom Date Picker */}
+        <CustomDatePicker 
+          startDate={startDate} 
+          endDate={endDate} 
+          onChange={setDateRange} 
         />
 
         {/* Guests */}
-        <div className="flex-1 flex flex-col justify-center px-4 py-3 md:py-0">
-             <label htmlFor="guests" className="block text-[10px] md:text-xs font-bold uppercase tracking-wider text-primary mb-1">Total Guests</label>
+        <div className="flex-1 flex flex-col justify-center px-6 py-4 md:py-0 hover:bg-white/40 rounded-[1.5rem] md:rounded-none transition-colors">
+             <label htmlFor="guests" className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary/40 mb-1">How many?</label>
              <input 
                 type="number" 
                 id="guests" 
                 placeholder="Add guests" 
-                className="w-full outline-none text-sm md:text-base text-gray-900 placeholder-gray-400 font-medium bg-transparent"
+                className="w-full outline-none text-sm md:text-base text-primary placeholder-primary/20 font-black bg-transparent"
                 value={guests}
                 onChange={(e) => setGuests(e.target.value)}
                 min="1"
@@ -100,12 +123,12 @@ export function SearchSection() {
         {/* Search Button */}
         <button 
             onClick={handleSearch}
-            className="bg-black hover:bg-gray-800 text-white rounded-xl md:rounded-full py-4 md:px-8 md:py-5 flex items-center justify-center gap-3 transition-all shadow-lg active:scale-95"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl md:rounded-full py-5 md:px-10 md:py-5 flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/20 active:scale-95 group/btn shrink-0"
         >
-            <FaSearch className="w-4 h-4 md:w-5 md:h-5" />
-            <span className="font-bold text-sm md:text-base md:hidden">Search Destinations</span>
+            <FaSearch className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
+            <span className="font-black text-xs uppercase tracking-widest">Find Escape</span>
         </button>
-      </Card>
+      </div>
     </section>
   );
 }

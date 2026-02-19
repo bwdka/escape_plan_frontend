@@ -1,0 +1,266 @@
+/* =========================================
+   DUAL MONTH DATEPICKER STYLING
+   ========================================= */
+
+   :root {
+    /* Menggunakan variabel global theme */
+    --dp-bg: var(--background);
+    --dp-text: var(--foreground);
+    --dp-muted: var(--muted-foreground);
+    --dp-border: var(--border);
+    --dp-accent: var(--primary);
+    --dp-accent-contrast: var(--primary-foreground);
+    --dp-hover: var(--secondary);
+    --dp-shadow: 0 20px 60px rgba(38, 80, 62, 0.15);
+    --radius: 2rem;
+    --radius-day: 0.75rem;
+    
+    /* Enhanced design variables */
+    --dp-gradient: linear-gradient(135deg, var(--primary) 0%, oklch(0.45 0.06 154) 100%);
+    --dp-success: oklch(0.65 0.15 150);
+    --dp-warning: var(--accent);
+    --dp-high-season: var(--accent);
+    --dp-weekend: oklch(0.6 0.18 25);
+    
+    /* Glass effect */
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+.datepicker {
+    position: absolute;
+    z-index: 9999;
+    width: min(95vw, 720px);
+    background: var(--dp-bg);
+    color: var(--dp-text);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    box-shadow: var(--dp-shadow);
+    padding: 0;
+    display: none;
+    overflow: hidden;
+    font-family: inherit;
+    backdrop-filter: blur(24px);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.datepicker.open.pos-bottom {
+    display: block;
+    animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.datepicker.open.pos-top {
+    display: block;
+    animation: slideInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInUp {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes slideInDown {
+    from { opacity: 0; transform: translate(-50%, -20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.dp-header {
+    background: var(--dp-accent);
+    color: var(--dp-accent-contrast);
+    padding: 1.25rem 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.dp-nav-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.dp-nav-btn {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: white;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+}
+
+.dp-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.dp-mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.mode-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.4rem 1.25rem;
+    border-radius: 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.mode-btn.active {
+    background: var(--accent);
+    color: var(--accent-foreground);
+    border-color: transparent;
+}
+
+.dp-calendars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 1.5rem 2rem;
+    background: transparent;
+}
+
+.dp-calendar .dp-title {
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.02em;
+}
+
+.dp-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.dp-weekday {
+    text-align: center;
+    font-size: 0.6rem;
+    color: var(--primary);
+    opacity: 0.4;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.dp-days, .dp-days-1, .dp-days-2 {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+}
+
+.dp-day {
+    aspect-ratio: 1;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 0.5rem;
+    display: grid;
+    place-items: center;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.dp-day.out {
+    opacity: 0.15;
+}
+
+.dp-day:hover:not(.disabled):not(.booked):not(.out) {
+    background: var(--secondary);
+    border-color: var(--border);
+}
+
+.dp-day.selected {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: 0 8px 16px rgba(38, 80, 62, 0.2);
+}
+
+.dp-day.selected.checkin {
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.dp-day.selected.checkout {
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.dp-day.in-range {
+    background: var(--secondary);
+    border-radius: 0;
+}
+
+.dp-day.today {
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+}
+
+.dp-day.booked {
+    background: oklch(0.95 0.05 25 / 10%);
+    color: oklch(0.6 0.18 25 / 40%);
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.dp-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 1.25rem 2rem;
+    border-top: 1px solid var(--border);
+    background: rgba(var(--background), 0.5);
+}
+
+.dp-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.clear-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--primary);
+}
+
+.apply-btn {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+    box-shadow: 0 10px 20px rgba(38, 80, 62, 0.2);
+}
+
+@media (max-width: 768px) {
+    .datepicker {
+        width: calc(100vw - 2rem);
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .dp-calendars {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 1.5rem;
+    }
+}
