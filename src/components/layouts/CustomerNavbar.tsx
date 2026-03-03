@@ -36,6 +36,7 @@ export function CustomerNavbar() {
                             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{user?.role}</p>
                         </div>
                         <Link href="/bookings/my-trips" className="block px-4 py-2.5 text-sm font-medium hover:bg-primary/10 transition-colors">My Trips</Link>
+                        <Link href="/profile" className="block px-4 py-2.5 text-sm font-medium hover:bg-primary/10 transition-colors">Profile Settings</Link>
                         <button onClick={() => logout()} className="block w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">Log out</button>
                     </div>
                  </div>
@@ -66,8 +67,9 @@ export function CustomerNavbar() {
                 {isAuthenticated ? (
                     <>
                         <p className="font-medium">Hi, {user?.name}</p>
-                        <Link href="/bookings/my-trips" className="text-primary">My Trips</Link>
-                        <button onClick={() => logout()} className="text-left text-red-600">Log out</button>
+                        <Link href="/bookings/my-trips" className="text-primary font-bold">My Trips</Link>
+                        <Link href="/profile" className="text-primary font-bold">Profile Settings</Link>
+                        <button onClick={() => logout()} className="text-left text-red-600 font-bold">Log out</button>
                     </>
                 ) : (
                     <Link href="/login" className="bg-black text-white px-5 py-3 rounded-lg text-center font-medium">

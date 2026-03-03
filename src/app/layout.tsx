@@ -3,8 +3,15 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import { Toaster } from "sonner";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
+
+declare global {
+  interface Window {
+    snap: any;
+  }
+}
 
 export const metadata: Metadata = {
   title: "Escape Plan - Best Glamping Experiences",
@@ -34,7 +41,10 @@ export default function RootLayout({
           <Toaster position="top-center" />
 
         </Providers>
-
+        <Script 
+          src="https://app.sandbox.midtrans.com/snap/snap.js" 
+          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        />
       </body>
 
     </html>

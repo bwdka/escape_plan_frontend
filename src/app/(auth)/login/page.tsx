@@ -25,7 +25,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
-  const redirectPath = searchParams.get('from') || '/';
+  const redirectPath = searchParams.get('redirect') || '/';
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -98,7 +98,10 @@ function LoginForm() {
 
       <div className="mt-8 pt-8 border-t border-primary/5 text-center">
           <p className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">Don't have an account?</p>
-          <Link href="/register" className="font-black text-sm text-accent hover:underline underline-offset-4 decoration-2 transition-all">
+          <Link 
+            href={`/register${searchParams.get('redirect') ? `?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : ''}`} 
+            className="font-black text-sm text-accent hover:underline underline-offset-4 decoration-2 transition-all"
+          >
             JOIN THE ESCAPE
           </Link>
       </div>

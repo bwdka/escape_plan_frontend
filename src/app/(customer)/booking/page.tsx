@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useCalculatePrice, useCreateBooking } from '@/hooks/useBooking';
+import { useCalculatePriceQuery, useCreateBooking } from '@/hooks/useBooking';
+import { useProfile } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +24,11 @@ const bookingSchema = z.object({
   customer_email: z.string().email(),
   customer_phone: z.string().min(10),
   special_request: z.string().optional(),
-  check_in: z.string().refine(val => new Date(val) > new Date(), "Must be future date"),
+  check_in: z.string().refine(val => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return new Date(val) >= today;
+  }, "Must be today or future"),
   check_out: z.string(),
   total_guests: z.number().min(1),
 }).refine(data => new Date(data.check_out) > new Date(data.check_in), {
@@ -40,9 +45,10 @@ function BookingContent() {
   const unitId = Number(searchParams.get('unit_id'));
   const unitName = searchParams.get('unit_name');
   const basePrice = Number(searchParams.get('price'));
+  const checkInParam = searchParams.get('check_in') || '';
+  const checkOutParam = searchParams.get('check_out') || '';
 
-  const { mutate: calculatePrice, data: priceData, isPending: isCalculating } = useCalculatePrice();
-  const { mutate: createBooking, isPending: isBooking } = useCreateBooking();
+  const { data: userProfile } = useProfile();
 
   // Mock addons for demo - in real app, fetch these from glamping detail or a separate API
   const [selectedAddons, setSelectedAddons] = useState<{id: number, qty: number}[]>([]);
@@ -50,32 +56,41 @@ function BookingContent() {
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      customer_name: '',
-      customer_email: '',
-      customer_phone: '',
+      customer_name: userProfile?.name || '',
+      customer_email: userProfile?.email || '',
+      customer_phone: userProfile?.phone || '',
       special_request: '',
-      check_in: '',
-      check_out: '',
+      check_in: checkInParam,
+      check_out: checkOutParam,
       total_guests: 2,
     }
   });
 
-  const watchDates = form.watch(['check_in', 'check_out']);
+  const { data: priceData, isLoading: isCalculating, error: calculationError } = useCalculatePriceQuery({
+    unit_id: unitId,
+    check_in: form.watch('check_in'),
+    check_out: form.watch('check_out'),
+    quantity: 1,
+    addons: selectedAddons,
+    promo_code: '',
+    enabled: !!unitId && !!form.watch('check_in') && !!form.watch('check_out')
+  });
 
-  // Recalculate price when dates or addons change
+  const { mutate: createBooking, isPending: isBooking } = useCreateBooking();
+
+  // Re-sync form with user profile and params when they load
   useEffect(() => {
-    const [checkIn, checkOut] = watchDates;
-    if (checkIn && checkOut && unitId) {
-        calculatePrice({
-            unit_id: unitId,
-            check_in: checkIn,
-            check_out: checkOut,
-            quantity: 1, // Default 1 unit
-            addons: selectedAddons,
-            promo_code: ''
-        });
+    if (userProfile) {
+        form.setValue('customer_name', userProfile.name);
+        form.setValue('customer_email', userProfile.email);
+        form.setValue('customer_phone', userProfile.phone || '');
     }
-  }, [watchDates, selectedAddons, unitId, calculatePrice]);
+    if (checkInParam) form.setValue('check_in', checkInParam);
+    if (checkOutParam) form.setValue('check_out', checkOutParam);
+  }, [userProfile, checkInParam, checkOutParam, form]);
+
+  const checkIn = form.watch('check_in');
+  const checkOut = form.watch('check_out');
 
   const onSubmit = (data: BookingFormValues) => {
     if (!unitId) return;
@@ -84,15 +99,33 @@ function BookingContent() {
         unit_id: unitId,
         ...data,
         addons: selectedAddons,
-        qty: 1 // Assuming 1 unit for simplicity in this prototype
-    } as any, { // Type casting for prototype speed
-        onSuccess: (res) => {
+        quantity: 1 // Renamed from qty to quantity for backend compatibility
+    } as any, { 
+ // Type casting for prototype speed
+        onSuccess: (res: any) => {
             toast.success("Booking Created!");
-            // Redirect to payment URL or confirmation page
-            if (res.payment_url) {
+            
+            if (res.snap_token) {
+                window.snap.pay(res.snap_token, {
+                    onSuccess: function(result: any) {
+                        toast.success("Payment success!");
+                        router.push('/bookings/my-trips');
+                    },
+                    onPending: function(result: any) {
+                        toast.info("Waiting for payment...");
+                        router.push('/bookings/my-trips');
+                    },
+                    onError: function(result: any) {
+                        toast.error("Payment failed!");
+                    },
+                    onClose: function() {
+                        toast.warning("You closed the payment popup.");
+                    }
+                });
+            } else if (res.payment_url) {
                 window.location.href = res.payment_url;
             } else {
-                router.push('/booking/success');
+                router.push('/bookings/my-trips');
             }
         },
         onError: (err: any) => {
@@ -119,9 +152,20 @@ function BookingContent() {
                          <div className="space-y-2">
                              <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Stay Period</Label>
                              <div className="grid grid-cols-2 gap-px bg-primary/10 rounded-xl overflow-hidden border border-primary/5">
-                                 <input type="date" {...form.register('check_in')} className="bg-white/50 p-3 text-xs font-black text-primary outline-none" />
-                                 <input type="date" {...form.register('check_out')} className="bg-white/50 p-3 text-xs font-black text-primary outline-none" />
+                                 <input 
+                                    type="date" 
+                                    {...form.register('check_in')} 
+                                    min={new Date().toISOString().split('T')[0]}
+                                    className="bg-white/50 p-3 text-xs font-black text-primary outline-none" 
+                                 />
+                                 <input 
+                                    type="date" 
+                                    {...form.register('check_out')} 
+                                    min={form.watch('check_in') || new Date().toISOString().split('T')[0]}
+                                    className="bg-white/50 p-3 text-xs font-black text-primary outline-none" 
+                                 />
                              </div>
+                             {form.formState.errors.check_in && <p className="text-red-500 text-[10px] font-bold mt-1 uppercase">{form.formState.errors.check_in.message}</p>}
                              {form.formState.errors.check_out && <p className="text-red-500 text-[10px] font-bold mt-1 uppercase">{form.formState.errors.check_out.message}</p>}
                          </div>
                          <div className="space-y-2">
@@ -201,6 +245,12 @@ function BookingContent() {
                   
                   {isCalculating ? (
                       <div className="flex justify-center py-10"><Loader2 className="animate-spin text-accent" /></div>
+                  ) : calculationError ? (
+                      <div className="p-4 bg-red-50 rounded-xl border border-red-100">
+                          <p className="text-[10px] font-bold text-red-500 uppercase leading-relaxed">
+                              {(calculationError as any).response?.data?.message || "Invalid dates or availability"}
+                          </p>
+                      </div>
                   ) : priceData ? (
                       <div className="space-y-4">
                           {priceData.breakdown.map((item, idx) => (

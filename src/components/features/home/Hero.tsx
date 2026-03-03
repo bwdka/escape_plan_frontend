@@ -1,9 +1,9 @@
 export function Hero() {
   return (
-    <header className="relative h-[75vh] min-h-[600px] flex items-center justify-center text-white bg-[url('https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center bg-no-repeat overflow-hidden">
+    <header className="relative h-[85vh] min-h-[700px] flex items-center justify-center text-white bg-[url('https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=1920&q=80')] bg-cover bg-center bg-no-repeat overflow-hidden">
       {/* Dynamic Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/40 via-primary/20 to-background" />
-      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-transparent" />
+      <div className="absolute inset-0 bg-black/10" />
       
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto space-y-6">
         <div className="inline-block glass px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest text-white/90 mb-4 animate-fade-up">

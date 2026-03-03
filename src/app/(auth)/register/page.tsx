@@ -1,9 +1,10 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -28,9 +29,11 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
+  const redirectPath = searchParams.get('redirect') || '/';
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -55,11 +58,10 @@ export default function RegisterPage() {
         if (response.data.user.role === 'partner') {
            router.push('/partner/dashboard');
         } else {
-           router.push('/');
+           router.push(redirectPath);
         }
       }
     } catch (error: any) {
-      // Handle Laravel validation errors (422)
       if (error.response?.status === 422 && error.response.data.errors) {
          const errors = error.response.data.errors;
          Object.keys(errors).forEach((key) => {
@@ -73,11 +75,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="glass p-10 rounded-[2.5rem] border-white/40 shadow-2xl space-y-8">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-black tracking-tighter text-primary">Join the Escape.</h1>
-        <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">Create your luxury account</p>
-      </div>
+    <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -188,10 +186,27 @@ export default function RegisterPage() {
          <p className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">
            Already a member?
          </p>
-         <Link href="/login" className="font-black text-sm text-accent hover:underline underline-offset-4 decoration-2 transition-all">
+         <Link 
+            href={`/login${searchParams.get('redirect') ? `?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : ''}`} 
+            className="font-black text-sm text-accent hover:underline underline-offset-4 decoration-2 transition-all"
+         >
             SIGN IN INSTEAD
          </Link>
       </div>
+    </>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <div className="glass p-10 rounded-[2.5rem] border-white/40 shadow-2xl space-y-8">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-black tracking-tighter text-primary">Join the Escape.</h1>
+        <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">Create your luxury account</p>
+      </div>
+      <Suspense fallback={<div>Loading form...</div>}>
+        <RegisterForm />
+      </Suspense>
     </div>
   );
 }

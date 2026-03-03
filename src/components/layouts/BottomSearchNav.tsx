@@ -2,15 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export function BottomSearchNav() {
   const [isVisible, setIsVisible] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show when scrolled past the main search area (approx 300px)
+      // Only show on landing page
+      if (pathname !== '/') {
+        setIsVisible(false);
+        return;
+      }
+      
       const show = window.scrollY > 300;
       setIsVisible(show);
     };

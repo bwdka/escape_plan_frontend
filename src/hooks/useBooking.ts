@@ -17,6 +17,23 @@ export const useCalculatePrice = () => {
   });
 };
 
+export const useCalculatePriceQuery = (payload: CalculatePriceRequest & { enabled: boolean }) => {
+  return useQuery({
+    queryKey: ['calculate-price', payload.unit_id, payload.check_in, payload.check_out, JSON.stringify(payload.addons)],
+    queryFn: async () => {
+      const { data } = await api.post<CalculatePriceResponse>('/bookings/calculate', payload);
+      return data.data;
+    },
+    enabled: payload.enabled && !!payload.unit_id && !!payload.check_in && !!payload.check_out,
+    staleTime: 1000 * 60, // Cache for 1 minute
+    retry: (failureCount, error: any) => {
+        // Don't retry if it's a validation error (422)
+        if (error.response?.status === 422) return false;
+        return failureCount < 2; // Retry max 2 times for other errors
+    }
+  });
+};
+
 export const useCreateBooking = () => {
   return useMutation({
     mutationFn: async (payload: CreateBookingRequest) => {

@@ -52,11 +52,11 @@ export function SearchSection() {
 
   return (
     <section className="relative -mt-20 md:-mt-16 z-30 container mx-auto px-4 max-w-6xl">
-      <div className="glass rounded-[2rem] md:rounded-full border-white/40 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.15)] p-2 md:p-3 md:pl-10 flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-2 max-w-5xl mx-auto group/search">
+      <div className="bg-white/95 backdrop-blur-2xl rounded-[2rem] md:rounded-full border border-white shadow-[0_32px_80px_-16px_rgba(0,0,0,0.15)] p-2 md:p-3 md:pl-10 flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-2 max-w-5xl mx-auto group/search transition-all hover:shadow-[0_48px_96px_-24px_rgba(0,0,0,0.2)]">
         
         {/* Location */}
-        <div className="flex-1 relative flex flex-col justify-center px-6 py-4 md:py-0 border-b md:border-b-0 md:border-r border-primary/5 hover:bg-white/40 rounded-[1.5rem] md:rounded-none transition-colors">
-            <label htmlFor="location" className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary/40 mb-1">Where to?</label>
+        <div className="flex-1 relative flex flex-col justify-center px-6 py-4 md:py-0 border-b md:border-b-0 md:border-r border-primary/10 hover:bg-primary/5 rounded-[1.5rem] md:rounded-none transition-colors">
+            <label htmlFor="location" className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary/60 mb-1">Where to?</label>
             <input 
                 type="text" 
                 id="location" 
@@ -107,8 +107,8 @@ export function SearchSection() {
         />
 
         {/* Guests */}
-        <div className="flex-1 flex flex-col justify-center px-6 py-4 md:py-0 hover:bg-white/40 rounded-[1.5rem] md:rounded-none transition-colors">
-             <label htmlFor="guests" className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary/40 mb-1">How many?</label>
+        <div className="flex-1 flex flex-col justify-center px-6 py-4 md:py-0 hover:bg-primary/5 rounded-[1.5rem] md:rounded-none transition-colors">
+             <label htmlFor="guests" className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary/60 mb-1">How many?</label>
              <input 
                 type="number" 
                 id="guests" 

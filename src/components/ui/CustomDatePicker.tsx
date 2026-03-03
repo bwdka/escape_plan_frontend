@@ -11,6 +11,8 @@ interface CustomDatePickerProps {
   onChange: (dates: [Date | null, Date | null]) => void;
   bookedDates?: string[];
   highSeasons?: { tanggal: string }[];
+  className?: string;
+  triggerClassName?: string;
 }
 
 export const CustomDatePicker = ({
@@ -18,7 +20,9 @@ export const CustomDatePicker = ({
   endDate,
   onChange,
   bookedDates = [],
-  highSeasons = []
+  highSeasons = [],
+  className,
+  triggerClassName
 }: CustomDatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(startDate || new Date());
@@ -167,13 +171,13 @@ export const CustomDatePicker = ({
   const nextMonthView = addMonths(viewDate, 1);
 
   return (
-    <div className="flex-1 relative flex flex-col md:flex-row items-stretch md:items-center">
+    <div className={cn("relative flex flex-col items-stretch", className)}>
       <div 
         ref={triggerRef}
-        className="flex-1 flex flex-col justify-center px-8 py-4 md:py-0 border-b md:border-b-0 md:border-r border-primary/5 cursor-pointer hover:bg-white/40 rounded-[1.5rem] md:rounded-none transition-colors"
+        className={cn("flex flex-col justify-center px-6 py-4 cursor-pointer hover:bg-black/5 transition-colors", triggerClassName)}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <label className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary/40 mb-1 text-left">When?</label>
+        <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-primary/40 mb-1 text-left cursor-pointer">When?</label>
         <div className={cn(
           "text-sm md:text-base font-black transition-colors text-left",
           startDate ? "text-primary" : "text-primary/30"
