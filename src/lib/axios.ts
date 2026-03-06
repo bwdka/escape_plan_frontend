@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // baseURL: 'https://api.escapeplan.com/api/v1',
-  baseURL: 'http://localhost:8000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
