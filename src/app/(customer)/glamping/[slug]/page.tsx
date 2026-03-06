@@ -124,7 +124,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
             <section className="glass-card">
                 <h2 className="text-2xl font-black mb-6 text-primary tracking-tight">About this escape</h2>
                 <p className="text-primary/70 leading-relaxed font-medium text-lg italic underline decoration-accent/10 underline-offset-8">
-                    "{glamping.description}"
+                    &quot;{glamping.description}&quot;
                 </p>
             </section>
 

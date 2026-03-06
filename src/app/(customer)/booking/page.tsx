@@ -183,7 +183,7 @@ function BookingContent() {
                          <div className="space-y-2">
                              <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">Jumlah Tamu</Label>
                              <Input type="number" {...form.register('total_guests', { valueAsNumber: true })} className="h-11 rounded-xl" />
-                             {(priceData?.extra_guests ?? 0) > 0 && (
+                             {(priceData?.extra_guests ?? 0) > 0 && priceData && (
                                  <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100 mt-2">
                                      <AlertCircle size={14} className="text-amber-600 mt-0.5" />
                                      <p className="text-[10px] font-bold text-amber-700 leading-normal uppercase">

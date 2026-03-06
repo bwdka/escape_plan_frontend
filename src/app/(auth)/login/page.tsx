@@ -19,7 +19,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  remember: z.boolean().default(false),
+  remember: z.boolean(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -131,7 +131,7 @@ function LoginForm() {
                   </FormItem>
                 )}
               />
-              <Link href="/forgot-password" size="sm" className="text-[10px] font-black uppercase tracking-widest text-accent hover:underline">
+              <Link href="/forgot-password" className="text-[10px] font-black uppercase tracking-widest text-accent hover:underline">
                   Forgot Password?
               </Link>
           </div>
@@ -143,7 +143,7 @@ function LoginForm() {
       </Form>
 
       <div className="mt-8 pt-8 border-t border-primary/5 text-center">
-          <p className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">Don't have an account?</p>
+          <p className="text-xs font-bold text-primary/40 uppercase tracking-widest mb-4">Don&apos;t have an account?</p>
           <Link 
             href={`/register${searchParams.get('redirect') ? `?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : ''}`} 
             className="font-black text-sm text-accent hover:underline underline-offset-4 decoration-2 transition-all tracking-widest"

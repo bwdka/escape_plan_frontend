@@ -31,7 +31,7 @@ export default function MyListingsPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Account Verification Pending</h3>
             <p className="text-gray-500 max-w-sm mx-auto">
-                Your partner account is currently under review by our team. You'll be able to manage your listings once your account is verified.
+                Your partner account is currently under review by our team. You&apos;ll be able to manage your listings once your account is verified.
             </p>
         </div>
     );

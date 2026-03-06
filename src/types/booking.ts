@@ -59,6 +59,34 @@ export interface CreateBookingResponse {
     };
 }
 
+export interface BookingItem {
+    id: number;
+    booking_id: number;
+    item_type: string;
+    item_id: number;
+    name: string;
+    quantity: number;
+    price: number;
+    total_price: number;
+}
+
+export interface BookingDetail {
+    id: number;
+    booking_code: string;
+    check_in: string;
+    check_out: string;
+    total_price: number;
+    status: string;
+    snap_token: string | null;
+    guest_name: string;
+    guest_email: string;
+    guest_phone: string;
+    glamping_name: string;
+    unit_name: string;
+    items: BookingItem[];
+    glamping_thumbnail: string;
+}
+
 export interface BookingHistoryItem {
     id: number;
     booking_code: string;
@@ -73,4 +101,8 @@ export interface BookingHistoryItem {
 
 export interface MyTripsResponse {
     data: BookingHistoryItem[];
+}
+
+export interface BookingDetailResponse {
+    data: BookingDetail;
 }

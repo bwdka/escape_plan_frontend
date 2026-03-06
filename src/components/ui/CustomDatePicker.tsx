@@ -36,27 +36,21 @@ export const CustomDatePicker = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
 
-  // Smart positioning logic
-  useEffect(() => {
-    if (isOpen && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const datepickerHeight = 550; // Approximate height of the dual calendar
-      
-      if (spaceBelow < datepickerHeight && rect.top > datepickerHeight) {
-        setPosition('top');
-      } else {
-        setPosition('bottom');
-      }
-    }
-  }, [isOpen]);
-
-  // Sync temp dates when opened
+  // Sync temp dates when opened and handle positioning
   useEffect(() => {
     if (isOpen) {
       setTempDates([startDate, endDate]);
       if (startDate) setViewDate(startDate);
-      setSelectingCheckin(true); // Default to check-in when opening
+      setSelectingCheckin(true);
+
+      if (triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const datepickerHeight = 550;
+        const newPos = (spaceBelow < datepickerHeight && rect.top > datepickerHeight) ? 'top' : 'bottom';
+        
+        setPosition(prev => prev !== newPos ? newPos : prev);
+      }
     }
   }, [isOpen, startDate, endDate]);
 
@@ -91,7 +85,6 @@ export const CustomDatePicker = ({
         setTempDates([date, tempStartDate]);
       } else {
         setTempDates([tempStartDate, date]);
-        // Do not close automatically as per user request
       }
     }
   };
@@ -108,7 +101,6 @@ export const CustomDatePicker = ({
 
   const renderCalendar = (year: number, month: number) => {
     const monthStart = startOfMonth(new Date(year, month));
-    const monthEnd = endOfMonth(monthStart);
     const startDateOfMonth = new Date(monthStart);
     startDateOfMonth.setDate(startDateOfMonth.getDate() - monthStart.getDay());
     
