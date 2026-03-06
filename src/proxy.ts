@@ -10,14 +10,14 @@ const PROTECTED_ROUTES = [
   { path: '/profile', role: undefined },
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // 1. Check if the current path matches any protected route
   const protectedRoute = PROTECTED_ROUTES.find(route => pathname.startsWith(route.path));
 
   if (protectedRoute) {
-    // 2. Get token from cookies (Middleware cannot access localStorage)
+    // 2. Get token from cookies (Middleware/Proxy cannot access localStorage)
     const token = request.cookies.get('token')?.value;
 
     // 3. If no token, redirect to login
