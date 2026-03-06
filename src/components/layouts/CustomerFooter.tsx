@@ -2,10 +2,10 @@ import { FaInstagram, FaFacebookF, FaTwitter, FaTiktok, FaCcVisa, FaCcMastercard
 
 export function CustomerFooter() {
   return (
-    <footer className="bg-primary text-primary-foreground pt-24 pb-12">
+    <footer className="bg-primary text-primary-foreground pt-12 pb-8">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-20">
-            <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-10">
+            <div className="space-y-6">
                 <h3 className="font-black text-2xl tracking-tighter">Escape <span className="text-accent">Plan.</span></h3>
                 <p className="text-primary-foreground/60 text-sm leading-relaxed font-medium">
                     Experience the perfect blend of luxury and nature. 
@@ -22,8 +22,8 @@ export function CustomerFooter() {
             </div>
 
             <div>
-                <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-8 text-accent">Discover</h4>
-                <ul className="space-y-4 text-sm text-primary-foreground/50 font-bold">
+                <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-6 text-accent">Discover</h4>
+                <ul className="space-y-3 text-sm text-primary-foreground/50 font-bold">
                     <li><a href="/search" className="hover:text-primary-foreground transition-colors">All Stays</a></li>
                     <li><a href="#" className="hover:text-primary-foreground transition-colors">Luxury Tents</a></li>
                     <li><a href="#" className="hover:text-primary-foreground transition-colors">Wooden Cabins</a></li>
@@ -33,8 +33,8 @@ export function CustomerFooter() {
             </div>
 
             <div>
-                <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-8 text-accent">Destinations</h4>
-                <ul className="space-y-4 text-sm text-primary-foreground/50 font-bold">
+                <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-6 text-accent">Destinations</h4>
+                <ul className="space-y-3 text-sm text-primary-foreground/50 font-bold">
                     <li><a href="#" className="hover:text-primary-foreground transition-colors">Lembang, Bandung</a></li>
                     <li><a href="#" className="hover:text-primary-foreground transition-colors">Puncak, Bogor</a></li>
                     <li><a href="#" className="hover:text-primary-foreground transition-colors">Kintamani, Bali</a></li>
@@ -44,7 +44,7 @@ export function CustomerFooter() {
             </div>
 
             <div>
-                <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-8 text-accent">Join Us</h4>
+                <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-6 text-accent">Join Us</h4>
                 <div className="glass p-6 rounded-3xl border-white/5 space-y-4">
                     <p className="text-xs font-bold leading-relaxed">Have a unique property? Start hosting today.</p>
                     <a href="/partner/register" className="block w-full bg-accent text-accent-foreground text-center py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
@@ -54,7 +54,7 @@ export function CustomerFooter() {
             </div>
         </div>
 
-        <div className="border-t border-white/5 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="text-[10px] font-black uppercase tracking-widest text-primary-foreground/30">
                 &copy; {new Date().getFullYear()} Escape Plan Global. All rights reserved.
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { FaUserCircle, FaBars } from 'react-icons/fa';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useState } from 'react';
@@ -12,8 +13,14 @@ export function CustomerNavbar() {
   return (
     <nav className="sticky top-0 z-50 transition-all duration-300 glass border-b border-white/10">
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-        <Link href="/" className="text-2xl font-bold tracking-tighter text-primary">
-          Escape Plan.
+        <Link href="/" className="flex items-center gap-2">
+          <Image 
+            src="/logo/logo_escape_plan.png" 
+            alt="Escape Plan Logo" 
+            width={110} 
+            height={32} 
+            className="object-contain"
+          />
         </Link>
         
         {/* Desktop Nav */}

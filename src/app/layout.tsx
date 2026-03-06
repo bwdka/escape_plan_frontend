@@ -16,6 +16,9 @@ declare global {
 export const metadata: Metadata = {
   title: "Escape Plan - Best Glamping Experiences",
   description: "Discover and book unique glamping experiences.",
+  icons: {
+    icon: "/logo/logo_only_escape_plan.png",
+  },
 };
 
 export default function RootLayout({

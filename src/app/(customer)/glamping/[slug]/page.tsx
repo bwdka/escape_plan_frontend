@@ -40,13 +40,6 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   if (isError || !glamping) return <div className="container mx-auto p-8 text-center">Glamping not found</div>;
 
   const handleBook = (unit: Unit) => {
-    if (!isAuthenticated) {
-        toast.info("Please sign in to book your escape");
-        const returnUrl = encodeURIComponent(`${pathname}?unit_id=${unit.id}`);
-        router.push(`/login?redirect=${returnUrl}`);
-        return;
-    }
-
     if (!startDate || !endDate) {
         toast.error("Please select stay dates first!");
         return;

@@ -3,24 +3,34 @@ export interface CalculatePriceRequest {
     check_in: string;
     check_out: string;
     quantity: number;
-    addons: { id: number; qty: number }[];
+    total_guests: number;
+    addons: { id: number; quantity: number }[];
     promo_code?: string;
 }
 
 export interface PriceBreakdownItem {
     label: string;
     value: number;
+    item_id?: number;
+    item_type?: string;
+    name?: string;
+    qty?: number;
+    price?: number;
 }
 
 export interface CalculatePriceResponse {
     data: {
         base_price: number;
+        attractive_price: number;
         addons_price: number;
-        discount_amount: number;
+        extra_guest_price?: number;
+        discount_amount?: number;
         service_fee: number;
         tax_amount: number;
         total_price: number;
         breakdown: PriceBreakdownItem[];
+        capacity?: number;
+        extra_guests?: number;
     };
 }
 
@@ -29,28 +39,30 @@ export interface CreateBookingRequest {
     check_in: string;
     check_out: string;
     total_guests: number;
-    customer_name: string;
-    customer_phone: string;
-    customer_email: string;
+    guest_name: string;
+    guest_phone: string;
+    guest_email: string;
     special_request?: string;
-    addons: { id: number; qty: number }[];
+    addons: { id: number; quantity: number }[];
     promo_code?: string;
+    quantity: number;
 }
 
 export interface CreateBookingResponse {
+    message: string;
     data: {
+        booking_id: number;
         booking_code: string;
-        status: 'UNPAID' | 'PAID' | 'CANCELLED' | 'COMPLETED';
-        expired_at: string;
+        status: string;
         snap_token: string;
-        payment_url: string;
+        total_price: number;
     };
 }
 
 export interface BookingHistoryItem {
     id: number;
     booking_code: string;
-    status: 'UNPAID' | 'PAID' | 'CANCELLED' | 'COMPLETED';
+    status: string;
     check_in: string;
     check_out: string;
     glamping_name: string;

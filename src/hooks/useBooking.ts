@@ -52,3 +52,14 @@ export const useMyTrips = () => {
     },
   });
 };
+
+export const useBookingDetail = (id: string) => {
+  return useQuery({
+    queryKey: ['booking', id],
+    queryFn: async () => {
+      const { data } = await api.get<any>(`/bookings/${id}`);
+      return data.data;
+    },
+    enabled: !!id,
+  });
+};

@@ -75,7 +75,7 @@ export default function MyTripsPage() {
                                     </div>
 
                                     <div className="mt-8 flex justify-end">
-                                        <Link href={`/glamping/${trip.id}`} className="text-[10px] font-black uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
+                                        <Link href={`/bookings/${trip.id}`} className="text-[10px] font-black uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
                                             View Details <ArrowRight size={12} />
                                         </Link>
                                     </div>
