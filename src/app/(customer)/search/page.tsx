@@ -92,6 +92,7 @@ function SearchContent() {
     }
   }, []);
 
+  // Back to original sticky sidebar logic
   useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
@@ -180,13 +181,13 @@ function SearchContent() {
   return (
     <div ref={containerRef} className="container mx-auto px-4 py-8 pb-32 lg:pb-8">
       
-      {/* 1. DESKTOP SEARCH BAR (Top Sticky) */}
+      {/* 1. DESKTOP SEARCH BAR (Top Sticky) - Fixed overflow to show DatePicker */}
       <div className={cn(
         "hidden lg:block sticky top-20 z-40 transition-all duration-500 -mx-4 px-4 py-4 bg-background/30 backdrop-blur-sm",
         !isSticky && "lg:relative lg:top-0 lg:mb-10 lg:bg-transparent lg:backdrop-blur-none lg:px-0 lg:py-0"
       )}>
         <div className={cn(
-            "bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/40 shadow-xl mx-auto flex transition-all duration-500 overflow-hidden ring-1 ring-black/5",
+            "bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/40 shadow-xl mx-auto flex transition-all duration-500 ring-1 ring-black/5",
             isSticky ? "max-w-4xl p-1.5" : "max-w-5xl p-2.5",
         )}>
           {/* Desktop inputs */}
@@ -327,8 +328,8 @@ function SearchContent() {
                 </div>
               </div>
 
-              {/* Dates Section */}
-              <div className="space-y-4 relative">
+              {/* Dates Section - Kept z-30 for DatePicker visibility */}
+              <div className="space-y-4 relative z-30">
                 <div className="flex items-center gap-2 text-accent">
                     <Calendar className="w-5 h-5" />
                     <span className="text-xs font-black uppercase tracking-widest">{t({ id: 'Kapan Menginap?', en: 'When?' })}</span>
@@ -376,7 +377,7 @@ function SearchContent() {
       </AnimatePresence>
 
       <div className="flex flex-col lg:flex-row gap-10 items-start">
-        {/* Sidebar Filters */}
+        {/* Sidebar Filters - Back to original manual sticky logic */}
         <aside className="w-full lg:w-72 relative z-20">
             <div
               ref={sidebarRef}

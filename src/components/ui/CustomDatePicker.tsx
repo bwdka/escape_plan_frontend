@@ -258,6 +258,8 @@ export const CustomDatePicker = ({
           style={{ 
             top: position === 'bottom' ? 'calc(100% + 1rem)' : 'auto',
             bottom: position === 'top' ? 'calc(100% + 1rem)' : 'auto',
+            position: isMobile ? 'absolute' : undefined, // Force absolute on mobile to stay within stacking context if needed
+            zIndex: 100001 // Ensure it's very high
           }}
         >
           <div className="dp-header">
