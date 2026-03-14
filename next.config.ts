@@ -14,6 +14,16 @@ const nextConfig: NextConfig = {
       {
          protocol: 'https',
          hostname: '**', // Allow all for prototype convenience if needed, or stick to strict
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8000',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '8000',
       }
     ],
   },

@@ -18,7 +18,7 @@ import { Loader2, Shield, Plus, Minus, AlertCircle } from 'lucide-react';
 import { FaCampground, FaCoffee, FaMotorcycle } from 'react-icons/fa';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { useI18n } from '@/i18n/I18nProvider';
-import { dummyBookedDates } from '@/lib/dummyBookings';
+import { useUnitBlockedDates, useUnitDetail } from '@/hooks/useGlampingDetail';
 
 type BookingFormValues = {
   guest_name: string;
@@ -41,6 +41,8 @@ function BookingContent() {
   const checkOutParam = searchParams.get('check_out') || '';
 
   const { data: userProfile } = useProfile();
+  const { data: unitDetail } = useUnitDetail(unitId);
+  const { data: blockedDates } = useUnitBlockedDates(unitId);
 
   const [selectedAddons, setSelectedAddons] = useState<{id: number, quantity: number, name: string, price: number, icon: any}[]>([
       { id: 1, quantity: 0, name: t({ id: 'Extra Bed', en: 'Extra Bed' }), price: 150000, icon: FaCampground },
@@ -152,6 +154,8 @@ function BookingContent() {
   };
 
   if (!unitId) return <div className="p-8 text-center">{t({ id: 'Sesi Booking Tidak Valid', en: 'Invalid booking session' })}</div>;
+  const policyType = unitDetail?.glamping?.cancellation_policy || 'moderate';
+  const policyLabel = policyType === 'flexible' ? t({ id: 'Fleksibel', en: 'Flexible' }) : policyType === 'strict' ? t({ id: 'Ketat', en: 'Strict' }) : t({ id: 'Moderat', en: 'Moderate' });
 
   return (
     <div className="container mx-auto px-4 py-10 md:py-16 grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16 max-w-6xl">
@@ -176,7 +180,7 @@ function BookingContent() {
                                     startDate={startDate}
                                     endDate={endDate}
                                     onChange={handleDateChange}
-                                    bookedDates={dummyBookedDates}
+                                    bookedDates={blockedDates || []}
                                     className="w-full"
                                     triggerClassName="h-12 rounded-xl bg-white/50 border-2 border-primary/5 px-4 py-2 hover:bg-white/80 transition-all shadow-inner text-sm font-medium text-primary"
                                     showLabel={false}
@@ -203,6 +207,24 @@ function BookingContent() {
                                  </div>
                              )}
                          </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-primary/5">
+                        <div className="flex items-start gap-3 bg-primary/5 border border-primary/10 rounded-2xl p-4">
+                            <Shield className="w-5 h-5 text-primary mt-0.5" />
+                            <div className="space-y-1">
+                                <p className="text-xs font-black uppercase tracking-widest text-primary/70">{t({ id: 'Kebijakan Pembatalan', en: 'Cancellation Policy' })}</p>
+                                <p className="text-sm font-bold text-primary">{policyLabel}</p>
+                                <p className="text-[10px] font-bold text-primary/50 uppercase tracking-widest">
+                                    {unitDetail?.glamping?.reschedule_allowed ? t({ id: 'Reschedule Diizinkan', en: 'Reschedule Allowed' }) : t({ id: 'Reschedule Tidak Diizinkan', en: 'No Reschedule' })}
+                                </p>
+                                {unitDetail?.glamping?.min_nights ? (
+                                  <p className="text-[10px] font-bold text-primary/50 uppercase tracking-widest">
+                                      {t({ id: `Minimal ${unitDetail.glamping.min_nights} malam`, en: `Minimum ${unitDetail.glamping.min_nights} nights` })}
+                                  </p>
+                                ) : null}
+                            </div>
+                        </div>
                     </div>
                     
                     <div className="pt-6 border-t border-primary/5 grid grid-cols-1 md:grid-cols-2 gap-6">

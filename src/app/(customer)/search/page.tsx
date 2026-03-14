@@ -47,6 +47,11 @@ function SearchContent() {
   const [filters, setFilters] = useState({
     min_price: searchParams.get('min_price') || '',
     max_price: searchParams.get('max_price') || '',
+    access_type: searchParams.get('access_type') || '',
+    bathroom_type: searchParams.get('bathroom_type') || '',
+    pet_friendly: searchParams.get('pet_friendly') || '',
+    has_wifi: searchParams.get('has_wifi') || '',
+    has_electricity: searchParams.get('has_electricity') || '',
   });
 
   const { data, isLoading, isError } = useGlampings({
@@ -56,6 +61,11 @@ function SearchContent() {
     guests: searchParams.get('guests') ? Number(searchParams.get('guests')) : undefined,
     min_price: filters.min_price ? Number(filters.min_price) : undefined,
     max_price: filters.max_price ? Number(filters.max_price) : undefined,
+    access_type: filters.access_type || undefined,
+    bathroom_type: filters.bathroom_type || undefined,
+    pet_friendly: filters.pet_friendly ? filters.pet_friendly === 'true' : undefined,
+    has_wifi: filters.has_wifi ? filters.has_wifi === 'true' : undefined,
+    has_electricity: filters.has_electricity ? filters.has_electricity === 'true' : undefined,
   });
 
   const handleFilterChange = (key: string, value: string) => {
@@ -70,6 +80,11 @@ function SearchContent() {
     if (guests) params.set('guests', guests);
     if (filters.min_price) params.set('min_price', filters.min_price);
     if (filters.max_price) params.set('max_price', filters.max_price);
+    if (filters.access_type) params.set('access_type', filters.access_type);
+    if (filters.bathroom_type) params.set('bathroom_type', filters.bathroom_type);
+    if (filters.pet_friendly) params.set('pet_friendly', filters.pet_friendly);
+    if (filters.has_wifi) params.set('has_wifi', filters.has_wifi);
+    if (filters.has_electricity) params.set('has_electricity', filters.has_electricity);
     router.push(`/search?${params.toString()}`);
     setIsSearchOpen(false);
   };
@@ -80,6 +95,15 @@ function SearchContent() {
     const ci = searchParams.get('check_in');
     const co = searchParams.get('check_out');
     setDateRange([ci ? new Date(ci) : null, co ? new Date(co) : null]);
+    setFilters({
+      min_price: searchParams.get('min_price') || '',
+      max_price: searchParams.get('max_price') || '',
+      access_type: searchParams.get('access_type') || '',
+      bathroom_type: searchParams.get('bathroom_type') || '',
+      pet_friendly: searchParams.get('pet_friendly') || '',
+      has_wifi: searchParams.get('has_wifi') || '',
+      has_electricity: searchParams.get('has_electricity') || '',
+    });
   }, [searchParams]);
 
   useEffect(() => {
@@ -408,6 +432,64 @@ function SearchContent() {
               </div>
             </div>
 
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t({ id: 'Akses', en: 'Access' })}</label>
+              <select
+                value={filters.access_type}
+                onChange={(e) => handleFilterChange('access_type', e.target.value)}
+                className="h-10 w-full rounded-xl border border-primary/10 bg-white/70 px-3 text-xs font-bold text-primary"
+              >
+                <option value="">{t({ id: 'Semua Akses', en: 'All Access' })}</option>
+                <option value="city_car">{t({ id: 'Mobil Kota', en: 'City Car' })}</option>
+                <option value="suv_only">{t({ id: 'SUV/4x4', en: 'SUV/4x4' })}</option>
+                <option value="motor_only">{t({ id: 'Motor Saja', en: 'Motorbike Only' })}</option>
+              </select>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t({ id: 'Kamar Mandi', en: 'Bathroom' })}</label>
+              <select
+                value={filters.bathroom_type}
+                onChange={(e) => handleFilterChange('bathroom_type', e.target.value)}
+                className="h-10 w-full rounded-xl border border-primary/10 bg-white/70 px-3 text-xs font-bold text-primary"
+              >
+                <option value="">{t({ id: 'Semua', en: 'All' })}</option>
+                <option value="private">{t({ id: 'Private', en: 'Private' })}</option>
+                <option value="shared">{t({ id: 'Shared', en: 'Shared' })}</option>
+                <option value="none">{t({ id: 'Tanpa Kamar Mandi', en: 'No Bathroom' })}</option>
+              </select>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t({ id: 'Fasilitas', en: 'Essentials' })}</label>
+              <div className="space-y-2 text-xs font-bold text-primary/70">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={filters.pet_friendly === 'true'}
+                    onChange={(e) => handleFilterChange('pet_friendly', e.target.checked ? 'true' : '')}
+                  />
+                  {t({ id: 'Pet Friendly', en: 'Pet Friendly' })}
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={filters.has_wifi === 'true'}
+                    onChange={(e) => handleFilterChange('has_wifi', e.target.checked ? 'true' : '')}
+                  />
+                  {t({ id: 'WiFi', en: 'WiFi' })}
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={filters.has_electricity === 'true'}
+                    onChange={(e) => handleFilterChange('has_electricity', e.target.checked ? 'true' : '')}
+                  />
+                  {t({ id: 'Listrik', en: 'Electricity' })}
+                </label>
+              </div>
+            </div>
+
             <Button className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest shadow-lg shadow-primary/20" onClick={handleSearch}>{t({ id: 'Terapkan Filter', en: 'Apply Filter' })}</Button>
             </div>
         </aside>
@@ -445,10 +527,11 @@ function SearchContent() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-8 w-full">
               {data?.data.map((glamping) => {
+                const storageBase = (process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8000/storage/').replace(/\/+$/, '/') ;
                 const imageUrl = glamping.thumbnail?.startsWith('http') 
                     ? glamping.thumbnail 
                     : glamping.thumbnail 
-                        ? `http://localhost:8000/storage/${glamping.thumbnail}`
+                        ? `${storageBase}${glamping.thumbnail.replace(/^\/+/, '')}`
                         : 'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&q=80';
                 const isSaved = savedSlugs.includes(glamping.slug);
 
@@ -500,6 +583,21 @@ function SearchContent() {
                                 {glamping.vibe && (
                                     <span className="text-[9px] px-3 py-1 bg-primary/5 text-primary/60 rounded-full uppercase font-black tracking-widest">
                                         {glamping.vibe}
+                                    </span>
+                                )}
+                                {glamping.pet_friendly && (
+                                    <span className="text-[9px] px-3 py-1 bg-accent/10 text-accent rounded-full uppercase font-black tracking-widest">
+                                        Pet Friendly
+                                    </span>
+                                )}
+                                {glamping.has_wifi && (
+                                    <span className="text-[9px] px-3 py-1 bg-primary/5 text-primary/60 rounded-full uppercase font-black tracking-widest">
+                                        WiFi
+                                    </span>
+                                )}
+                                {glamping.bathroom_type && (
+                                    <span className="text-[9px] px-3 py-1 bg-primary/5 text-primary/60 rounded-full uppercase font-black tracking-widest">
+                                        {glamping.bathroom_type}
                                     </span>
                                 )}
                             </div>

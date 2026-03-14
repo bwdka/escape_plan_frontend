@@ -221,16 +221,21 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
 
                 {booking.status === 'PAID' && (
                     <div className="pt-4 md:pt-6">
-                        <div className="bg-green-50 border border-green-100 rounded-2xl md:rounded-3xl p-6 md:p-8 flex items-center gap-4">
-                            <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-xl md:rounded-2xl flex items-center justify-center text-green-600 flex-shrink-0">
-                                <CheckCircle2 size={20} className="md:w-6 md:h-6" />
+                        <div className="bg-green-50 border border-green-100 rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-4 text-left w-full">
+                                <div className="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-xl md:rounded-2xl flex items-center justify-center text-green-600 flex-shrink-0">
+                                    <CheckCircle2 size={20} className="md:w-6 md:h-6" />
+                                </div>
+                                <div>
+                                    <p className="font-black text-primary text-xs md:text-sm uppercase tracking-tight mb-1">{t({ id: 'Pembayaran Dikonfirmasi', en: 'Payment Confirmed' })}</p>
+                                    <p className="text-[10px] md:text-xs font-bold text-primary/40 leading-relaxed">
+                                      {t({ id: 'Siapkan barang! Pesananmu sudah siap.', en: 'Pack your bags! Your escape is ready.' })}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="font-black text-primary text-xs md:text-sm uppercase tracking-tight mb-1">{t({ id: 'Pembayaran Dikonfirmasi', en: 'Payment Confirmed' })}</p>
-                                <p className="text-[10px] md:text-xs font-bold text-primary/40 leading-relaxed">
-                                  {t({ id: 'Siapkan barang! Pesananmu sudah siap.', en: 'Pack your bags! Your escape is ready.' })}
-                                </p>
-                            </div>
+                            <Link href={`/messages?booking_id=${booking.id}`} className="w-full md:w-auto inline-flex items-center justify-center h-12 md:h-14 rounded-xl md:rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] md:text-xs px-10 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                                {t({ id: 'Chat Host', en: 'Message Host' })}
+                            </Link>
                         </div>
                     </div>
                 )}

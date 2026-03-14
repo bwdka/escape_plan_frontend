@@ -4,7 +4,7 @@ import { Suspense, useState, use, useRef, useEffect, type CSSProperties } from '
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { MapPin, Star, Wifi, Flame, Users, Bed, CheckCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useGlampingDetail } from '@/hooks/useGlampingDetail';
+import { useGlampingBlockedDates, useGlampingDetail, useUnitBlockedDates } from '@/hooks/useGlampingDetail';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -15,7 +15,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Unit } from '@/types/glamping';
 import { useI18n } from '@/i18n/I18nProvider';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { dummyBookedDates } from '@/lib/dummyBookings';
 
 // Icon mapper helper
 const IconMap: Record<string, any> = {
@@ -43,7 +42,26 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [sidebarStyle, setSidebarStyle] = useState<CSSProperties>({});
-  const bookedDates = dummyBookedDates;
+  const { data: blockedDates } = useGlampingBlockedDates(glamping?.id);
+  const { data: unitBlockedDates } = useUnitBlockedDates(selectedUnit?.id);
+  const bookedDates = selectedUnit?.id ? (unitBlockedDates || []) : (blockedDates || []);
+
+  const policyText = (() => {
+    const type = glamping?.cancellation_policy || 'moderate';
+    if (type === 'flexible') {
+      return t({ id: 'Bebas batal hingga 24 jam sebelum check-in.', en: 'Free cancellation up to 24 hours before check-in.' });
+    }
+    if (type === 'strict') {
+      return t({ id: 'Pembatalan ketat, refund terbatas mendekati hari H.', en: 'Strict cancellation with limited refunds close to arrival.' });
+    }
+    return t({ id: 'Pembatalan moderat, refund sebagian sebelum check-in.', en: 'Moderate cancellation with partial refunds before check-in.' });
+  })();
+  const storageBase = (process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8000/storage/').replace(/\/+$/, '/');
+  const resolveImage = (src?: string) => {
+    if (!src) return PLACEHOLDER_IMAGE;
+    if (src.startsWith('http')) return src;
+    return `${storageBase}${src.replace(/^\/+/, '')}`;
+  };
 
   useEffect(() => {
     try {
@@ -57,8 +75,8 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   }, [params.slug]);
 
   const galleryImages = [
-    glamping?.thumbnail_url || PLACEHOLDER_IMAGE,
-    ...(glamping?.gallery?.map((photo) => photo.url || PLACEHOLDER_IMAGE) || [])
+    resolveImage(glamping?.thumbnail_url),
+    ...(glamping?.gallery?.map((photo) => resolveImage(photo.url)) || [])
   ];
 
   const openLightbox = (index: number) => {
@@ -261,7 +279,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                   onClick={() => openLightbox(0)}
                 >
                     <Image 
-                        src={glamping.thumbnail_url || PLACEHOLDER_IMAGE} 
+                        src={resolveImage(glamping.thumbnail_url)} 
                         alt={glamping.name} 
                         fill 
                         className="object-cover hover:scale-105 transition-transform duration-700" 
@@ -276,7 +294,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                           onClick={() => openLightbox(index + 1)}
                         >
                             <Image 
-                                src={photo.url || PLACEHOLDER_IMAGE} 
+                                src={resolveImage(photo.url)} 
                                 alt={photo.caption || glamping.name} 
                                 fill 
                                 className="object-cover hover:scale-110 transition-transform duration-700" 
@@ -298,7 +316,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                       onClick={() => openLightbox(index + 1)}
                     >
                       <Image
-                        src={photo.url || PLACEHOLDER_IMAGE}
+                        src={resolveImage(photo.url)}
                         alt={photo.caption || glamping.name}
                         fill
                         className="object-cover"
@@ -420,6 +438,37 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                     </div>
                 </section>
 
+                <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="rounded-[2rem] bg-white border border-black/5 p-5 md:p-6 space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Akses', en: 'Access' })}</p>
+                    <p className="text-sm font-bold text-primary">{glamping.access_notes || t({ id: 'Akses mudah, detail mengikuti konfirmasi host.', en: 'Easy access, details confirmed by host.' })}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/30">{t({ id: 'Tipe Akses', en: 'Access Type' })}: {glamping.access_type}</p>
+                  </div>
+                  <div className="rounded-[2rem] bg-white border border-black/5 p-5 md:p-6 space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Keamanan', en: 'Safety' })}</p>
+                    <p className="text-sm font-bold text-primary">{glamping.safety_notes || t({ id: 'Ikuti arahan host dan batas area aman.', en: 'Follow host guidance and safe zone boundaries.' })}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/30">{t({ id: 'Listrik', en: 'Electricity' })}: {glamping.has_electricity ? t({ id: 'Tersedia', en: 'Available' }) : t({ id: 'Terbatas', en: 'Limited' })}</p>
+                  </div>
+                  <div className="rounded-[2rem] bg-white border border-black/5 p-5 md:p-6 space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Perlengkapan', en: 'Packing List' })}</p>
+                    <p className="text-sm font-bold text-primary">{glamping.packing_list || t({ id: 'Bawa jaket hangat, sandal, senter, dan obat pribadi.', en: 'Bring warm jacket, sandals, flashlight, and personal meds.' })}</p>
+                  </div>
+                </section>
+
+                <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="rounded-[2rem] bg-white border border-black/5 p-5 md:p-6 space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Aturan Rumah', en: 'House Rules' })}</p>
+                    <p className="text-sm font-bold text-primary">{glamping.house_rules || t({ id: 'Jaga kebersihan, tidak merusak alam, dan patuhi jam tenang.', en: 'Keep it clean, respect nature, and observe quiet hours.' })}</p>
+                  </div>
+                  <div className="rounded-[2rem] bg-white border border-black/5 p-5 md:p-6 space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Kebijakan Pembatalan', en: 'Cancellation Policy' })}</p>
+                    <p className="text-sm font-bold text-primary">{policyText}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/30">
+                      {glamping.reschedule_allowed ? t({ id: 'Reschedule Diizinkan', en: 'Reschedule Allowed' }) : t({ id: 'Reschedule Tidak Diizinkan', en: 'No Reschedule' })}
+                    </p>
+                  </div>
+                </section>
+
                 <section ref={sanctuariesRef}>
                     <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-primary tracking-tight">{t({ id: 'Pilihan Unit Tersedia', en: 'Available Sanctuaries' })}</h2>
                     <div className="space-y-4 md:space-y-6">
@@ -428,7 +477,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                                 <div className="flex flex-col md:flex-row">
                                     <div className="relative w-full md:w-64 h-48 md:h-auto bg-gray-200 overflow-hidden">
                                         <Image 
-                                            src={(unit.photos && unit.photos.length > 0) ? unit.photos[0] : (glamping.thumbnail_url || PLACEHOLDER_IMAGE)} 
+                                            src={resolveImage((unit.photos && unit.photos.length > 0) ? unit.photos[0] : glamping.thumbnail_url)} 
                                             alt={unit.name} 
                                             fill 
                                             className="object-cover group-hover:scale-110 transition-transform duration-700" 

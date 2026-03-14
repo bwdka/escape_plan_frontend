@@ -87,123 +87,124 @@ export default function ManageUnitsPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-                <Link href="/partner/listings">
-                    <ArrowLeft className="h-5 w-5" />
-                </Link>
-            </Button>
-            <div>
-                <h2 className="text-2xl font-bold">Manage Units</h2>
-                <p className="text-sm text-gray-500">Add or edit units for this property</p>
-            </div>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <Button variant="ghost" size="icon" asChild className="rounded-full border border-primary/10 bg-white/70">
+          <Link href="/partner/listings">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+        </Button>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/50">Inventory</p>
+          <h2 className="font-display text-3xl text-primary tracking-tight">Manage Units</h2>
+          <p className="text-sm text-primary/60">Add or edit units for this property</p>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-4">
-                {isLoading ? (
-                    <div className="space-y-4">
-                        {[1, 2].map(i => <Card key={i} className="h-32 animate-pulse bg-gray-50" />)}
-                    </div>
-                ) : units?.length === 0 ? (
-                    <Card className="p-12 text-center border-dashed">
-                        <p className="text-gray-500">No units found. Add your first unit to start receiving bookings!</p>
-                    </Card>
-                ) : (
-                    units?.map((unit: any) => (
-                        <Card key={unit.id} className={editingUnitId === unit.id ? 'ring-2 ring-primary' : ''}>
-                            <CardContent className="p-4 flex gap-4">
-                                <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                                    <Image 
-                                        src={unit.unit_images?.[0]?.path ? (unit.unit_images[0].path.startsWith('http') ? unit.unit_images[0].path : `http://localhost:8000/storage/${unit.unit_images[0].path}`) : 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=200&q=80'} 
-                                        alt={unit.title}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                                        <h3 className="font-bold">{unit.title}</h3>
-                                        <div className="flex gap-2">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(unit)}>
-                                                <Edit2 className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDelete(unit.id)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-500">
-                                        <span>Capacity: {unit.capacity}</span>
-                                        <span>Stock: {unit.total_stock}</span>
-                                        <span className="font-bold text-primary">Rp {Number(unit.price_weekday).toLocaleString('id-ID')}</span>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))
-                )}
-            </div>
-
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-4">
+          {isLoading ? (
             <div className="space-y-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                        <CardTitle className="text-lg">
-                            {editingUnitId ? 'Edit Unit' : 'Add New Unit'}
-                        </CardTitle>
-                        {editingUnitId && (
-                            <Button variant="ghost" size="icon" onClick={cancelEdit}>
-                                <X className="h-4 w-4" />
-                            </Button>
-                        )}
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>Unit Title</Label>
-                                <Input {...register('title', { required: true })} placeholder="e.g. Deluxe Tent" />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Capacity</Label>
-                                    <Input type="number" {...register('capacity', { valueAsNumber: true })} defaultValue={2} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Stock</Label>
-                                    <Input type="number" {...register('total_stock', { valueAsNumber: true })} defaultValue={1} />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Weekday Price</Label>
-                                    <Input type="number" {...register('price_weekday', { valueAsNumber: true })} placeholder="Rp" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Weekend Price</Label>
-                                    <Input type="number" {...register('price_weekend', { valueAsNumber: true })} placeholder="Rp" />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Description</Label>
-                                <Textarea {...register('description')} placeholder="Unit details..." />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Photos</Label>
-                                <MediaUpload value={images} onChange={setImages} folder="units" />
-                            </div>
-                            <Button className="w-full" type="submit" disabled={isPending}>
-                                {isPending ? 'Saving...' : (editingUnitId ? 'Update Unit' : 'Add Unit')}
-                            </Button>
-                            {editingUnitId && (
-                                <Button className="w-full" variant="outline" type="button" onClick={cancelEdit}>
-                                    Cancel Editing
-                                </Button>
-                            )}
-                        </form>
-                    </CardContent>
-                </Card>
+              {[1, 2].map(i => <Card key={i} className="h-32 animate-pulse bg-white/70 rounded-[2rem]" />)}
             </div>
+          ) : units?.length === 0 ? (
+            <Card className="p-12 text-center border-dashed rounded-[2rem] bg-white/70">
+              <p className="text-primary/60">No units found. Add your first unit to start receiving bookings!</p>
+            </Card>
+          ) : (
+            units?.map((unit: any) => (
+              <Card key={unit.id} className={`rounded-[2rem] border-white/70 bg-white/75 ${editingUnitId === unit.id ? 'ring-2 ring-primary' : ''}`}>
+                <CardContent className="p-5 flex gap-4">
+                  <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 shrink-0">
+                    <Image 
+                      src={unit.unit_images?.[0]?.path ? (unit.unit_images[0].path.startsWith('http') ? unit.unit_images[0].path : `http://localhost:8000/storage/${unit.unit_images[0].path}`) : 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=200&q=80'} 
+                      alt={unit.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                      <h3 className="font-display text-lg text-primary">{unit.title}</h3>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full border border-primary/10 bg-white/70" onClick={() => handleEdit(unit)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-red-500 border border-red-200/60 bg-white/70" onClick={() => handleDelete(unit.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-3 mt-2 text-sm text-primary/60">
+                      <span>Capacity: {unit.capacity}</span>
+                      <span>Stock: {unit.total_stock}</span>
+                      <span className="font-bold text-primary">Rp {Number(unit.price_weekday).toLocaleString('id-ID')}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
+
+        <div className="space-y-4">
+          <Card className="rounded-[2rem] border-white/70 bg-white/75 shadow-xl">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-lg">
+                {editingUnitId ? 'Edit Unit' : 'Add New Unit'}
+              </CardTitle>
+              {editingUnitId && (
+                <Button variant="ghost" size="icon" onClick={cancelEdit} className="rounded-full border border-primary/10 bg-white/70">
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Unit Title</Label>
+                  <Input {...register('title', { required: true })} placeholder="e.g. Deluxe Tent" className="rounded-2xl" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Capacity</Label>
+                    <Input type="number" {...register('capacity', { valueAsNumber: true })} defaultValue={2} className="rounded-2xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Stock</Label>
+                    <Input type="number" {...register('total_stock', { valueAsNumber: true })} defaultValue={1} className="rounded-2xl" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Weekday Price</Label>
+                    <Input type="number" {...register('price_weekday', { valueAsNumber: true })} placeholder="Rp" className="rounded-2xl" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Weekend Price</Label>
+                    <Input type="number" {...register('price_weekend', { valueAsNumber: true })} placeholder="Rp" className="rounded-2xl" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea {...register('description')} placeholder="Unit details..." className="rounded-2xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Photos</Label>
+                  <MediaUpload value={images} onChange={setImages} folder="units" />
+                </div>
+                <Button className="w-full rounded-2xl" type="submit" disabled={isPending}>
+                  {isPending ? 'Saving...' : (editingUnitId ? 'Update Unit' : 'Add Unit')}
+                </Button>
+                {editingUnitId && (
+                  <Button className="w-full rounded-2xl" variant="outline" type="button" onClick={cancelEdit}>
+                    Cancel Editing
+                  </Button>
+                )}
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

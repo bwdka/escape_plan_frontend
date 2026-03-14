@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useI18n } from '@/i18n/I18nProvider';
+import { cn } from '@/lib/utils';
 
 type RegisterFormValues = {
   name: string;
@@ -165,17 +166,34 @@ function RegisterForm() {
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">
                       {t({ id: 'Saya ingin bergabung sebagai', en: 'I want to join as' })}
                     </FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                        <SelectTrigger className="rounded-xl h-12 bg-white/70 border-white/40 focus:ring-primary/30">
-                        <SelectValue placeholder={t({ id: 'Pilih peran', en: 'Select a role' })} />
-                        </SelectTrigger>
+                      <div className="grid grid-cols-2 gap-2 bg-black/5 p-1 rounded-xl h-12">
+                        <button
+                          type="button"
+                          onClick={() => field.onChange('customer')}
+                          className={cn(
+                            "rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
+                            field.value === 'customer' 
+                              ? "bg-white text-primary shadow-sm" 
+                              : "text-primary/40 hover:text-primary/60"
+                          )}
+                        >
+                          {t({ id: 'Tamu', en: 'Guest' })}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => field.onChange('partner')}
+                          className={cn(
+                            "rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
+                            field.value === 'partner' 
+                              ? "bg-white text-primary shadow-sm" 
+                              : "text-primary/40 hover:text-primary/60"
+                          )}
+                        >
+                          {t({ id: 'Partner', en: 'Partner' })}
+                        </button>
+                      </div>
                     </FormControl>
-                    <SelectContent>
-                        <SelectItem value="customer">{t({ id: 'Tamu (Pesan Penginapan)', en: 'Guest (Book Stays)' })}</SelectItem>
-                        <SelectItem value="partner">{t({ id: 'Partner (Daftarkan Properti)', en: 'Partner (List Property)' })}</SelectItem>
-                    </SelectContent>
-                    </Select>
                     <FormMessage />
                 </FormItem>
                 )}

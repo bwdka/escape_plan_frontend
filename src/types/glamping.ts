@@ -7,6 +7,11 @@ export interface Glamping {
   price: number;
   rating: number;
   vibe: string;
+  access_type?: string;
+  pet_friendly?: boolean;
+  has_wifi?: boolean;
+  has_electricity?: boolean;
+  bathroom_type?: 'private' | 'shared' | 'none';
   description?: string;
   images?: string[];
   amenities?: any[];
@@ -31,6 +36,11 @@ export interface GlampingFilterParams {
   min_price?: number;
   max_price?: number;
   vibe?: string; // comma separated
+  access_type?: string;
+  pet_friendly?: boolean;
+  has_wifi?: boolean;
+  has_electricity?: boolean;
+  bathroom_type?: 'private' | 'shared' | 'none';
   page?: number;
 }
 
@@ -74,6 +84,19 @@ export interface GlampingDetail extends Glamping {
     location_city: string;
     thumbnail_url: string;
     review_count: number;
+    access_type: string;
+    cancellation_policy?: string;
+    reschedule_allowed?: boolean;
+    min_nights?: number;
+    prep_days?: number;
+    pet_friendly?: boolean;
+    has_wifi?: boolean;
+    has_electricity?: boolean;
+    bathroom_type?: 'private' | 'shared' | 'none';
+    access_notes?: string | null;
+    safety_notes?: string | null;
+    packing_list?: string | null;
+    house_rules?: string | null;
     latitude: number;
     longitude: number;
     policy: {

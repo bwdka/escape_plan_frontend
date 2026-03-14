@@ -8,15 +8,23 @@ import { useEffect, useState } from 'react';
 import { useI18n } from '@/i18n/I18nProvider';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useProfile } from '@/hooks/useAuth';
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useClearNotifications } from '@/hooks/useNotifications';
+import { Bell } from 'lucide-react';
 
 export function CustomerNavbar() {
   const { isAuthenticated, user, logout, setAuth } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const { data: profile } = useProfile(mounted && !!token);
+  const { data: notifications = [] } = useNotifications();
+  const { mutate: markRead } = useMarkNotificationRead();
+  const { mutate: markAllRead } = useMarkAllNotificationsRead();
+  const { mutate: clearAll } = useClearNotifications();
+  const unreadCount = notifications.filter((n: any) => !n.read_at).length;
 
   useEffect(() => {
     setMounted(true);
@@ -72,6 +80,7 @@ export function CustomerNavbar() {
                         </div>
                         <Link href="/wishlist" className="block px-4 py-2.5 text-sm font-medium hover:bg-primary/10 transition-colors">{t({ id: 'Wishlist', en: 'Wishlist' })}</Link>
                         <Link href="/bookings/my-trips" className="block px-4 py-2.5 text-sm font-medium hover:bg-primary/10 transition-colors">{t({ id: 'Perjalanan Saya', en: 'My Trips' })}</Link>
+                        <Link href="/messages" className="block px-4 py-2.5 text-sm font-medium hover:bg-primary/10 transition-colors">{t({ id: 'Pesan', en: 'Messages' })}</Link>
                         <Link href="/profile" className="block px-4 py-2.5 text-sm font-medium hover:bg-primary/10 transition-colors">{t({ id: 'Pengaturan Profil', en: 'Profile Settings' })}</Link>
                         <button onClick={() => logout()} className="block w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">{t({ id: 'Keluar', en: 'Log out' })}</button>
                     </div>
@@ -85,6 +94,53 @@ export function CustomerNavbar() {
                         {t({ id: 'Daftar Sekarang', en: 'Join Now' })}
                     </Link>
                  </div>
+            )}
+            {mounted && isAuthenticated && (
+              <div className="relative">
+                <button
+                  type="button"
+                  className="relative h-10 w-10 rounded-full border border-primary/10 bg-white/70 flex items-center justify-center"
+                  onClick={() => setIsNotifOpen((v) => !v)}
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-4 h-4 text-primary" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-black flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                {isNotifOpen && (
+                  <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-white/60 bg-white/90 shadow-2xl overflow-hidden z-50">
+                    <div className="px-4 py-3 border-b border-primary/10">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary/50">Notifications</p>
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/50">
+                          <button onClick={() => markAllRead()}>Mark all</button>
+                          <span>•</span>
+                          <button onClick={() => clearAll()}>Clear</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="max-h-72 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-4 text-xs text-primary/50">No notifications yet.</div>
+                      ) : (
+                        notifications.slice(0, 6).map((n: any) => (
+                          <button
+                            key={n.id}
+                            className="w-full text-left px-4 py-3 border-b border-primary/5 text-sm text-primary/80 hover:bg-primary/5"
+                            onClick={() => markRead(n.id)}
+                          >
+                            <div className="text-[10px] uppercase tracking-widest text-primary/40">{n.type}</div>
+                            <div className="font-semibold">{n.data?.preview || 'New update'}</div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
             <LanguageToggle className="ml-2" />
         </div>
@@ -107,6 +163,7 @@ export function CustomerNavbar() {
                     <>
                         <p className="font-bold">{t({ id: 'Halo', en: 'Hi' })}, {user?.name}</p>
                         <Link href="/bookings/my-trips" className="text-primary font-black">{t({ id: 'Perjalanan Saya', en: 'My Trips' })}</Link>
+                        <Link href="/messages" className="text-primary font-black">{t({ id: 'Pesan', en: 'Messages' })}</Link>
                         <Link href="/profile" className="text-primary font-black">{t({ id: 'Pengaturan Profil', en: 'Profile Settings' })}</Link>
                         <button onClick={() => logout()} className="text-left text-red-600 font-black">{t({ id: 'Keluar', en: 'Log out' })}</button>
                     </>
