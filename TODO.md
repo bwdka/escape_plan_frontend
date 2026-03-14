@@ -9,6 +9,11 @@ Daftar tugas untuk membangun MVP Escape Plan yang solid.
 ## 🎨 Fase 2: Frontend & UI/UX (Completed)
 - [x] **New Visual Identity:** Forest Luxury theme (#26503e), refined typography, and enhanced "Liquid Glass" effects.
 - [x] **Customer Flow:** Search, Results, Detail, Booking (Midtrans Snap), and My Journeys page.
+- [x] **Mobile Responsiveness:** All customer-facing pages (Detail, Search, My Trips) optimized for mobile.
+- [x] **Real-time UX:** Countdown timer and automatic cancellation UI for pending bookings.
+- [x] **Navbar Layout:** Spacing tuned for edge-to-edge layout per feedback.
+- [x] **Sticky Booking Widget:** Reserve panel follows scroll on detail page.
+- [ ] **Bilingual UI (ID/EN):** Completed for Home, Auth, Search, Glamping Detail, Booking, Booking Detail, Booking Success, Navbar/Footer, Admin/Partner layout; remaining pages still pending.
 
 ## 🏢 Fase 3: Partner Dashboard (Completed)
 - [x] **Listing Management:** Full CRUD for Glampings & Units with MediaUpload.

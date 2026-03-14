@@ -8,7 +8,7 @@ import Link from "next/link";
 export default function CreateGlampingPage() {
   return (
     <div className="space-y-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
                 <Link href="/partner/listings">
                     <ArrowLeft className="h-5 w-5" />

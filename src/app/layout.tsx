@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import { Toaster } from "sonner";
 import Script from "next/script";
 
-const inter = Inter({ subsets: ["latin"] });
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
 
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
 declare global {
   interface Window {
     snap: any;
@@ -35,7 +44,7 @@ export default function RootLayout({
 
     <html lang="en">
 
-      <body className={inter.className} suppressHydrationWarning>
+      <body className={`${manrope.variable} ${fraunces.variable} font-body`} suppressHydrationWarning>
 
         <Providers>
 
@@ -45,7 +54,7 @@ export default function RootLayout({
 
         </Providers>
         <Script 
-          src="https://app.sandbox.midtrans.com/snap/snap.js" 
+          src="https://app.midtrans.com/snap/snap.js" 
           data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
         />
       </body>

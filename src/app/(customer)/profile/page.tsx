@@ -68,16 +68,16 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-16 max-w-4xl">
+    <div className="container mx-auto px-4 py-10 md:py-16 max-w-4xl">
       <div className="flex flex-col gap-2 mb-12">
         <h1 className="text-4xl font-black text-primary tracking-tighter">Identity & Finance</h1>
         <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">Manage your escape credentials</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12">
         {/* Profile Card */}
         <div className="lg:col-span-1">
-            <div className="glass p-8 rounded-[2.5rem] border-white/40 text-center space-y-6 sticky top-32">
+            <div className="glass p-6 md:p-8 rounded-[2.5rem] border-white/40 text-center space-y-6 lg:sticky lg:top-32">
                 <div className="w-24 h-24 bg-primary rounded-3xl mx-auto flex items-center justify-center text-white text-4xl font-black shadow-2xl">
                     {user?.name?.charAt(0)}
                 </div>
@@ -96,7 +96,7 @@ export default function ProfilePage() {
 
         {/* Settings Form */}
         <div className="lg:col-span-2 space-y-10">
-            <div className="glass p-10 rounded-[3rem] border-white/40 shadow-xl">
+            <div className="glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-xl">
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
                     {/* Basic Info */}
                     <div className="space-y-6">
@@ -151,7 +151,7 @@ export default function ProfilePage() {
                         <Button 
                             type="submit" 
                             disabled={isUpdating}
-                            className="h-14 px-10 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all"
+                            className="h-14 px-8 sm:px-10 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest shadow-2xl shadow-primary/20 hover:scale-105 transition-all w-full sm:w-auto"
                         >
                             {isUpdating ? <Loader2 className="animate-spin mr-2" /> : null}
                             Update Identity

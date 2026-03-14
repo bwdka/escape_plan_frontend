@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { FaSearch, FaMapMarkerAlt } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { useLocations } from '@/hooks/useGlampings';
-import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n/I18nProvider';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, MapPin, Users, Calendar } from 'lucide-react';
+import { slideUp } from '@/lib/animations';
 
 export function SearchSection() {
   const router = useRouter();
@@ -14,11 +16,11 @@ export function SearchSection() {
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
   const [guests, setGuests] = useState('');
+  const { t } = useI18n();
   
   const { data: dbLocations } = useLocations();
   const suggestionRef = useRef<HTMLDivElement>(null);
 
-  // Fallback if DB is empty, but prioritizes DB locations
   const locations = dbLocations || ["Lembang", "Ciwidey", "Kintamani", "Ubud", "Puncak", "Bogor", "Yogyakarta"];
 
   const filteredSuggestions = locations.filter(loc => 
@@ -51,84 +53,130 @@ export function SearchSection() {
   };
 
   return (
-    <section className="relative -mt-20 md:-mt-16 z-30 container mx-auto px-4 max-w-6xl">
-      <div className="bg-white/95 backdrop-blur-2xl rounded-[2rem] md:rounded-full border border-white shadow-[0_32px_80px_-16px_rgba(0,0,0,0.15)] p-2 md:p-3 md:pl-10 flex flex-col md:flex-row items-stretch md:items-center gap-1 md:gap-2 max-w-5xl mx-auto group/search transition-all hover:shadow-[0_48px_96px_-24px_rgba(0,0,0,0.2)]">
-        
-        {/* Location */}
-        <div className="flex-1 relative flex flex-col justify-center px-6 py-4 md:py-0 border-b md:border-b-0 md:border-r border-primary/10 hover:bg-primary/5 rounded-[1.5rem] md:rounded-none transition-colors">
-            <label htmlFor="location" className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary/60 mb-1">Where to?</label>
-            <input 
-                type="text" 
-                id="location" 
-                autoComplete="off"
-                placeholder="Search destinations" 
-                className="w-full outline-none text-sm md:text-base text-primary placeholder-primary/20 font-black bg-transparent"
-                value={location}
-                onChange={(e) => {
+    <section className="relative -mt-12 z-30 container mx-auto px-4 pointer-events-none">
+      <motion.div 
+        variants={slideUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        className="pointer-events-auto bg-white/80 dark:bg-black/60 backdrop-blur-xl rounded-[2.75rem] border border-white/20 shadow-[0_12px_40px_rgba(0,0,0,0.12)] p-3 sm:p-4 max-w-4xl xl:max-w-[64rem] mx-auto relative"
+      >
+        <div className="absolute -top-20 -right-24 w-64 h-64 bg-accent/15 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/15 blur-3xl rounded-full pointer-events-none" />
+        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-2">
+          
+          {/* Location Input */}
+          <div className="relative flex-1 w-full group">
+            <div className="flex items-center gap-3 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent shrink-0">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
+                  {t({ id: 'Destinasi', en: 'Destination' })}
+                </label>
+                <input 
+                  type="text" 
+                  value={location}
+                  onChange={(e) => {
                     setLocation(e.target.value);
                     setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-            />
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  placeholder={t({ id: 'Mau kemana?', en: 'Where to go?' })}
+                  className="w-full bg-transparent border-none p-0 text-sm font-semibold text-foreground placeholder:text-muted-foreground/50 focus:ring-0 truncate"
+                />
+              </div>
+            </div>
 
-            {/* Suggestions Dropdown - SOLID Background */}
-            {showSuggestions && filteredSuggestions.length > 0 && (
-                <div 
-                    ref={suggestionRef}
-                    className="absolute top-full left-0 mt-4 w-full md:w-[300px] bg-white rounded-[2rem] border border-black/5 shadow-2xl overflow-hidden py-4 z-50 animate-fade-up"
+            {/* Suggestions Dropdown */}
+            <AnimatePresence>
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <motion.div 
+                  ref={suggestionRef}
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute top-full left-0 mt-2 w-full lg:w-80 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-black/5 overflow-hidden z-50 p-2"
                 >
-                    <p className="px-6 pb-2 text-[9px] font-black uppercase tracking-widest text-primary/30">Available Sanctuaries</p>
-                    <div className="max-h-[300px] overflow-y-auto no-scrollbar">
-                        {filteredSuggestions.map((loc, i) => (
-                            <button
-                                key={i}
-                                className="w-full px-6 py-3 flex items-center gap-4 hover:bg-primary/5 transition-colors text-left group"
-                                onClick={() => selectSuggestion(loc)}
-                            >
-                                <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
-                                    <FaMapMarkerAlt size={12} />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-black text-primary">{loc}</p>
-                                    <p className="text-[9px] font-bold text-primary/30 uppercase tracking-wider italic">Glamping Paradise</p>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-        
-        {/* Custom Date Picker */}
-        <CustomDatePicker 
-          startDate={startDate} 
-          endDate={endDate} 
-          onChange={setDateRange} 
-        />
+                  <p className="px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    {t({ id: 'Lokasi Populer', en: 'Popular Locations' })}
+                  </p>
+                  <div className="max-h-[240px] overflow-y-auto">
+                    {filteredSuggestions.map((loc, i) => (
+                      <button
+                        key={i}
+                        onClick={() => selectSuggestion(loc)}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent/10 rounded-xl transition-colors text-left group/item"
+                      >
+                        <MapPin className="w-4 h-4 text-muted-foreground group-hover/item:text-accent" />
+                        <span className="text-sm font-medium text-foreground">{loc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-        {/* Guests */}
-        <div className="flex-1 flex flex-col justify-center px-6 py-4 md:py-0 hover:bg-primary/5 rounded-[1.5rem] md:rounded-none transition-colors">
-             <label htmlFor="guests" className="block text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] text-primary/60 mb-1">How many?</label>
-             <input 
-                type="number" 
-                id="guests" 
-                placeholder="Add guests" 
-                className="w-full outline-none text-sm md:text-base text-primary placeholder-primary/20 font-black bg-transparent"
-                value={guests}
-                onChange={(e) => setGuests(e.target.value)}
-                min="1"
-            />
-        </div>
+          <div className="hidden lg:block w-px h-10 bg-border mx-2" />
 
-        {/* Search Button */}
-        <button 
+          {/* Date Picker */}
+          <div className="flex-1 w-full group">
+            <div className="flex items-center gap-3 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent shrink-0">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
+                  {t({ id: 'Tanggal', en: 'Dates' })}
+                </label>
+                <CustomDatePicker 
+                  startDate={startDate} 
+                  endDate={endDate} 
+                  onChange={setDateRange}
+                  showLabel={false}
+                  className="w-full"
+                  triggerClassName="px-0 py-0 hover:bg-transparent"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="hidden lg:block w-px h-10 bg-border mx-2" />
+
+          {/* Guests Input */}
+          <div className="flex-1 w-full">
+            <div className="flex items-center gap-3 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
+                  {t({ id: 'Tamu', en: 'Guests' })}
+                </label>
+                <input 
+                  type="number" 
+                  min="1"
+                  value={guests}
+                  onChange={(e) => setGuests(e.target.value)}
+                  placeholder={t({ id: 'Jumlah orang', en: 'Add guests' })}
+                  className="w-full bg-transparent border-none p-0 text-sm font-semibold text-foreground placeholder:text-muted-foreground/50 focus:ring-0"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Search Button */}
+          <button 
             onClick={handleSearch}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl md:rounded-full py-5 md:px-10 md:py-5 flex items-center justify-center gap-3 transition-all shadow-xl shadow-primary/20 active:scale-95 group/btn shrink-0"
-        >
-            <FaSearch className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
-            <span className="font-black text-xs uppercase tracking-widest">Find Escape</span>
-        </button>
-      </div>
+            className="w-full lg:w-auto p-3 sm:p-4 bg-primary text-primary-foreground rounded-[1.25rem] hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-primary/25 flex items-center justify-center gap-2"
+          >
+            <Search className="w-6 h-6" />
+            <span className="lg:hidden font-bold">{t({ id: 'Cari', en: 'Search' })}</span>
+          </button>
+        </div>
+      </motion.div>
     </section>
   );
 }

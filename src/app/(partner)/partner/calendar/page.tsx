@@ -150,7 +150,8 @@ export default function PartnerCalendarPage() {
                     {isLoading ? (
                          <div className="h-64 flex items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>
                     ) : (
-                        <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                        <div className="min-w-[700px] grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
                              {/* Days Header */}
                             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
                                 <div key={day} className="bg-gray-50 p-2 text-center text-xs font-medium text-gray-500">
@@ -189,6 +190,7 @@ export default function PartnerCalendarPage() {
                                     </div>
                                 );
                             })}
+                        </div>
                         </div>
                     )}
                 </CardContent>

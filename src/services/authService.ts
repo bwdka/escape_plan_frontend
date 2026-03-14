@@ -12,6 +12,16 @@ export const AuthService = {
     return response.data;
   },
 
+  async getGoogleRedirectUrl(redirect?: string, role?: 'customer' | 'partner') {
+    const response = await api.get<{ url: string }>('/auth/google/redirect', {
+      params: {
+        ...(redirect ? { redirect } : {}),
+        ...(role ? { role } : {}),
+      },
+    });
+    return response.data;
+  },
+
   async logout() {
     return await api.post('/auth/logout');
   },

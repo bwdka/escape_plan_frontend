@@ -2,40 +2,93 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaStar, FaHeart, FaArrowRight } from 'react-icons/fa';
-import { MapPin } from 'lucide-react';
+import { Star, Heart, ArrowRight, MapPin } from 'lucide-react';
 import { Glamping } from '@/types/glamping';
 import { toast } from 'sonner';
-import { MouseEvent } from 'react';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { MouseEvent, useEffect, useState } from 'react';
+import { useI18n } from '@/i18n/I18nProvider';
+import { motion } from 'framer-motion';
+import { fadeIn, staggerContainer } from '@/lib/animations';
 
 interface GlampingGridProps {
   title: string;
-  glampings: Partial<Glamping>[]; // Using Partial for flexibility with mock data
+  glampings: Partial<Glamping>[];
   viewAllLink?: string;
 }
 
 export function GlampingGrid({ title, glampings, viewAllLink = '/search' }: GlampingGridProps) {
+  const { t } = useI18n();
+  const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('saved_glampings');
+      const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+      setSavedSlugs(parsed);
+    } catch {
+      setSavedSlugs([]);
+    }
+  }, []);
   
-  const handleWishlist = (e: MouseEvent<HTMLButtonElement>, name: string) => {
-    e.preventDefault(); // Prevent Link navigation
+  const handleWishlist = (e: MouseEvent<HTMLButtonElement>, name: string, slug?: string) => {
+    e.preventDefault();
     e.stopPropagation();
-    toast.success(`${name} added to your wishlist!`);
+    if (!slug) {
+      toast.error(t({ id: 'Slug tidak ditemukan', en: 'Missing slug' }));
+      return;
+    }
+    try {
+      const next = savedSlugs.includes(slug)
+        ? savedSlugs.filter((s) => s !== slug)
+        : [...savedSlugs, slug];
+      localStorage.setItem('saved_glampings', JSON.stringify(next));
+      setSavedSlugs(next);
+      toast.success(next.includes(slug)
+        ? t({ id: `Berhasil menambahkan ${name} ke wishlist!`, en: `${name} added to your wishlist!` })
+        : t({ id: `${name} dihapus dari wishlist`, en: `${name} removed from your wishlist` })
+      );
+    } catch {
+      toast.error(t({ id: 'Gagal menyimpan wishlist', en: 'Failed to save wishlist' }));
+    }
   };
 
   return (
-    <section className="container mx-auto px-4 mt-20">
-      <div className="flex justify-between items-end mb-10">
-        <div>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-primary">{title}</h2>
-            <div className="h-1 w-12 bg-accent mt-2 rounded-full" />
-        </div>
-        <Link href={viewAllLink} className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-primary/60 hover:text-primary transition-all group">
-            Explore All <FaArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+    <section className="container mx-auto px-4 mt-24 mb-12">
+      <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeIn}
+        >
+            <div className="inline-flex items-center gap-2 mb-4">
+              <span className="h-1 w-10 bg-accent rounded-full" />
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">Curated</span>
+            </div>
+            <h2 className="font-display text-4xl md:text-5xl font-bold tracking-[-0.02em] text-foreground mb-4">
+              {title}
+            </h2>
+            <div className="h-1.5 w-24 bg-accent rounded-full" />
+        </motion.div>
+        
+        <Link 
+          href={viewAllLink} 
+          className="group flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+        >
+            {t({ id: 'Lihat Semua', en: 'Explore All' })} 
+            <span className="p-2 rounded-full bg-accent/10 group-hover:bg-accent group-hover:text-accent-foreground transition-all">
+              <ArrowRight className="w-4 h-4" />
+            </span>
         </Link>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <motion.div 
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+      >
         {glampings.map((item, idx) => {
             const imageUrl = item.thumbnail?.startsWith('http') 
                 ? item.thumbnail 
@@ -44,68 +97,85 @@ export function GlampingGrid({ title, glampings, viewAllLink = '/search' }: Glam
                     : `https://images.unsplash.com/photo-${1500000000000 + idx}?auto=format&fit=crop&w=800&q=80`;
 
             return (
-                <Link href={`/glamping/${item.slug || 'slug-' + idx}`} key={idx} className="block group">
-                    <div className="relative overflow-hidden rounded-[2.5rem] bg-white border border-black/5 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 h-full flex flex-col">
-                        <div className="p-3 pb-0">
-                            <div className="relative aspect-square overflow-hidden rounded-[2rem] bg-gray-100">
-                                <Image 
-                                    src={imageUrl} 
-                                    alt={item.name || 'Glamping'}
-                                    fill
-                                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                                />
-                                {/* Badges */}
-                                <div className="absolute top-4 left-4 flex flex-col gap-2">
-                                    {idx === 0 && <span className="glass text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">New Arrival</span>}
-                                    {idx === 2 && <span className="bg-accent text-accent-foreground text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg uppercase tracking-widest">Curated</span>}
-                                </div>
-                                
-                                <button 
-                                    onClick={(e) => handleWishlist(e, item.name || 'Item')}
-                                    className="absolute top-4 right-4 w-10 h-10 rounded-full glass border-white/40 hover:bg-white flex items-center justify-center text-primary hover:text-red-500 transition-all shadow-sm z-10"
-                                >
-                                    <FaHeart className="w-4 h-4" />
-                                </button>
+                <motion.div 
+                  key={idx} 
+                  variants={fadeIn}
+                  whileHover={{ y: -10 }}
+                  className="group"
+                >
+                  <Link href={`/glamping/${item.slug || 'slug-' + idx}`} className="block h-full">
+                    <div className="relative h-full flex flex-col bg-card rounded-[2rem] overflow-hidden transition-shadow hover:shadow-2xl hover:shadow-primary/5">
+                        {/* Image Container */}
+                        <div className="relative aspect-[4/3] overflow-hidden">
+                            <Image 
+                                src={imageUrl} 
+                                alt={item.name || 'Glamping'}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                            
+                            {/* Badges */}
+                            <div className="absolute top-4 left-4 flex flex-col gap-2">
+                                {idx === 0 && (
+                                  <span className="glass-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md">
+                                    {t({ id: 'Terbaru', en: 'New Arrival' })}
+                                  </span>
+                                )}
+                                {item.slug && savedSlugs.includes(item.slug) && (
+                                  <span className="glass-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md">
+                                    {t({ id: 'Tersimpan', en: 'Saved' })}
+                                  </span>
+                                )}
+                            </div>
+                            
+                            <button 
+                                onClick={(e) => handleWishlist(e, item.name || 'Item', item.slug)}
+                                className={`absolute top-4 right-4 w-10 h-10 rounded-full backdrop-blur-md border border-white/30 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 ${
+                                  item.slug && savedSlugs.includes(item.slug)
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-black/40 text-white hover:bg-white hover:text-red-500'
+                                }`}
+                            >
+                                <Heart className={`w-5 h-5 ${item.slug && savedSlugs.includes(item.slug) ? 'fill-current' : ''}`} />
+                            </button>
 
-                                {/* Bottom Overlay Info */}
-                                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent text-white opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    <p className="text-xs font-bold uppercase tracking-widest mb-1">View Details</p>
-                                    <div className="h-0.5 w-8 bg-accent" />
+                            {/* Price Tag Overlay */}
+                            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                                <div className="glass-dark px-4 py-2 rounded-xl backdrop-blur-md">
+                                  <span className="text-xs text-white/80 font-medium uppercase tracking-wider block mb-0.5">Start from</span>
+                                  <span className="text-white font-bold">
+                                    Rp {(item.price || 0).toLocaleString('id-ID')}
+                                  </span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-6 flex-1 flex flex-col">
-                            <div className="flex justify-between items-start gap-2 mb-3">
-                                <h3 className="font-black text-xl text-primary leading-tight line-clamp-1 group-hover:text-accent transition-colors">
+                        {/* Content */}
+                        <div className="p-5 flex-1 flex flex-col gap-2">
+                            <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-display text-lg font-bold text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-1">
                                     {item.name}
                                 </h3>
-                                <div className="flex items-center gap-1 px-2 py-1 bg-accent/10 rounded-lg shrink-0">
-                                    <FaStar className="text-[10px] text-accent" />
-                                    <span className="text-[10px] font-black text-primary">{item.rating || 4.8}</span>
+                                <div className="flex items-center gap-1 text-amber-400 shrink-0">
+                                    <Star className="w-3.5 h-3.5 fill-current" />
+                                    <span className="text-sm font-bold text-foreground">{item.rating || 4.8}</span>
                                 </div>
                             </div>
                             
-                            <div className="flex items-center gap-1.5 text-primary/50 mb-6">
-                                <MapPin size={12} className="shrink-0" />
-                                <p className="text-[11px] font-bold uppercase tracking-wider truncate">
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <MapPin className="w-3.5 h-3.5" />
+                                <p className="text-xs font-bold uppercase tracking-wider truncate">
                                     {item.location || 'Indonesia'}
                                 </p>
                             </div>
-
-                            <div className="mt-auto pt-4 border-t border-black/5 flex justify-between items-center">
-                                <div className="text-[10px] text-primary/40 font-black uppercase tracking-widest">Nightly</div>
-                                <div className="text-xl font-black text-primary">
-                                    <span className="text-sm font-bold mr-1 italic text-primary/40">Rp</span>
-                                    {(item.price || 0).toLocaleString('id-ID')}
-                                </div>
-                            </div>
                         </div>
                     </div>
-                </Link>
+                  </Link>
+                </motion.div>
             );
         })}
-      </div>
+      </motion.div>
     </section>
   );
 }

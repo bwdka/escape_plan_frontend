@@ -91,9 +91,9 @@ export default function MyListingsPage() {
                                         </Badge>
                                     </div>
                                 </div>
-                                <div className="flex-1 p-10 flex flex-col justify-between">
+                                <div className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-between">
                                     <div>
-                                        <div className="flex justify-between items-start">
+                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                                             <div>
                                                 <h3 className="font-black text-2xl text-primary tracking-tight mb-2">{glamping.name}</h3>
                                                 <div className="flex items-center gap-2 text-primary/40 font-bold text-sm uppercase tracking-wider">
@@ -101,7 +101,7 @@ export default function MyListingsPage() {
                                                     {glamping.address}
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-wrap gap-2">
                                                 <Button variant="luxury" size="icon" className="rounded-xl h-10 w-10" asChild>
                                                     <Link href={`/glamping/${glamping.slug}`} target="_blank">
                                                         <Eye className="h-4 w-4" />
@@ -118,7 +118,7 @@ export default function MyListingsPage() {
                                             </div>
                                         </div>
 
-                                        <div className="mt-8 flex gap-8">
+                                        <div className="mt-8 flex flex-wrap gap-4 sm:gap-6">
                                             <div className="bg-white/40 p-4 rounded-2xl border border-white/40 min-w-[100px]">
                                                 <p className="text-[10px] font-black uppercase text-primary/30 tracking-[0.2em] mb-1">Units</p>
                                                 <p className="text-xl font-black text-primary">{glamping.units?.length || 0}</p>
@@ -134,7 +134,7 @@ export default function MyListingsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="mt-10 flex gap-4">
+                                    <div className="mt-8 md:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4">
                                         <Button variant="default" className="rounded-xl h-12 px-8 font-black uppercase tracking-widest text-xs" asChild>
                                             <Link href={`/partner/listings/${glamping.id}`}>
                                                 Manage Sanctuaries

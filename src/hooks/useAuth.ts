@@ -3,13 +3,14 @@ import api from '@/lib/axios';
 import { User } from '@/types';
 import { useAuthStore } from '@/store/useAuthStore';
 
-export const useProfile = () => {
+export const useProfile = (enabled: boolean = true) => {
   return useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data } = await api.get<{user: User}>('/profile');
       return data.user;
     },
+    enabled,
   });
 };
 

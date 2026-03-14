@@ -35,7 +35,7 @@ export default function VerificationsPage() {
             </div>
 
             <Tabs defaultValue="partners" className="space-y-8">
-                <TabsList className="bg-primary/5 p-1 rounded-2xl border border-primary/5">
+                <TabsList className="bg-primary/5 p-1 rounded-2xl border border-primary/5 flex flex-wrap">
                     <TabsTrigger value="partners" className="rounded-xl px-8 py-3 font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Pending Partners</TabsTrigger>
                     <TabsTrigger value="glampings" className="rounded-xl px-8 py-3 font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-white">Glamping Approvals</TabsTrigger>
                 </TabsList>
@@ -48,8 +48,8 @@ export default function VerificationsPage() {
                             </div>
                         ) : (
                             pendingUsers?.data.map((user: any) => (
-                                <div key={user.id} className="glass p-8 rounded-[2.5rem] border-white/40 flex items-center justify-between group hover:bg-white/60 transition-all duration-500">
-                                    <div className="flex items-center gap-6">
+                                <div key={user.id} className="glass p-6 sm:p-8 rounded-[2.5rem] border-white/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 group hover:bg-white/60 transition-all duration-500">
+                                    <div className="flex items-center gap-4">
                                         <div className="h-16 w-16 rounded-3xl bg-accent/10 flex items-center justify-center font-black text-xl text-accent">
                                             {user.name.charAt(0)}
                                         </div>
@@ -58,7 +58,7 @@ export default function VerificationsPage() {
                                             <p className="text-sm font-bold text-primary/40">{user.email}</p>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-2">
+                                    <div className="flex w-full sm:w-auto flex-row sm:flex-col gap-2 sm:items-end">
                                         <Button 
                                             size="sm" 
                                             className="bg-primary text-primary-foreground rounded-xl"
@@ -84,8 +84,8 @@ export default function VerificationsPage() {
                             </div>
                         ) : (
                             pendingGlampings?.data.map((glamping: any) => (
-                                <div key={glamping.id} className="glass p-8 rounded-[2.5rem] border-white/40 flex items-center justify-between group hover:bg-white/60 transition-all duration-500">
-                                    <div className="flex items-center gap-6">
+                                <div key={glamping.id} className="glass p-6 sm:p-8 rounded-[2.5rem] border-white/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 group hover:bg-white/60 transition-all duration-500">
+                                    <div className="flex items-center gap-4">
                                         <div className="h-16 w-16 rounded-3xl bg-primary/10 flex items-center justify-center">
                                             <Tent className="w-8 h-8 text-primary" />
                                         </div>
@@ -94,7 +94,7 @@ export default function VerificationsPage() {
                                             <p className="text-sm font-bold text-accent">By {glamping.partner?.name}</p>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-2">
+                                    <div className="flex w-full sm:w-auto flex-row sm:flex-col gap-2 sm:items-end">
                                         <Button 
                                             size="sm" 
                                             variant="outline"

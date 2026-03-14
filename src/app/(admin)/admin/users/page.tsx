@@ -25,9 +25,9 @@ export default function AdminUsersPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <h1 className="text-2xl font-bold">User Management</h1>
-                <div className="relative w-64">
+                <div className="relative w-full sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input 
                         placeholder="Search users..." 

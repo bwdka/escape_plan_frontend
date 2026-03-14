@@ -87,7 +87,7 @@ export default function ManageUnitsPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
                 <Link href="/partner/listings">
                     <ArrowLeft className="h-5 w-5" />
@@ -122,7 +122,7 @@ export default function ManageUnitsPage({ params }: { params: Promise<{ id: stri
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <div className="flex justify-between items-start">
+                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                                         <h3 className="font-bold">{unit.title}</h3>
                                         <div className="flex gap-2">
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(unit)}>
@@ -133,7 +133,7 @@ export default function ManageUnitsPage({ params }: { params: Promise<{ id: stri
                                             </Button>
                                         </div>
                                     </div>
-                                    <div className="flex gap-4 mt-2 text-sm text-gray-500">
+                                    <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-500">
                                         <span>Capacity: {unit.capacity}</span>
                                         <span>Stock: {unit.total_stock}</span>
                                         <span className="font-bold text-primary">Rp {Number(unit.price_weekday).toLocaleString('id-ID')}</span>
@@ -163,7 +163,7 @@ export default function ManageUnitsPage({ params }: { params: Promise<{ id: stri
                                 <Label>Unit Title</Label>
                                 <Input {...register('title', { required: true })} placeholder="e.g. Deluxe Tent" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Capacity</Label>
                                     <Input type="number" {...register('capacity', { valueAsNumber: true })} defaultValue={2} />
@@ -173,7 +173,7 @@ export default function ManageUnitsPage({ params }: { params: Promise<{ id: stri
                                     <Input type="number" {...register('total_stock', { valueAsNumber: true })} defaultValue={1} />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Weekday Price</Label>
                                     <Input type="number" {...register('price_weekday', { valueAsNumber: true })} placeholder="Rp" />

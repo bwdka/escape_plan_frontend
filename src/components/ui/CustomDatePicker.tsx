@@ -13,6 +13,7 @@ interface CustomDatePickerProps {
   highSeasons?: { tanggal: string }[];
   className?: string;
   triggerClassName?: string;
+  showLabel?: boolean;
 }
 
 export const CustomDatePicker = ({
@@ -22,12 +23,14 @@ export const CustomDatePicker = ({
   bookedDates = [],
   highSeasons = [],
   className,
-  triggerClassName
+  triggerClassName,
+  showLabel = true
 }: CustomDatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(startDate || new Date());
   const [selectingCheckin, setSelectingCheckin] = useState(true);
   const [position, setPosition] = useState<'bottom' | 'top'>('bottom');
+  const [isMobile, setIsMobile] = useState(false);
   
   // Local state for dates before applying
   const [tempDates, setTempDates] = useState<[Date | null, Date | null]>([startDate, endDate]);
@@ -58,6 +61,30 @@ export const CustomDatePicker = ({
     "Juli","Agustus","September","Oktober","November","Desember"];
   const ID_DAYS_MIN = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
 
+  const isBookedDate = (date: Date) => {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    return bookedDates.includes(dateStr);
+  };
+
+  const hasBookedBetween = (start: Date, end: Date) => {
+    const s = new Date(start);
+    const e = new Date(end);
+    if (e <= s) return false;
+    return bookedDates.some((d) => {
+      const bd = new Date(d);
+      return bd > s && bd < e;
+    });
+  };
+
+  const getNextBookedAfterStart = (start: Date) => {
+    const s = new Date(start);
+    const future = bookedDates
+      .map((d) => new Date(d))
+      .filter((d) => d > s)
+      .sort((a, b) => a.getTime() - b.getTime());
+    return future.length ? future[0] : null;
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node) && 
@@ -69,23 +96,47 @@ export const CustomDatePicker = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(media.matches);
+    update();
+    if (media.addEventListener) {
+      media.addEventListener('change', update);
+      return () => media.removeEventListener('change', update);
+    }
+    media.addListener(update);
+    return () => media.removeListener(update);
+  }, []);
+
   const handleDayClick = (date: Date) => {
+    const booked = isBookedDate(date);
+    let nextStart: Date | null = tempStartDate;
+    let nextEnd: Date | null = tempEndDate;
     if (selectingCheckin) {
-      if (tempEndDate && isAfter(date, tempEndDate)) {
-        setTempDates([date, null]);
-      } else {
-        setTempDates([date, tempEndDate]);
-      }
+      if (booked) return;
+      nextStart = date;
+      nextEnd = null;
       setSelectingCheckin(false);
     } else {
       if (!tempStartDate) {
-        setTempDates([date, null]);
+        if (booked) return;
+        nextStart = date;
+        nextEnd = null;
         setSelectingCheckin(false);
       } else if (isBefore(date, tempStartDate)) {
-        setTempDates([date, tempStartDate]);
+        if (booked) return;
+        nextStart = date;
+        nextEnd = tempStartDate;
       } else {
-        setTempDates([tempStartDate, date]);
+        if (hasBookedBetween(tempStartDate, date)) return;
+        nextStart = tempStartDate;
+        nextEnd = date;
       }
+    }
+    setTempDates([nextStart, nextEnd]);
+    if (nextStart && nextEnd) {
+      onChange([nextStart, nextEnd]);
+      setIsOpen(false);
     }
   };
 
@@ -132,12 +183,24 @@ export const CustomDatePicker = ({
             const isPast = isBefore(date, today);
             const isWeekend = date.getDay() === 0 || date.getDay() === 6;
             const isHigh = highSeasons.some(s => isSameDay(new Date(s.tanggal), date));
+            const canUseAsCheckout =
+              !selectingCheckin &&
+              tempStartDate &&
+              !isBefore(date, tempStartDate) &&
+              !hasBookedBetween(tempStartDate, date);
+            const isBookedButCheckoutAllowed = isBooked && canUseAsCheckout;
+            const nextBooked = tempStartDate ? getNextBookedAfterStart(tempStartDate) : null;
+            const isAfterNextBooked =
+              !selectingCheckin &&
+              tempStartDate &&
+              nextBooked &&
+              isAfter(date, nextBooked);
 
             return (
               <button
                 key={idx}
                 type="button"
-                disabled={isPast || isBooked}
+                disabled={isPast || (isBooked && !canUseAsCheckout)}
                 className={cn(
                   "dp-day",
                   isOut && "out",
@@ -145,7 +208,9 @@ export const CustomDatePicker = ({
                   isSelectedCheckin && "selected checkin",
                   isSelectedCheckout && "selected checkout",
                   isInRange && "in-range",
-                  isBooked && "booked",
+                  isBooked && !isBookedButCheckoutAllowed && "booked",
+                  isBookedButCheckoutAllowed && "booked-allowed",
+                  isAfterNextBooked && "blocked-after",
                   isWeekend && "weekend",
                   isHigh && "high-season"
                 )}
@@ -169,10 +234,10 @@ export const CustomDatePicker = ({
         className={cn("flex flex-col justify-center px-6 py-4 cursor-pointer hover:bg-black/5 transition-colors", triggerClassName)}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-primary/40 mb-1 text-left cursor-pointer">When?</label>
+        {showLabel && <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-0.5 text-left cursor-pointer">Dates</label>}
         <div className={cn(
-          "text-sm md:text-base font-black transition-colors text-left",
-          startDate ? "text-primary" : "text-primary/30"
+          "text-sm font-semibold transition-colors text-left",
+          startDate ? "text-foreground" : "text-muted-foreground/50"
         )}>
           {startDate ? (
             <>
@@ -217,7 +282,7 @@ export const CustomDatePicker = ({
           </div>
           <div className="dp-calendars">
             {renderCalendar(viewDate.getFullYear(), viewDate.getMonth())}
-            {renderCalendar(nextMonthView.getFullYear(), nextMonthView.getMonth())}
+            {!isMobile && renderCalendar(nextMonthView.getFullYear(), nextMonthView.getMonth())}
           </div>
           <div className="dp-footer">
             <button className="dp-btn clear-btn" onClick={handleClear}>Clear</button>

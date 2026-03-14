@@ -8,9 +8,11 @@ import { GlampingGrid } from "@/components/features/home/GlampingGrid";
 import { StatsSection } from "@/components/features/home/StatsSection";
 import { FeaturesSection } from "@/components/features/home/FeaturesSection";
 import { useGlampings } from "@/hooks/useGlampings";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("Glamping");
+  const { t } = useI18n();
 
   const { data, isLoading } = useGlampings({
      vibe: selectedCategory === "All" ? undefined : selectedCategory.toLowerCase()
@@ -43,7 +45,7 @@ export default function HomePage() {
       ) : (
         <div key={selectedCategory} className="animate-fade-up">
           <GlampingGrid 
-            title={`${selectedCategory} Stays Popular Right Now`} 
+            title={t({ id: `${selectedCategory} Populer Saat Ini`, en: `${selectedCategory} Stays Popular Right Now` })} 
             glampings={filteredPopular} 
           />
           
@@ -53,7 +55,7 @@ export default function HomePage() {
           
           {exploreMore.length > 0 && (
             <GlampingGrid 
-                title="Explore Other Stays" 
+                title={t({ id: 'Jelajahi Penginapan Lainnya', en: 'Explore Other Stays' })} 
                 glampings={exploreMore} 
             />
           )}

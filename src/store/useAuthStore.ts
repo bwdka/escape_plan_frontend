@@ -9,12 +9,18 @@ interface AuthState {
   login: (user: User, token: string) => void;
   logout: () => void;
   setUser: (user: User) => void;
+  setAuth: (user: User | null, token: string | null) => void;
 }
+
+const getInitialToken = () => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('token');
+};
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: null,
-  isAuthenticated: false,
+  token: getInitialToken(),
+  isAuthenticated: !!getInitialToken(),
   login: (user, token) => {
     // Set cookies for Middleware access
     Cookies.set('token', token, { expires: 7 }); // Expires in 7 days
@@ -26,7 +32,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     
     set({ user, token, isAuthenticated: true });
   },
-  setUser: (user) => set({ user }),
+  setUser: (user) => set({ user, isAuthenticated: true }),
+  setAuth: (user, token) => set({ user, token, isAuthenticated: !!token }),
   logout: () => {
     Cookies.remove('token');
     Cookies.remove('user_role');
