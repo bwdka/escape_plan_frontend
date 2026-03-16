@@ -130,14 +130,14 @@ function SearchContent() {
       const sidebar = sidebarRef.current;
       if (!container || !sidebar) return;
 
-      const topOffset = 110; 
+      const topOffset = 120; 
       const containerRect = container.getBoundingClientRect();
       const containerTop = containerRect.top + window.scrollY;
       const sidebarHeight = sidebar.offsetHeight;
       const footer = document.querySelector('footer');
       const footerTop = footer ? footer.offsetTop : (containerTop + container.offsetHeight);
       
-      const stopAt = footerTop - 40; 
+      const stopAt = footerTop - 80; 
       const maxTop = stopAt - sidebarHeight;
 
       if (currentScroll + topOffset + sidebarHeight >= stopAt) {
@@ -199,84 +199,28 @@ function SearchContent() {
   return (
     <div ref={containerRef} className="container mx-auto px-4 py-8 pb-32 lg:pb-8">
       
-      {/* 1. DESKTOP SEARCH BAR (Top Sticky) - Fixed overflow to show DatePicker */}
-      <div className={cn(
-        "hidden lg:block sticky top-20 z-40 transition-all duration-500 -mx-4 px-4 py-4 bg-background/30 backdrop-blur-sm",
-        !isSticky && "lg:relative lg:top-0 lg:mb-10 lg:bg-transparent lg:backdrop-blur-none lg:px-0 lg:py-0"
-      )}>
-        <div className={cn(
-            "bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/40 shadow-xl mx-auto flex transition-all duration-500 ring-1 ring-black/5",
-            isSticky ? "max-w-4xl p-1.5" : "max-w-5xl p-2.5",
-        )}>
-          {/* Desktop inputs */}
-          <div className="flex w-full items-center gap-1.5">
-            <div className="flex-[1.2] flex items-center gap-3 px-5 py-2 rounded-2xl hover:bg-black/5 transition-colors cursor-pointer group">
-                <MapPin className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
-                <div className="flex-1">
-                <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest">{t({ id: 'Lokasi', en: 'Location' })}</label>
-                <input 
-                    type="text" 
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder={t({ id: 'Mau kemana?', en: 'Where to?' })}
-                    className="w-full bg-transparent border-none p-0 text-xs font-bold text-primary placeholder:text-primary/20 focus:ring-0"
-                />
-                </div>
-            </div>
-            <div className="w-px h-6 bg-primary/10" />
-            <div className="flex-1 flex items-center gap-3 px-5 py-2 rounded-2xl hover:bg-black/5 transition-colors cursor-pointer group">
-                <Calendar className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
-                <div className="flex-1">
-                <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest">{t({ id: 'Tanggal', en: 'Dates' })}</label>
-                <CustomDatePicker 
-                    startDate={dateRange[0]} 
-                    endDate={dateRange[1]} 
-                    onChange={setDateRange}
-                    showLabel={false}
-                    className="w-full"
-                    triggerClassName="px-0 py-0 hover:bg-transparent h-auto text-xs font-bold text-primary"
-                />
-                </div>
-            </div>
-            <div className="w-px h-6 bg-primary/10" />
-            <div className="flex-[0.8] flex items-center gap-3 px-5 py-2 rounded-2xl hover:bg-black/5 transition-colors cursor-pointer group">
-                <Users className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
-                <div className="flex-1">
-                <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest">{t({ id: 'Tamu', en: 'Guests' })}</label>
-                <input 
-                    type="number" 
-                    value={guests}
-                    onChange={(e) => setGuests(e.target.value)}
-                    placeholder={t({ id: 'Berapa?', en: 'Add guests' })}
-                    className="w-full bg-transparent border-none p-0 text-xs font-bold text-primary placeholder:text-primary/20 focus:ring-0"
-                />
-                </div>
-            </div>
-            <button onClick={handleSearch} className="p-3.5 bg-primary text-white rounded-2xl hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center justify-center"><Search className="w-4 h-4" /></button>
-          </div>
-        </div>
-      </div>
+      {/* 1. DESKTOP SEARCH BAR (Centered above cards) */}
 
       {/* 2. MOBILE FLOATING BUTTON (Airbnb Style) */}
-      <div className="lg:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-[140] w-[calc(100%-2rem)] max-w-sm">
+      <div className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[140] w-[calc(100%-2rem)] max-w-[280px]">
         <motion.button 
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsSearchOpen(true)}
-          className="w-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-full py-4 px-6 flex items-center justify-between border border-black/5 transition-all ring-1 ring-black/5"
+          className="w-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.15)] rounded-full py-2.5 px-3.5 flex items-center justify-between border border-black/5 transition-all ring-1 ring-black/5"
         >
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
-              <Search className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+              <Search className="w-3.5 h-3.5" />
             </div>
             <div className="flex flex-col text-left">
-              <span className="text-sm font-black text-primary leading-none mb-1">{location || t({ id: 'Mulai pencarian', en: 'Start searching' })}</span>
-              <span className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">
+              <span className="text-[11px] font-black text-primary leading-none mb-0.5">{location || t({ id: 'Mulai pencarian', en: 'Start searching' })}</span>
+              <span className="text-[8px] font-bold text-primary/40 uppercase tracking-widest">
                 {formatDateLabel()} • {guests || 1} {t({ id: 'Tamu', en: 'Guests' })}
               </span>
             </div>
           </div>
           <div className="p-2 rounded-full bg-primary/5 text-primary/40">
-            <Filter className="w-4 h-4" />
+            <Filter className="w-3 h-3" />
           </div>
         </motion.button>
       </div>
@@ -490,6 +434,58 @@ function SearchContent() {
 
         {/* Results Grid */}
         <div className="flex-1 w-full">
+          <div className="hidden lg:block mb-8">
+            <div className={cn(
+              "bg-white/85 backdrop-blur-2xl rounded-[2.5rem] border border-white/40 shadow-xl mx-auto flex transition-all duration-500 ring-1 ring-black/5",
+              "max-w-4xl p-2.5"
+            )}>
+              <div className="flex w-full items-center gap-1.5">
+                <div className="flex-[1.2] flex items-center gap-3 px-5 py-2 rounded-2xl hover:bg-black/5 transition-colors cursor-pointer group">
+                  <MapPin className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
+                  <div className="flex-1">
+                    <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest">{t({ id: 'Lokasi', en: 'Location' })}</label>
+                    <input 
+                      type="text" 
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder={t({ id: 'Mau kemana?', en: 'Where to?' })}
+                      className="w-full bg-transparent border-none p-0 text-xs font-bold text-primary placeholder:text-primary/20 focus:ring-0"
+                    />
+                  </div>
+                </div>
+                <div className="w-px h-6 bg-primary/10" />
+                <div className="flex-1 flex items-center gap-3 px-5 py-2 rounded-2xl hover:bg-black/5 transition-colors cursor-pointer group">
+                  <Calendar className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
+                  <div className="flex-1">
+                    <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest">{t({ id: 'Tanggal', en: 'Dates' })}</label>
+                    <CustomDatePicker 
+                      startDate={dateRange[0]} 
+                      endDate={dateRange[1]} 
+                      onChange={setDateRange}
+                      showLabel={false}
+                      className="w-full"
+                      triggerClassName="px-0 py-0 hover:bg-transparent h-auto text-xs font-bold text-primary"
+                    />
+                  </div>
+                </div>
+                <div className="w-px h-6 bg-primary/10" />
+                <div className="flex-[0.8] flex items-center gap-3 px-5 py-2 rounded-2xl hover:bg-black/5 transition-colors cursor-pointer group">
+                  <Users className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
+                  <div className="flex-1">
+                    <label className="block text-[8px] font-black text-primary/40 uppercase tracking-widest">{t({ id: 'Tamu', en: 'Guests' })}</label>
+                    <input 
+                      type="number" 
+                      value={guests}
+                      onChange={(e) => setGuests(e.target.value)}
+                      placeholder={t({ id: 'Berapa?', en: 'Add guests' })}
+                      className="w-full bg-transparent border-none p-0 text-xs font-bold text-primary placeholder:text-primary/20 focus:ring-0"
+                    />
+                  </div>
+                </div>
+                <button onClick={handleSearch} className="p-3.5 bg-primary text-white rounded-2xl hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center justify-center"><Search className="w-4 h-4" /></button>
+              </div>
+            </div>
+          </div>
           <div className="mb-10 flex flex-col gap-2">
             <h1 className="text-4xl font-black text-primary tracking-tighter">{t({ id: 'Pilihan Escape Tersedia', en: 'Available Escapes' })}</h1>
             <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">

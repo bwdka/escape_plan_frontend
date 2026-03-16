@@ -148,7 +148,7 @@ export default function AiChatWidget() {
   );
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-[80] isolate">
       {open && (
         <div
           className="w-[320px] sm:w-[360px] shadow-2xl border border-primary/10 rounded-2xl overflow-hidden bg-[#fff4ea]"
@@ -243,9 +243,11 @@ export default function AiChatWidget() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:opacity-90 transition"
+          className="relative w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-[0_12px_30px_rgba(0,0,0,0.25)] ring-1 ring-black/10 flex items-center justify-center hover:opacity-90 transition"
           aria-label={t({ id: 'Buka chat AI', en: 'Open AI chat' })}
         >
+          <span className="absolute -inset-0.5 rounded-full bg-primary/30 animate-ping" aria-hidden="true" />
+          <span className="absolute -inset-1 rounded-full border border-primary/30 opacity-70" aria-hidden="true" />
           <MessageCircle className="w-5 h-5" />
         </button>
       )}

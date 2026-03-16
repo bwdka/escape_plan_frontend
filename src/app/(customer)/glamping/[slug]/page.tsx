@@ -334,28 +334,26 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
         </div>
 
         {/* Mobile fixed reserve bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden">
-          <div className="mx-auto max-w-6xl px-4 pb-4">
-            <div className="glass border border-white/30 rounded-2xl p-3 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <CustomDatePicker
-                    startDate={startDate}
-                    endDate={endDate}
-                    onChange={setDates}
-                    bookedDates={bookedDates}
-                    showLabel={false}
-                    className="w-full"
-                    triggerClassName="w-full flex items-center px-3 py-2 rounded-xl bg-white/70 border border-white/40"
-                  />
-                </div>
-                <Button
-                  onClick={onReserveClick}
-                  className="h-11 rounded-xl px-4 text-[10px] font-black uppercase tracking-widest"
-                >
-                  {t({ id: 'Pilih Unit', en: 'Choose Sanctuary' })}
-                </Button>
+        <div className="fixed bottom-4 left-0 right-0 z-40 md:hidden">
+          <div className="mx-auto max-w-6xl px-4">
+            <div className="flex items-center gap-3 pr-14">
+              <div className="flex-1">
+                <CustomDatePicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  onChange={setDates}
+                  bookedDates={bookedDates}
+                  showLabel={false}
+                  className="w-full"
+                  triggerClassName="w-full flex items-center px-3 py-2 rounded-xl bg-white/80 border border-white/60 backdrop-blur-xl shadow-[0_12px_30px_rgba(0,0,0,0.18)]"
+                />
               </div>
+              <Button
+                onClick={onReserveClick}
+                className="h-11 rounded-xl px-4 text-[10px] font-black uppercase tracking-widest bg-primary text-primary-foreground shadow-[0_12px_30px_rgba(0,0,0,0.2)]"
+              >
+                {t({ id: 'Pilih Unit', en: 'Choose Sanctuary' })}
+              </Button>
             </div>
           </div>
         </div>
