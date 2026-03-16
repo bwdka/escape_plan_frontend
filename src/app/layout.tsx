@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "./providers";
 import { Toaster } from "sonner";
 import Script from "next/script";
+import AiChatWidget from "@/components/ai/AiChatWidget";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -49,6 +50,8 @@ export default function RootLayout({
         <Providers>
 
           {children}
+
+          <AiChatWidget />
 
           <Toaster position="top-center" />
 
