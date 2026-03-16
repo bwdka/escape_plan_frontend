@@ -117,7 +117,6 @@ function SearchContent() {
     }
   }, []);
 
-  // Back to original sticky sidebar logic
   useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
@@ -131,41 +130,36 @@ function SearchContent() {
       const sidebar = sidebarRef.current;
       if (!container || !sidebar) return;
 
-      const topOffset = 220; 
-      const startOffset = 0;
-      const paddingX = 16;
+      const topOffset = 110; 
       const containerRect = container.getBoundingClientRect();
       const containerTop = containerRect.top + window.scrollY;
-      const containerLeft = containerRect.left + window.scrollX;
       const sidebarHeight = sidebar.offsetHeight;
       const footer = document.querySelector('footer');
-      const footerTop = footer ? footer.getBoundingClientRect().top + window.scrollY : null;
-      const containerHeight = container.offsetHeight;
-      const containerBottom = containerTop + containerHeight;
-      const stopGap = 64;
-      const stopAt = Math.min(containerBottom, footerTop ?? containerBottom) - stopGap;
+      const footerTop = footer ? footer.offsetTop : (containerTop + container.offsetHeight);
+      
+      const stopAt = footerTop - 40; 
       const maxTop = stopAt - sidebarHeight;
 
       if (currentScroll + topOffset + sidebarHeight >= stopAt) {
         setSidebarStyle({
           position: 'absolute',
-          top: Math.max(startOffset, maxTop - containerTop),
+          top: maxTop - containerTop,
           left: 0,
-          width: sidebar.offsetWidth,
+          width: sidebar.parentElement?.offsetWidth || 288,
         });
       } else if (currentScroll + topOffset >= containerTop) {
         setSidebarStyle({
           position: 'fixed',
           top: topOffset,
-          left: containerLeft + paddingX,
-          width: sidebar.offsetWidth,
+          left: containerRect.left + 16,
+          width: sidebar.parentElement?.offsetWidth || 288,
         });
       } else {
         setSidebarStyle({
           position: 'absolute',
-          top: startOffset,
+          top: 0,
           left: 0,
-          width: sidebar.offsetWidth,
+          width: sidebar.parentElement?.offsetWidth || 288,
         });
       }
     };
@@ -178,7 +172,6 @@ function SearchContent() {
       window.removeEventListener('resize', handleScroll);
     };
   }, []);
-
 
   const toggleSave = (slug: string) => {
     try {
@@ -401,7 +394,7 @@ function SearchContent() {
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col lg:flex-row gap-10 items-start">
+      <div className="flex flex-col lg:flex-row gap-10">
         {/* Sidebar Filters - Back to original manual sticky logic */}
         <aside className="w-full lg:w-72 relative z-20">
             <div
