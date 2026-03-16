@@ -138,13 +138,13 @@ export function CustomerNavbar() {
                       </button>
                       <div className={`absolute right-0 top-full mt-2 w-56 rounded-2xl shadow-2xl py-2 transition-opacity animate-fade-up overflow-hidden bg-black/80 backdrop-blur-xl border border-primary/20 ${isProfileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                           <div className="px-4 py-3 border-b border-primary/10 bg-white/5">
-                              <p className="font-bold text-sm text-primary">{user?.name}</p>
-                              <p className="text-[10px] text-primary/60 uppercase tracking-widest">{user?.role}</p>
+                          <p className="font-bold text-sm text-white">{user?.name}</p>
+                              <p className="text-[10px] text-white/50 uppercase tracking-widest">{user?.role}</p>
                           </div>
-                          <Link href="/wishlist" className="block px-4 py-2.5 text-sm font-medium text-primary/80 hover:bg-white/10 transition-colors">Wishlist</Link>
-                          <Link href="/bookings/my-trips" className="block px-4 py-2.5 text-sm font-medium text-primary/80 hover:bg-white/10 transition-colors">My Trips</Link>
-                          <Link href="/messages" className="block px-4 py-2.5 text-sm font-medium text-primary/80 hover:bg-white/10 transition-colors">Messages</Link>
-                          <Link href="/profile" className="block px-4 py-2.5 text-sm font-medium text-primary/80 hover:bg-white/10 transition-colors">Profile Settings</Link>
+                          <Link href="/wishlist" className="block px-4 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">Wishlist</Link>
+                          <Link href="/bookings/my-trips" className="block px-4 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">My Trips</Link>
+                          <Link href="/messages" className="block px-4 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">Messages</Link>
+                          <Link href="/profile" className="block px-4 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">Profile Settings</Link>
                           <button onClick={() => logout()} className="block w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors">Log out</button>
                       </div>
                    </div>
