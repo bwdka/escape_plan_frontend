@@ -6,8 +6,41 @@ import { useI18n } from '@/i18n/I18nProvider';
 export function CustomerFooter() {
   const { t } = useI18n();
   return (
-    <footer className="bg-primary text-primary-foreground pt-14 md:pt-16 pb-10 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.15),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.08),transparent_60%)] pointer-events-none" />
+    <footer className="bg-primary text-primary-foreground pt-14 md:pt-16 pb-10 relative overflow-hidden group">
+      {/* Decorative Forest Motif Patterns */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none opacity-20">
+        {/* Abstract Tree Shapes */}
+        <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-accent/20 rounded-full blur-3xl" />
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl" />
+        
+        {/* Subtle Pattern Overlay */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+        
+        {/* Forest Motif (SVG-like CSS shapes) */}
+        <div className="absolute bottom-0 right-0 w-full h-32 flex justify-around items-end px-10 gap-8">
+          {[...Array(6)].map((_, i) => (
+            <div 
+              key={i} 
+              className="w-0 h-0 border-l-[40px] border-l-transparent border-r-[40px] border-r-transparent border-bottom-[80px] border-b-accent/10 mb-[-20px] transform transition-transform duration-1000 group-hover:translate-y-[-10px]"
+              style={{ 
+                borderBottomWidth: `${60 + (i % 3) * 30}px`,
+                borderLeftWidth: `${30 + (i % 2) * 20}px`,
+                borderRightWidth: `${30 + (i % 2) * 20}px`,
+                opacity: 0.1 + (i % 3) * 0.05,
+                transitionDelay: `${i * 100}ms`
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Floating Leaves/Dots */}
+        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-accent/20 rounded-full animate-pulse" />
+        <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-white/10 rounded-full animate-pulse delay-700" />
+        <div className="absolute bottom-1/2 left-10 w-1 h-1 bg-accent/30 rounded-full animate-pulse delay-1000" />
+      </div>
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.08),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.05),transparent_60%)] pointer-events-none" />
+      
       <div className="container mx-auto px-4 relative">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 mb-10">
             <div className="space-y-6">
