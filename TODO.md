@@ -26,8 +26,9 @@ Daftar tugas untuk membangun MVP Escape Plan yang solid.
 - [x] **User Control:** Full user management with status toggles.
 - [x] **Monitoring:** System-wide transaction and booking monitor.
 
-## 🧪 Fase 5: Testing & Deployment (Ready)
-- [x] **Production Build:** All routes compile with Next.js 15+ Turbopack and zero type errors.
+## 🧪 Fase 5: Testing & Deployment (In Progress)
+- [x] **Production Build:** Initial compilation and build fixes.
+- [ ] **Code Quality:** Fix 134 ESLint/TypeScript errors currently ignored in `next.config.ts`.
 - [ ] **Unit Testing:** Logic perhitungan harga and ketersediaan.
 - [ ] **Integration Testing:** Full booking journey verification.
 - [ ] **Deployment:** Setup staging environment.
