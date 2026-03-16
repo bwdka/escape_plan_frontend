@@ -44,7 +44,9 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   const [sidebarStyle, setSidebarStyle] = useState<CSSProperties>({});
   const { data: blockedDates } = useGlampingBlockedDates(glamping?.id);
   const { data: unitBlockedDates } = useUnitBlockedDates(selectedUnit?.id);
-  const bookedDates = selectedUnit?.id ? (unitBlockedDates || []) : (blockedDates || []);
+  const bookedDates = selectedUnit?.id 
+    ? (unitBlockedDates ?? blockedDates ?? []) 
+    : (blockedDates ?? []);
 
   const policyText = (() => {
     const type = glamping?.cancellation_policy || 'moderate';
