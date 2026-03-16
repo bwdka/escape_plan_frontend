@@ -24,7 +24,7 @@ export default function HomePage() {
   const exploreMore = glampings.slice(4, 8);
 
   return (
-    <div className="pb-20 overflow-x-hidden">
+    <div className="-mt-28 pb-20 overflow-x-hidden">
       <Hero />
       <SearchSection />
       

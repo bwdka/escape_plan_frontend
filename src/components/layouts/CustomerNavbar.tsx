@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { FaUserCircle, FaBars } from 'react-icons/fa';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useEffect, useState } from 'react';
@@ -16,6 +17,9 @@ export function CustomerNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const pathname = usePathname();
+  const isHero = pathname === '/' && !isScrolled;
   const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -34,6 +38,12 @@ export function CustomerNavbar() {
   }, []);
 
   useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
     if (token && profile && !user) {
       setAuth(profile, token);
     }
@@ -42,7 +52,11 @@ export function CustomerNavbar() {
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl z-50">
       <nav
-        className="w-full transition-all duration-300 backdrop-blur-xl bg-white/10 border border-white/20 shadow-lg rounded-2xl"
+        className={`w-full transition-all duration-500 backdrop-blur-xl rounded-2xl ${
+          isHero
+            ? 'bg-white/10 border border-white/20 shadow-lg'
+            : 'bg-white/30 border border-white/40 shadow-xl'
+        }`}
       >
         <div className="w-full px-4 sm:px-6 lg:px-10 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -51,16 +65,16 @@ export function CustomerNavbar() {
               alt="Escape Plan Logo" 
               width={110} 
               height={32} 
-              className="object-contain"
+              className={`object-contain transition-all duration-500 ${isHero ? 'brightness-0 invert' : ''}`}
             />
           </Link>
           
           {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-8">
-              <Link href="/search" className="text-sm font-bold text-primary/80 hover:text-primary transition-colors">{t({ id: 'Penginapan', en: 'Stays' })}</Link>
-              <Link href="/wishlist" className="text-sm font-bold text-primary/60 hover:text-primary transition-colors">{t({ id: 'Wishlist', en: 'Wishlist' })}</Link>
-              <Link href="#" className="text-sm font-bold text-primary/60 hover:text-primary transition-colors">{t({ id: 'Pengalaman', en: 'Experiences' })}</Link>
-              <Link href="/partner/register" className="text-sm font-bold text-primary/60 hover:text-primary transition-colors">{t({ id: 'Jadi host', en: 'Become a host' })}</Link>
+              <Link href="/search" className={`text-sm font-bold transition-colors ${isHero ? 'text-white/90 hover:text-white' : 'text-primary/80 hover:text-primary'}`}>{t({ id: 'Penginapan', en: 'Stays' })}</Link>
+              <Link href="/wishlist" className={`text-sm font-bold transition-colors ${isHero ? 'text-white/70 hover:text-white' : 'text-primary/60 hover:text-primary'}`}>{t({ id: 'Wishlist', en: 'Wishlist' })}</Link>
+              <Link href="#" className={`text-sm font-bold transition-colors ${isHero ? 'text-white/70 hover:text-white' : 'text-primary/60 hover:text-primary'}`}>{t({ id: 'Pengalaman', en: 'Experiences' })}</Link>
+              <Link href="/partner/register" className={`text-sm font-bold transition-colors ${isHero ? 'text-white/70 hover:text-white' : 'text-primary/60 hover:text-primary'}`}>{t({ id: 'Jadi host', en: 'Become a host' })}</Link>
               
               {mounted && isAuthenticated && (
                 <div className="relative">
@@ -70,7 +84,7 @@ export function CustomerNavbar() {
                     onClick={() => setIsNotifOpen((v) => !v)}
                     aria-label="Notifications"
                   >
-                    <Bell className="w-4 h-4 text-primary" />
+                    <Bell className={`w-4 h-4 ${isHero ? 'text-white' : 'text-primary'}`} />
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
                         {unreadCount}
@@ -136,7 +150,7 @@ export function CustomerNavbar() {
                    </div>
               ) : (
                    <div className="flex items-center gap-3">
-                      <Link href="/login" className="text-sm font-bold text-primary hover:opacity-80 px-4">
+                      <Link href="/login" className={`text-sm font-bold hover:opacity-80 px-4 transition-colors ${isHero ? 'text-white' : 'text-primary'}`}>
                           Login
                       </Link>
                       <Link href="/register" className="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-bold hover:shadow-xl hover:-translate-y-0.5 transition-all shadow-lg shadow-primary/20 active:scale-95">
@@ -148,7 +162,7 @@ export function CustomerNavbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <button className="lg:hidden text-2xl w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-primary" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <button className={`lg:hidden text-2xl w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center transition-colors ${isHero ? 'text-white' : 'text-primary'}`} onClick={() => setIsMenuOpen(!isMenuOpen)}>
               <FaBars />
           </button>
 
@@ -157,18 +171,18 @@ export function CustomerNavbar() {
         {/* Mobile Menu Overlay */}
         {isMenuOpen && (
              <div className="w-full bg-black/70 backdrop-blur-xl border-t border-white/20 p-5 flex flex-col gap-4 lg:hidden rounded-b-2xl">
-                <Link href="/search" className="font-bold text-lg text-primary">Stays</Link>
-                <Link href="/wishlist" className="font-bold text-lg text-primary/70">Wishlist</Link>
-                <Link href="#" className="font-bold text-lg text-primary/70">Experiences</Link>
-                <Link href="/partner/register" className="font-bold text-lg text-primary/70">Become a host</Link>
-                <hr className="border-primary/20"/>
+                <Link href="/search" className="font-bold text-lg text-white">Stays</Link>
+                <Link href="/wishlist" className="font-bold text-lg text-white/70">Wishlist</Link>
+                <Link href="#" className="font-bold text-lg text-white/70">Experiences</Link>
+                <Link href="/partner/register" className="font-bold text-lg text-white/70">Become a host</Link>
+                <hr className="border-white/20"/>
                 <LanguageToggle />
                 {isAuthenticated ? (
                     <>
-                        <p className="font-bold text-primary">Hi, {user?.name}</p>
-                        <Link href="/bookings/my-trips" className="text-green-400 font-bold">My Trips</Link>
-                        <Link href="/messages" className="text-green-400 font-bold">Messages</Link>
-                        <Link href="/profile" className="text-green-400 font-bold">Profile Settings</Link>
+                        <p className="font-bold text-white">Hi, {user?.name}</p>
+                        <Link href="/bookings/my-trips" className="text-white/80 font-bold">My Trips</Link>
+                        <Link href="/messages" className="text-white/80 font-bold">Messages</Link>
+                        <Link href="/profile" className="text-white/80 font-bold">Profile Settings</Link>
                         <button onClick={() => logout()} className="text-left text-red-500 font-bold">Log out</button>
                     </>
                 ) : (
