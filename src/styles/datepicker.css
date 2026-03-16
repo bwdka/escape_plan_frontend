@@ -266,24 +266,22 @@
 }
 
 .dp-day.booked {
-    background: oklch(0.95 0.05 25 / 10%);
-    color: oklch(0.6 0.18 25 / 40%);
+    background: rgba(0, 0, 0, 0.05); /* Fallback for oklch */
+    color: rgba(0, 0, 0, 0.3);
     text-decoration: line-through;
     cursor: not-allowed;
+    pointer-events: none; /* Prevent clicking */
 }
 
 .dp-day.booked-allowed {
     border: 1.5px solid var(--accent);
     color: var(--primary);
     background: rgba(255, 255, 255, 0.6);
-}
-
-.dp-day.booked-allowed:hover {
-    background: var(--secondary);
+    pointer-events: auto; /* Allow clicking for checkout */
 }
 
 .dp-day.blocked-after {
-    color: oklch(0.6 0.18 25 / 40%);
+    color: rgba(0, 0, 0, 0.3);
     text-decoration: line-through;
 }
 
