@@ -1,19 +1,21 @@
-export const fadeIn = {
+import { Variants } from 'framer-motion';
+
+export const fadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-export const slideUp = {
+export const slideUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-export const slideDown = {
+export const slideDown: Variants = {
   hidden: { opacity: 0, y: -30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };
 
-export const staggerContainer = {
+export const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -24,7 +26,7 @@ export const staggerContainer = {
   },
 };
 
-export const scaleIn = {
+export const scaleIn: Variants = {
   hidden: { scale: 0.9, opacity: 0 },
   visible: { 
     scale: 1, 
@@ -33,7 +35,7 @@ export const scaleIn = {
   },
 };
 
-export const textReveal = {
+export const textReveal: Variants = {
   hidden: { y: "100%" },
   visible: { 
     y: 0, 

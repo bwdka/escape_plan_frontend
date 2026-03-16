@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useMessageThreads, useThreadMessages, useSendMessage, useStartThread } from '@/hooks/useMessages';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export default function CustomerMessagesPage() {
+function MessagesContent() {
   const { user } = useAuthStore();
   const searchParams = useSearchParams();
   const bookingId = Number(searchParams.get('booking_id') || 0);
@@ -79,5 +79,13 @@ export default function CustomerMessagesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CustomerMessagesPage() {
+  return (
+    <Suspense fallback={<div>Loading messages...</div>}>
+      <MessagesContent />
+    </Suspense>
   );
 }

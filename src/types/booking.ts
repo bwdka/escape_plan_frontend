@@ -85,6 +85,7 @@ export interface BookingDetail {
     unit_name: string;
     items: BookingItem[];
     glamping_thumbnail: string;
+    created_at: string;
 }
 
 export interface BookingHistoryItem {

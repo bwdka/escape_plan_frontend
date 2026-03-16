@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthService } from '@/services/authService';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useI18n } from '@/i18n/I18nProvider';
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
@@ -60,5 +60,13 @@ export default function GoogleCallbackPage() {
         {message}
       </div>
     </div>
+  );
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense fallback={<div>Connecting...</div>}>
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }

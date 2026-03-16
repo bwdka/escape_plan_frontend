@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useGlampings, useLocations } from '@/hooks/useGlampings';
+import { GlampingFilterParams } from '@/types/glamping';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +63,7 @@ function SearchContent() {
     min_price: filters.min_price ? Number(filters.min_price) : undefined,
     max_price: filters.max_price ? Number(filters.max_price) : undefined,
     access_type: filters.access_type || undefined,
-    bathroom_type: filters.bathroom_type || undefined,
+    bathroom_type: (filters.bathroom_type || undefined) as GlampingFilterParams['bathroom_type'],
     pet_friendly: filters.pet_friendly ? filters.pet_friendly === 'true' : undefined,
     has_wifi: filters.has_wifi ? filters.has_wifi === 'true' : undefined,
     has_electricity: filters.has_electricity ? filters.has_electricity === 'true' : undefined,

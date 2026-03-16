@@ -21,7 +21,7 @@ const glampingSchema = z.object({
   description: z.string().min(10, "Description is too short"),
   address: z.string().min(5, "Address is required"),
   access_type: z.enum(['city_car', 'suv_only', 'motor_only']),
-  cancellation_policy: z.enum(['flexible', 'moderate', 'strict']).default('moderate'),
+  cancellation_policy: z.enum(['flexible', 'moderate', 'strict']),
   reschedule_allowed: z.boolean().optional(),
   min_nights: z.number().min(1).max(30).optional(),
   prep_days: z.number().min(0).max(7).optional(),
