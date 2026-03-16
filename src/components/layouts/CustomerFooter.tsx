@@ -6,8 +6,31 @@ import { useI18n } from '@/i18n/I18nProvider';
 export function CustomerFooter() {
   const { t } = useI18n();
   return (
-    <footer className="bg-primary text-primary-foreground pt-14 md:pt-16 pb-10 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.15),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.08),transparent_60%)] pointer-events-none" />
+    <footer className="bg-primary text-primary-foreground pt-14 md:pt-16 pb-10 relative overflow-hidden group">
+      {/* Abstract Batik Motif Overlay (Mega Mendung/Organic Inspired) */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.18] mix-blend-soft-light" 
+        style={{ 
+          backgroundImage: `
+            radial-gradient(ellipse at 20% 30%, currentColor 0%, transparent 40%),
+            radial-gradient(ellipse at 80% 70%, currentColor 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, transparent 60%, currentColor 60%, currentColor 62%, transparent 62%),
+            radial-gradient(circle at 10% 90%, transparent 50%, currentColor 50%, currentColor 52%, transparent 52%),
+            radial-gradient(circle at 90% 10%, transparent 50%, currentColor 50%, currentColor 52%, transparent 52%),
+            linear-gradient(135deg, transparent 40%, currentColor 40%, currentColor 41%, transparent 41%, transparent 45%, currentColor 45%, currentColor 46%, transparent 46%)
+          `,
+          backgroundSize: '120px 120px, 150px 150px, 80px 80px, 100px 100px, 100px 100px, 60px 60px',
+          backgroundPosition: '0 0, 40px 40px, 20px 20px, 10px 10px, -10px -10px, 0 0'
+        }} 
+      />
+      
+      {/* Secondary Decorative Glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+        <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-accent/20 rounded-full blur-3xl opacity-30" />
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl opacity-20" />
+      </div>
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.08),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.05),transparent_60%)] pointer-events-none" />
+      
       <div className="container mx-auto px-4 relative">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12 mb-10">
             <div className="space-y-6">
