@@ -16,7 +16,7 @@ export function Hero() {
   return (
     <header 
       ref={ref}
-      className="relative h-[75vh] sm:h-[85vh] min-h-[500px] sm:min-h-[650px] flex items-center justify-center text-white overflow-hidden"
+      className="relative h-[75vh] sm:h-[95vh] min-h-[500px] sm:min-h-[800px] flex items-center justify-center text-white overflow-hidden"
     >
       {/* Parallax Background */}
       <motion.div 
