@@ -2,8 +2,9 @@
 
 import { Suspense, useState, use, useRef, useEffect, type CSSProperties } from 'react';
 import Image from 'next/image';
+import Head from 'next/head';
 import { useRouter } from 'next/navigation';
-import { MapPin, Star, Wifi, Flame, Users, Bed, CheckCircle, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { MapPin, Star, Users, Bed, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useGlampingBlockedDates, useGlampingDetail, useUnitBlockedDates } from '@/hooks/useGlampingDetail';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { Button } from '@/components/ui/button';
@@ -15,13 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Unit } from '@/types/glamping';
 import { useI18n } from '@/i18n/I18nProvider';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-
-// Icon mapper helper
-const IconMap: Record<string, any> = {
-  wifi: Wifi,
-  fire: Flame,
-  // Add more as needed
-};
+import { AMENITY_ICON_FALLBACK, AMENITY_ICON_MAP } from '@/lib/amenities';
 
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=800&q=80';
 
@@ -33,6 +28,8 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   const sidebarWrapRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { t } = useI18n();
+  const blurDataURL =
+    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzAnIGhlaWdodD0nMjInIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMwJyBoZWlnaHQ9JzIyJyBmaWxsPSIjZWRlN2RlIi8+PC9zdmc+";
   
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [dates, setDates] = useState<[Date | null, Date | null]>([null, null]);
@@ -62,7 +59,11 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   const resolveImage = (src?: string) => {
     if (!src) return PLACEHOLDER_IMAGE;
     if (src.startsWith('http')) return src;
-    return `${storageBase}${src.replace(/^\/+/, '')}`;
+    let normalized = src.replace(/^\/+/, '');
+    if (storageBase.includes('/storage/') && normalized.startsWith('storage/')) {
+      normalized = normalized.replace(/^storage\//, '');
+    }
+    return `${storageBase}${normalized}`;
   };
 
   useEffect(() => {
@@ -77,9 +78,10 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   }, [params.slug]);
 
   const galleryImages = [
-    resolveImage(glamping?.thumbnail_url),
-    ...(glamping?.gallery?.map((photo) => resolveImage(photo.url)) || [])
-  ];
+    resolveImage(glamping?.thumbnail_url || glamping?.thumbnail || glamping?.images?.[0]),
+    ...(glamping?.gallery?.map((photo) => resolveImage(photo.url)) || []),
+    ...(glamping?.images?.map((img) => resolveImage(img)) || []),
+  ].filter(Boolean);
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -170,6 +172,14 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   if (isLoading) return <div className="container mx-auto p-8"><Skeleton className="h-[400px] w-full rounded-xl" /></div>;
   if (isError || !glamping) return <div className="container mx-auto p-8 text-center">{t({ id: 'Glamping tidak ditemukan', en: 'Glamping not found' })}</div>;
 
+  const metaTitle = t({
+    id: `Glamping di ${glamping.name} - Booking Sekarang`,
+    en: `${glamping.name} Glamping - Book Now`,
+  });
+  const metaDescription = glamping.description
+    ? glamping.description.slice(0, 160)
+    : t({ id: 'Temukan pengalaman glamping terbaik dengan fasilitas premium.', en: 'Discover premium glamping experiences with curated amenities.' });
+
   const handleBook = (unit: Unit) => {
     if (!startDate || !endDate) {
         toast.error(t({ id: 'Pilih tanggal menginap terlebih dahulu!', en: 'Please select stay dates first!' }));
@@ -235,6 +245,10 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
 
   return (
     <div className="w-full">
+        <Head>
+          <title>{metaTitle}</title>
+          <meta name="description" content={metaDescription} />
+        </Head>
         <div className="container mx-auto px-4 py-8 md:py-12 max-w-6xl pb-28 md:pb-12">
         {/* Header & Gallery */}
         <div className="mb-8 md:mb-12">
@@ -284,6 +298,8 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                         src={resolveImage(glamping.thumbnail_url)} 
                         alt={glamping.name} 
                         fill 
+                        placeholder="blur"
+                        blurDataURL={blurDataURL}
                         className="object-cover hover:scale-105 transition-transform duration-700" 
                     />
                 </button>
@@ -299,6 +315,8 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                                 src={resolveImage(photo.url)} 
                                 alt={photo.caption || glamping.name} 
                                 fill 
+                                placeholder="blur"
+                                blurDataURL={blurDataURL}
                                 className="object-cover hover:scale-110 transition-transform duration-700" 
                             />
                         </button>
@@ -321,6 +339,8 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                         src={resolveImage(photo.url)}
                         alt={photo.caption || glamping.name}
                         fill
+                        placeholder="blur"
+                        blurDataURL={blurDataURL}
                         className="object-cover"
                       />
                     </button>
@@ -424,8 +444,10 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-6">
                         {glamping.amenities?.map((amenity: any, idx) => {
                             const name = typeof amenity === 'string' ? amenity : amenity.name;
-                            const iconName = typeof amenity === 'string' ? amenity.toLowerCase() : amenity.icon;
-                            const Icon = IconMap[iconName] || CheckCircle;
+                            const iconName = typeof amenity === 'string'
+                              ? amenity.toLowerCase()
+                              : (amenity.icon || amenity.name || '').toLowerCase().replace(/\s+/g, '_');
+                            const Icon = AMENITY_ICON_MAP[iconName] || AMENITY_ICON_FALLBACK;
                             return (
                                 <div key={idx} className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl md:rounded-2xl bg-white border border-black/5 hover:border-accent/30 transition-all group">
                                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:scale-110 transition-transform flex-shrink-0">
@@ -477,9 +499,17 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                                 <div className="flex flex-col md:flex-row">
                                     <div className="relative w-full md:w-64 h-48 md:h-auto bg-gray-200 overflow-hidden">
                                         <Image 
-                                            src={resolveImage((unit.photos && unit.photos.length > 0) ? unit.photos[0] : glamping.thumbnail_url)} 
+                                            src={resolveImage(
+                                              Array.isArray(unit.photos) && unit.photos.length > 0
+                                                ? (typeof unit.photos[0] === 'string'
+                                                  ? unit.photos[0]
+                                                  : (unit.photos[0]?.url || unit.photos[0]?.path))
+                                                : (glamping.thumbnail_url || glamping.thumbnail || glamping.images?.[0])
+                                            )} 
                                             alt={unit.name} 
                                             fill 
+                                            placeholder="blur"
+                                            blurDataURL={blurDataURL}
                                             className="object-cover group-hover:scale-110 transition-transform duration-700" 
                                         />
                                     </div>

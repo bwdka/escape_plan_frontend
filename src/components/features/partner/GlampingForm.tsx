@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,10 @@ import { MediaUpload } from './MediaUpload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AMENITY_ICON_FALLBACK, AMENITY_ICON_KEYS, AMENITY_ICON_MAP } from '@/lib/amenities';
+import { MinusCircle } from 'lucide-react';
 
 const glampingSchema = z.object({
   name: z.string().min(3, "Name is too short"),
@@ -38,6 +42,14 @@ const glampingSchema = z.object({
   facilities: z.array(z.number()),
   images: z.array(z.string()).min(1, "At least one image is required"),
   thumbnail: z.string().optional(),
+  addons: z.array(z.object({
+    id: z.number().optional(),
+    name: z.string().min(2, "Addon name is required"),
+    price: z.number().min(0, "Price must be 0 or more"),
+    unit: z.enum(['per_night', 'per_stay', 'per_person']),
+    description: z.string().optional(),
+    icon: z.string().optional(),
+  })),
 });
 
 type GlampingFormValues = z.infer<typeof glampingSchema>;
@@ -45,6 +57,70 @@ type GlampingFormValues = z.infer<typeof glampingSchema>;
 interface GlampingFormProps {
     initialData?: any;
     id?: number;
+}
+
+type IconPickerProps = {
+  value: string;
+  onChange: (value: string) => void;
+};
+
+function IconPicker({ value, onChange }: IconPickerProps) {
+  const SelectedIcon = AMENITY_ICON_MAP[value] || AMENITY_ICON_FALLBACK;
+  const label = value || 'Select icon';
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="w-full rounded-2xl border border-white/70 bg-white/70 px-4 py-2.5 flex items-center gap-3 hover:border-accent/50 transition-colors"
+        >
+          <span className="h-9 w-9 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
+            <SelectedIcon className="h-4 w-4" />
+          </span>
+          <span className="text-sm font-semibold text-primary/70 truncate">{label}</span>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Pick an Icon</DialogTitle>
+          <DialogDescription>Select an icon for this add-on.</DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              onChange('');
+              setOpen(false);
+            }}
+            className={`h-10 w-10 rounded-xl border ${!value ? 'border-accent bg-accent/10' : 'border-white/70 bg-white/70'} flex items-center justify-center`}
+            title="None"
+          >
+            <MinusCircle className="h-4 w-4" />
+          </button>
+          {AMENITY_ICON_KEYS.map((key) => {
+            const Icon = AMENITY_ICON_MAP[key] || AMENITY_ICON_FALLBACK;
+            const isActive = value === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => {
+                  onChange(key);
+                  setOpen(false);
+                }}
+                className={`h-10 w-10 rounded-xl border ${isActive ? 'border-accent bg-accent/10' : 'border-white/70 bg-white/70'} flex items-center justify-center`}
+                title={key}
+              >
+                <Icon className="h-4 w-4" />
+              </button>
+            );
+          })}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export function GlampingForm({ initialData, id }: GlampingFormProps) {
@@ -85,6 +161,7 @@ export function GlampingForm({ initialData, id }: GlampingFormProps) {
       house_rules: '',
       facilities: [],
       images: [],
+      addons: [],
     }
   });
 
@@ -105,6 +182,7 @@ export function GlampingForm({ initialData, id }: GlampingFormProps) {
   };
 
   const isPending = isCreating || isUpdating;
+  const addonsFieldArray = useFieldArray({ control: form.control, name: 'addons' });
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-4xl">
@@ -250,9 +328,10 @@ export function GlampingForm({ initialData, id }: GlampingFormProps) {
 
       <Card className="rounded-[2.5rem] border-white/70 bg-white/75 shadow-xl">
         <CardHeader>
-          <CardTitle className="font-display text-xl text-primary">Facilities</CardTitle>
+          <CardTitle className="font-display text-xl text-primary">Include Facilities</CardTitle>
         </CardHeader>
         <CardContent>
+          <p className="text-sm text-primary/60 mb-4">Included in base price. Guests get these for free.</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {facilities?.map((facility) => (
               <div key={facility.id} className="flex items-center space-x-2 rounded-2xl border border-white/70 bg-white/70 px-3 py-2">
@@ -260,6 +339,7 @@ export function GlampingForm({ initialData, id }: GlampingFormProps) {
                   type="checkbox"
                   id={`fac-${facility.id}`} 
                   className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  checked={form.watch('facilities')?.includes(facility.id)}
                   onChange={(e) => {
                     const checked = e.target.checked;
                     const current = form.getValues('facilities');
@@ -274,6 +354,93 @@ export function GlampingForm({ initialData, id }: GlampingFormProps) {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-[2.5rem] border-white/70 bg-white/75 shadow-xl">
+        <CardHeader>
+          <CardTitle className="font-display text-xl text-primary">Add-on Facilities</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-primary/60">Optional paid extras. Guests can add these during booking.</p>
+          {addonsFieldArray.fields.length === 0 && (
+            <p className="text-sm text-primary/60">No add-ons yet. Add extra paid facilities like BBQ, ATV, or breakfast.</p>
+          )}
+          <div className="space-y-4">
+            {addonsFieldArray.fields.map((field, index) => (
+              <div key={field.id} className="rounded-2xl border border-white/70 bg-white/70 p-4 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div className="space-y-2">
+                    <Label>Addon Name</Label>
+                    <Input
+                      {...form.register(`addons.${index}.name` as const)}
+                      className="rounded-2xl"
+                      placeholder="e.g. BBQ Package"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Price</Label>
+                    <Input
+                      type="number"
+                      {...form.register(`addons.${index}.price` as const, { valueAsNumber: true })}
+                      className="rounded-2xl"
+                      placeholder="250000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Unit</Label>
+                    <Select
+                      value={form.watch(`addons.${index}.unit` as const)}
+                      onValueChange={(v) => form.setValue(`addons.${index}.unit` as const, v as any)}
+                    >
+                      <SelectTrigger className="rounded-2xl">
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="per_stay">Per Stay</SelectItem>
+                        <SelectItem value="per_night">Per Night</SelectItem>
+                        <SelectItem value="per_person">Per Person</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Icon</Label>
+                    <IconPicker
+                      value={form.watch(`addons.${index}.icon` as const) || ''}
+                      onChange={(v) => form.setValue(`addons.${index}.icon` as const, v)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    {...form.register(`addons.${index}.description` as const)}
+                    className="rounded-2xl"
+                    placeholder="Optional details for guests"
+                    rows={2}
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => addonsFieldArray.remove(index)}
+                    className="rounded-2xl"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => addonsFieldArray.append({ name: '', price: 0, unit: 'per_stay', description: '', icon: '' })}
+            className="rounded-2xl"
+          >
+            Add Add-on
+          </Button>
         </CardContent>
       </Card>
 

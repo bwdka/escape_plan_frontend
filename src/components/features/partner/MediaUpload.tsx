@@ -51,12 +51,23 @@ export function MediaUpload({ value, onChange, folder = 'glampings' }: MediaUplo
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {value.map((path, index) => (
           <div key={index} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 group">
-            <Image 
-              src={path.startsWith('http') ? path : `${process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8000/storage/'}${path}`} 
-              alt={`Upload ${index}`}
-              fill
-              className="object-cover"
-            />
+            {(() => {
+              const storageBase = (process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8000/storage/').replace(/\/+$/, '/');
+              let normalized = path.replace(/^\/+/, '');
+              if (storageBase.includes('/storage/') && normalized.startsWith('storage/')) {
+                normalized = normalized.replace(/^storage\//, '');
+              }
+              const src = path.startsWith('http') ? path : `${storageBase}${normalized}`;
+              return (
+                <Image 
+                  src={src}
+                  alt={`Upload ${index}`}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              );
+            })()}
             <button
               type="button"
               onClick={() => removeImage(path)}

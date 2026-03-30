@@ -4,21 +4,19 @@ import { useState, useEffect, use } from 'react';
 import { useBookingDetail } from "@/hooks/useBooking";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, MapPin, Tent, ArrowLeft, CreditCard, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Calendar, MapPin, Tent, ArrowLeft, Clock, CheckCircle2, XCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { useI18n } from "@/i18n/I18nProvider";
 
 export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { data: booking, isLoading, isError, refetch } = useBookingDetail(resolvedParams.id);
-  const router = useRouter();
   const [timeLeft, setTimeLeft] = useState<string>("");
   const { t } = useI18n();
+  const blurDataURL =
+    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzAnIGhlaWdodD0nMjInIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMwJyBoZWlnaHQ9JzIyJyBmaWxsPSIjZWRlN2RlIi8+PC9zdmc+";
 
   useEffect(() => {
     if (!booking || booking.status !== 'PENDING_PAYMENT') return;
@@ -61,22 +59,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
     </div>
   );
 
-  const handlePay = () => {
-    if (booking.snap_token && window.snap) {
-        window.snap.pay(booking.snap_token, {
-            onSuccess: () => {
-                toast.success(t({ id: 'Pembayaran berhasil!', en: 'Payment successful!' }));
-                router.refresh();
-            },
-            onPending: () => {
-                toast.info(t({ id: 'Menunggu pembayaran...', en: 'Waiting for payment...' }));
-            },
-            onClose: () => {
-                toast.warning(t({ id: 'Selesaikan pembayaran sebelum waktu habis!', en: 'Complete payment before it expires!' }));
-            }
-        });
-    }
-  };
+  const paymentPayload = booking.payment_payload || null;
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
@@ -91,6 +74,8 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                     src={booking.glamping_thumbnail} 
                     alt={booking.glamping_name}
                     fill
+                    placeholder="blur"
+                    blurDataURL={blurDataURL}
                     className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 md:from-black/60 to-transparent" />
@@ -188,13 +173,48 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                                     </p>
                                 </div>
                             </div>
-                            <Button 
-                                onClick={handlePay}
-                                className="w-full md:w-auto h-12 md:h-14 rounded-xl md:rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] md:text-xs px-10 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-                            >
-                                <CreditCard size={14} className="mr-2 md:w-4 md:h-4" /> {t({ id: 'Bayar Sekarang', en: 'Pay Now' })}
-                            </Button>
                         </div>
+                        {paymentPayload && (
+                          <div className="mt-4 bg-white/60 border border-white/70 rounded-2xl md:rounded-3xl p-6 md:p-8">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-3">{t({ id: 'Instruksi Pembayaran', en: 'Payment Instructions' })}</p>
+                            {paymentPayload.va_numbers && (
+                              <div className="space-y-2">
+                                {paymentPayload.va_numbers.map((va: any, idx: number) => (
+                                  <div key={idx} className="flex items-center justify-between border-b border-primary/5 py-2">
+                                    <span className="font-bold uppercase">{va.bank}</span>
+                                    <span className="font-mono">{va.va_number}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {paymentPayload.permata_va_number && (
+                              <div className="flex items-center justify-between border-b border-primary/5 py-2">
+                                <span className="font-bold uppercase">Permata</span>
+                                <span className="font-mono">{paymentPayload.permata_va_number}</span>
+                              </div>
+                            )}
+                            {paymentPayload.actions && (
+                              <div className="mt-3 space-y-2">
+                                {paymentPayload.actions.map((action: any, idx: number) => (
+                                  <a key={idx} href={action.url} target="_blank" className="text-sm font-bold text-accent underline">
+                                    {action.name || 'Open Payment Link'}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                            {paymentPayload.payment_code && (
+                              <div className="text-sm text-primary mt-2">
+                                <div className="flex items-center justify-between border-b border-primary/5 py-2">
+                                  <span className="font-bold uppercase">{paymentPayload.store || 'CStore'}</span>
+                                  <span className="font-mono">{paymentPayload.payment_code}</span>
+                                </div>
+                              </div>
+                            )}
+                            {paymentPayload.qr_string && (
+                              <p className="text-sm text-primary/70 mt-2">QR String: {paymentPayload.qr_string}</p>
+                            )}
+                          </div>
+                        )}
                     </div>
                 )}
 

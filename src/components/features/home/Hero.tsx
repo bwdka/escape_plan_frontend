@@ -69,7 +69,7 @@ export function Hero() {
                 hidden: { y: "100%" },
                 visible: { y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
               }}
-              className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-[-0.03em] leading-[0.9] sm:leading-[0.85] text-balance drop-shadow-2xl"
+              className="font-display text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-[-0.03em] leading-[0.9] sm:leading-[0.85] text-balance drop-shadow-2xl hero-title-shadow"
             >
               PLAN YOUR
               <br />

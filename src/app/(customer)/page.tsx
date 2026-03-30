@@ -24,7 +24,9 @@ export default function HomePage() {
   const exploreMore = glampings.slice(4, 8);
 
   return (
-    <div className="-mt-28 pb-20 overflow-x-hidden">
+    <div className="-mt-28 pb-20 overflow-x-hidden relative">
+      <div className="ambient-orb absolute -top-24 right-[-120px] h-[320px] w-[320px] rounded-full bg-accent/40" />
+      <div className="ambient-orb float-slow absolute top-[40vh] left-[-120px] h-[260px] w-[260px] rounded-full bg-primary/30" />
       <Hero />
       <SearchSection />
       

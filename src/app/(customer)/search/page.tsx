@@ -22,6 +22,8 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { t } = useI18n();
+  const blurDataURL =
+    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzAnIGhlaWdodD0nMjInIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMwJyBoZWlnaHQ9JzIyJyBmaWxsPSIjZWRlN2RlIi8+PC9zdmc+";
   const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -88,6 +90,22 @@ function SearchContent() {
     if (filters.has_electricity) params.set('has_electricity', filters.has_electricity);
     router.push(`/search?${params.toString()}`);
     setIsSearchOpen(false);
+  };
+
+  const handleResetFilters = () => {
+    setLocation('');
+    setGuests('');
+    setDateRange([null, null]);
+    setFilters({
+      min_price: '',
+      max_price: '',
+      access_type: '',
+      bathroom_type: '',
+      pet_friendly: '',
+      has_wifi: '',
+      has_electricity: '',
+    });
+    router.push('/search');
   };
 
   useEffect(() => {
@@ -511,8 +529,18 @@ function SearchContent() {
             </div>
           ) : data?.data.length === 0 ? (
           <div className="text-center py-16 md:py-24 glass rounded-[3.5rem] border-white/40 text-primary/30">
-              <Search className="w-16 h-16 mx-auto mb-6 opacity-10" />
+              <div className="w-20 h-20 rounded-3xl bg-primary/5 flex items-center justify-center mx-auto mb-6">
+                <Search className="w-10 h-10 opacity-20" />
+              </div>
               <p className="font-black uppercase tracking-[0.2em] text-sm">{t({ id: 'Tidak ada tempat yang sesuai kriteria', en: 'No sanctuaries match your criteria' })}</p>
+              <p className="text-[10px] font-bold text-primary/30 uppercase tracking-widest mt-3">{t({ id: 'Coba reset filter untuk melihat semua', en: 'Try resetting filters to see all' })}</p>
+              <Button
+                onClick={handleResetFilters}
+                variant="outline"
+                className="mt-6 rounded-full text-[10px] font-black uppercase tracking-widest"
+              >
+                {t({ id: 'Reset Filter', en: 'Reset Filters' })}
+              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-8 w-full">
@@ -534,6 +562,8 @@ function SearchContent() {
                                 src={imageUrl} 
                                 alt={glamping.name}
                                 fill
+                                placeholder="blur"
+                                blurDataURL={blurDataURL}
                                 className="object-cover group-hover:scale-110 transition-transform duration-700"
                             />
                             <div className="absolute top-4 right-4">

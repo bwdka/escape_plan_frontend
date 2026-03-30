@@ -60,6 +60,12 @@ html {
     text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
   }
 
+  .hero-title-shadow {
+    text-shadow:
+      0 14px 40px rgba(0, 0, 0, 0.55),
+      0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+
   @keyframes liquid-bg {
     0% {
       background-position: 0% 50%;
@@ -123,6 +129,32 @@ html {
 
   .float-soft {
     animation: float-soft 6s ease-in-out infinite;
+  }
+
+  @keyframes slow-pulse {
+    0% {
+      opacity: 0.25;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.55;
+      transform: scale(1.04);
+    }
+    100% {
+      opacity: 0.25;
+      transform: scale(1);
+    }
+  }
+
+  .float-slow {
+    animation: float-soft 9s ease-in-out infinite;
+  }
+
+  .ambient-orb {
+    pointer-events: none;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: slow-pulse 10s ease-in-out infinite;
   }
 }
 

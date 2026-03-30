@@ -16,6 +16,8 @@ const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1478131143081-80f7f84c
 
 export default function WishlistPage() {
   const { t } = useI18n();
+  const blurDataURL =
+    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzAnIGhlaWdodD0nMjInIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMwJyBoZWlnaHQ9JzIyJyBmaWxsPSIjZWRlN2RlIi8+PC9zdmc+";
   const [slugs, setSlugs] = useState<string[]>([]);
   const [items, setItems] = useState<GlampingDetail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,6 +123,8 @@ export default function WishlistPage() {
                         src={imageUrl}
                         alt={glamping.name}
                         fill
+                        placeholder="blur"
+                        blurDataURL={blurDataURL}
                         className="object-cover group-hover:scale-110 transition-transform duration-700"
                       />
                       <div className="absolute top-4 right-4">

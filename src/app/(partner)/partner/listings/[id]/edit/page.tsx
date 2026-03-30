@@ -45,8 +45,16 @@ export default function EditGlampingPage({ params }: { params: Promise<{ id: str
         latitude: glamping.latitude?.toString(),
         longitude: glamping.longitude?.toString(),
         facilities: glamping.facilities?.map((f: any) => f.id) || [],
-        images: glamping.glamping_images?.map((img: any) => img.path) || [],
+        images: (glamping.glampingImages || glamping.glamping_images || []).map((img: any) => img.path) || [],
         thumbnail: glamping.thumbnail,
+        addons: (glamping.addons || []).map((addon: any) => ({
+            id: addon.id,
+            name: addon.name,
+            price: Number(addon.price),
+            unit: addon.unit,
+            description: addon.description || '',
+            icon: addon.icon || '',
+        })),
     };
 
     return (

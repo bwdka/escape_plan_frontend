@@ -20,6 +20,11 @@ export function CustomerNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
   const isHero = pathname === '/' && !isScrolled;
+  const dashboardLink = user?.role === 'admin'
+    ? '/admin/dashboard'
+    : user?.role === 'partner'
+      ? '/partner/dashboard'
+      : '/bookings/my-trips';
   const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -141,6 +146,7 @@ export function CustomerNavbar() {
                           <p className="font-bold text-sm text-white">{user?.name}</p>
                               <p className="text-[10px] text-white/50 uppercase tracking-widest">{user?.role}</p>
                           </div>
+                          <Link href={dashboardLink} className="block px-4 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">Dashboard</Link>
                           <Link href="/wishlist" className="block px-4 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">Wishlist</Link>
                           <Link href="/bookings/my-trips" className="block px-4 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">My Trips</Link>
                           <Link href="/messages" className="block px-4 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">Messages</Link>
@@ -180,6 +186,7 @@ export function CustomerNavbar() {
                 {isAuthenticated ? (
                     <>
                         <p className="font-bold text-white">Hi, {user?.name}</p>
+                        <Link href={dashboardLink} className="text-white/80 font-bold">Dashboard</Link>
                         <Link href="/bookings/my-trips" className="text-white/80 font-bold">My Trips</Link>
                         <Link href="/messages" className="text-white/80 font-bold">Messages</Link>
                         <Link href="/profile" className="text-white/80 font-bold">Profile Settings</Link>

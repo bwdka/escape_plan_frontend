@@ -10,6 +10,8 @@ import Link from "next/link";
 
 export default function MyTripsPage() {
   const { data: trips, isLoading } = useMyTrips();
+  const blurDataURL =
+    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzAnIGhlaWdodD0nMjInIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMwJyBoZWlnaHQ9JzIyJyBmaWxsPSIjZWRlN2RlIi8+PC9zdmc+";
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-16 max-w-4xl">
@@ -44,6 +46,8 @@ export default function MyTripsPage() {
                                         src={trip.glamping_thumbnail || 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=400&q=80'} 
                                         alt="Glamping"
                                         fill
+                                        placeholder="blur"
+                                        blurDataURL={blurDataURL}
                                         className="object-cover group-hover:scale-110 transition-transform duration-700"
                                     />
                                     <div className="absolute top-4 right-4 sm:hidden">

@@ -67,3 +67,52 @@ export const useAdminBookings = (params?: any) => {
     },
   });
 };
+
+export const useAdminFacilities = () => {
+  return useQuery({
+    queryKey: ['admin-facilities'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/facilities');
+      return data;
+    },
+  });
+};
+
+export const useAdminCreateFacility = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { name: string; icon?: string | null }) => {
+      const { data } = await api.post('/admin/facilities', payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-facilities'] });
+    },
+  });
+};
+
+export const useAdminUpdateFacility = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: number; payload: { name: string; icon?: string | null } }) => {
+      const { data } = await api.put(`/admin/facilities/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-facilities'] });
+    },
+  });
+};
+
+export const useAdminDeleteFacility = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { data } = await api.delete(`/admin/facilities/${id}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-facilities'] });
+    },
+  });
+};

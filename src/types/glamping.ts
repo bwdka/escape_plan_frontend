@@ -66,6 +66,8 @@ export interface Addon {
     name: string;
     price: number;
     unit: string;
+    icon?: string | null;
+    description?: string | null;
 }
 
 export interface Amenity {

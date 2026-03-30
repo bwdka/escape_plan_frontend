@@ -10,6 +10,13 @@ import {
     BookingDetailResponse
 } from '@/types/booking';
 
+export type PaymentMethod = {
+  id: string;
+  payment_type: string;
+  bank?: string;
+  label: string;
+};
+
 export const useCalculatePrice = () => {
   return useMutation({
     mutationFn: async (payload: CalculatePriceRequest) => {
@@ -21,7 +28,7 @@ export const useCalculatePrice = () => {
 
 export const useCalculatePriceQuery = (payload: CalculatePriceRequest & { enabled: boolean }) => {
   return useQuery({
-    queryKey: ['calculate-price', payload.unit_id, payload.check_in, payload.check_out, JSON.stringify(payload.addons), payload.total_guests],
+    queryKey: ['calculate-price', payload.unit_id, payload.check_in, payload.check_out, JSON.stringify(payload.addons), payload.total_guests, payload.payment_method_id],
     queryFn: async () => {
       const { data } = await api.post<CalculatePriceResponse>('/bookings/calculate', payload);
       return data.data;
@@ -40,6 +47,16 @@ export const useCreateBooking = () => {
   return useMutation({
     mutationFn: async (payload: CreateBookingRequest) => {
       const { data } = await api.post<CreateBookingResponse>('/bookings', payload);
+      return data.data;
+    },
+  });
+};
+
+export const usePaymentMethods = () => {
+  return useQuery({
+    queryKey: ['payment-methods'],
+    queryFn: async () => {
+      const { data } = await api.get<{ data: PaymentMethod[] }>('/payment-methods');
       return data.data;
     },
   });

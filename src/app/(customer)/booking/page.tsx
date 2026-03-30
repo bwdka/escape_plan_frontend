@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useCalculatePriceQuery, useCreateBooking } from '@/hooks/useBooking';
+import { useCalculatePriceQuery, useCreateBooking, usePaymentMethods } from '@/hooks/useBooking';
 import { useProfile } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,10 +15,10 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Loader2, Shield, Plus, Minus, AlertCircle } from 'lucide-react';
-import { FaCampground, FaCoffee, FaMotorcycle } from 'react-icons/fa';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useUnitBlockedDates, useUnitDetail } from '@/hooks/useGlampingDetail';
+import { AMENITY_ICON_FALLBACK, AMENITY_ICON_MAP } from '@/lib/amenities';
 
 type BookingFormValues = {
   guest_name: string;
@@ -43,12 +43,15 @@ function BookingContent() {
   const { data: userProfile } = useProfile();
   const { data: unitDetail } = useUnitDetail(unitId);
   const { data: blockedDates } = useUnitBlockedDates(unitId);
+  const { data: paymentMethods = [] } = usePaymentMethods();
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [paymentInstruction, setPaymentInstruction] = useState<any | null>(null);
+  const [cardToken, setCardToken] = useState<string>('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExp, setCardExp] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
 
-  const [selectedAddons, setSelectedAddons] = useState<{id: number, quantity: number, name: string, price: number, icon: any}[]>([
-      { id: 1, quantity: 0, name: t({ id: 'Extra Bed', en: 'Extra Bed' }), price: 150000, icon: FaCampground },
-      { id: 2, quantity: 0, name: t({ id: 'Paket BBQ (4 Pax)', en: 'BBQ Package (4 Pax)' }), price: 250000, icon: FaCoffee },
-      { id: 3, quantity: 0, name: t({ id: 'Sewa ATV (2 Jam)', en: 'ATV Rental (2 Hours)' }), price: 300000, icon: FaMotorcycle },
-  ]);
+  const [selectedAddons, setSelectedAddons] = useState<{id: number, quantity: number, name: string, price: number, icon: any}[]>([]);
 
   const bookingSchema = z.object({
     guest_name: z.string().min(3, t({ id: 'Nama lengkap harus diisi', en: 'Full name is required' })),
@@ -77,6 +80,8 @@ function BookingContent() {
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       guest_name: userProfile?.name || '',
       guest_email: userProfile?.email || '',
@@ -106,6 +111,7 @@ function BookingContent() {
     quantity: 1,
     total_guests: form.watch('total_guests'),
     addons: activeAddons,
+    payment_method_id: selectedPaymentMethod || undefined,
     enabled: !!unitId && !!form.watch('check_in') && !!form.watch('check_out')
   });
 
@@ -121,33 +127,54 @@ function BookingContent() {
     if (checkOutParam) form.setValue('check_out', checkOutParam);
   }, [userProfile, checkInParam, checkOutParam, form]);
 
+  useEffect(() => {
+    if (!selectedPaymentMethod && paymentMethods.length > 0) {
+      setSelectedPaymentMethod(paymentMethods[0].id);
+    }
+  }, [paymentMethods, selectedPaymentMethod]);
+
+  const resolveAddonIcon = (addon: any) => {
+    const raw = (addon?.icon || addon?.name || '').toString().toLowerCase();
+    if (!raw) return AMENITY_ICON_FALLBACK;
+    const normalized = raw
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .replace(/_+/g, '_');
+    return AMENITY_ICON_MAP[raw] || AMENITY_ICON_MAP[normalized] || AMENITY_ICON_FALLBACK;
+  };
+
+  useEffect(() => {
+    const addons = unitDetail?.glamping?.addons || [];
+    if (!Array.isArray(addons)) {
+      setSelectedAddons([]);
+      return;
+    }
+    setSelectedAddons(addons.map((addon: any) => ({
+      id: addon.id,
+      quantity: 0,
+      name: addon.name,
+      price: Number(addon.price),
+      icon: resolveAddonIcon(addon),
+    })));
+  }, [unitDetail?.glamping?.addons]);
+
   const onSubmit = (data: BookingFormValues) => {
     if (!unitId) return;
+    if (!selectedPaymentMethod) {
+      toast.error(t({ id: 'Pilih metode pembayaran terlebih dahulu', en: 'Please select a payment method' }));
+      return;
+    }
     createBooking({
         unit_id: unitId,
         ...data,
         addons: activeAddons,
-        quantity: 1
+        quantity: 1,
+        payment_method_id: selectedPaymentMethod,
+        card_token: selectedPaymentMethod === 'credit_card' ? cardToken : undefined,
     }, { 
         onSuccess: (res: any) => {
-            const bookingId = res.booking_id;
-            const guestEmail = data.guest_email;
-            if (res.snap_token && window.snap) {
-                window.snap.pay(res.snap_token, {
-                    onSuccess: () => {
-                        toast.success(t({ id: 'Pembayaran berhasil!', en: 'Payment successful!' }));
-                        router.push(`/booking/success?booking_id=${bookingId}&email=${guestEmail}`);
-                    },
-                    onPending: () => {
-                        toast.info(t({ id: 'Menunggu pembayaran...', en: 'Waiting for payment...' }));
-                        router.push(`/booking/success?booking_id=${bookingId}&email=${guestEmail}`);
-                    },
-                    onError: () => toast.error(t({ id: 'Pembayaran gagal!', en: 'Payment failed!' })),
-                    onClose: () => toast.warning(t({ id: 'Anda menutup pop-up pembayaran.', en: 'You closed the payment popup.' }))
-                });
-            } else {
-                toast.error(t({ id: 'Gagal membuka pembayaran. Token Midtrans tidak tersedia.', en: 'Failed to open payment. Midtrans token unavailable.' }));
-            }
+            setPaymentInstruction(res.payment?.response || null);
+            toast.success(t({ id: 'Booking dibuat. Silakan selesaikan pembayaran.', en: 'Booking created. Please complete payment.' }));
         },
         onError: (err: any) => toast.error(err.response?.data?.message || t({ id: 'Booking gagal dibuat', en: 'Booking creation failed' }))
     });
@@ -194,7 +221,7 @@ function BookingContent() {
                          </div>
                          <div className="space-y-2">
                              <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t({ id: 'Jumlah Tamu', en: 'Guests' })}</Label>
-                             <Input type="number" {...form.register('total_guests', { valueAsNumber: true })} className="h-11 rounded-xl" />
+                            <Input type="number" {...form.register('total_guests', { valueAsNumber: true })} className={`h-11 rounded-xl ${form.formState.errors.total_guests ? 'border-red-300 focus-visible:ring-red-200' : ''}`} />
                              {(priceData?.extra_guests ?? 0) > 0 && priceData && (
                                  <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100 mt-2">
                                      <AlertCircle size={14} className="text-amber-600 mt-0.5" />
@@ -230,17 +257,17 @@ function BookingContent() {
                     <div className="pt-6 border-t border-primary/5 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t({ id: 'Nama Lengkap', en: 'Full Name' })}</Label>
-                            <Input placeholder={t({ id: 'Sesuai KTP', en: 'As per ID' })} {...form.register('guest_name')} className="rounded-xl" />
+                            <Input placeholder={t({ id: 'Sesuai KTP', en: 'As per ID' })} {...form.register('guest_name')} className={`rounded-xl ${form.formState.errors.guest_name ? 'border-red-300 focus-visible:ring-red-200' : ''}`} />
                              {form.formState.errors.guest_name && <p className="text-red-500 text-[10px] font-bold mt-1 uppercase">{form.formState.errors.guest_name.message}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t({ id: 'No. WhatsApp', en: 'WhatsApp Number' })}</Label>
-                            <Input placeholder="081..." {...form.register('guest_phone')} className="rounded-xl" />
+                            <Input placeholder="081..." {...form.register('guest_phone')} className={`rounded-xl ${form.formState.errors.guest_phone ? 'border-red-300 focus-visible:ring-red-200' : ''}`} />
                              {form.formState.errors.guest_phone && <p className="text-red-500 text-[10px] font-bold mt-1 uppercase">{form.formState.errors.guest_phone.message}</p>}
                         </div>
                         <div className="space-y-2 md:col-span-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t({ id: 'Alamat Email', en: 'Email Address' })}</Label>
-                            <Input type="email" placeholder="email@example.com" {...form.register('guest_email')} className="rounded-xl h-12" />
+                            <Input type="email" placeholder="email@example.com" {...form.register('guest_email')} className={`rounded-xl h-12 ${form.formState.errors.guest_email ? 'border-red-300 focus-visible:ring-red-200' : ''}`} />
                              {form.formState.errors.guest_email && <p className="text-red-500 text-[10px] font-bold mt-1 uppercase">{form.formState.errors.guest_email.message}</p>}
                              <p className="text-[9px] font-bold text-accent uppercase tracking-widest mt-2 ml-1 flex items-center gap-1.5">
                                 <AlertCircle size={10} /> {t({ id: 'Pastikan email aktif & benar untuk verifikasi akun & kirim e-tiket.', en: 'Use an active email for verification and e-ticket delivery.' })}
@@ -278,6 +305,103 @@ function BookingContent() {
                 ))}
             </div>
         </div>
+
+        <div className="glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-xl space-y-6">
+            <h3 className="font-black text-xl text-primary tracking-tight">{t({ id: 'Metode Pembayaran', en: 'Payment Method' })}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {paymentMethods.map((method) => (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => setSelectedPaymentMethod(method.id)}
+                  className={`p-4 rounded-2xl border text-left transition-all ${selectedPaymentMethod === method.id ? 'border-accent bg-accent/5 shadow-md' : 'border-primary/10 bg-white/50'}`}
+                >
+                  <p className="text-sm font-black text-primary">{method.label}</p>
+                  <p className="text-[10px] uppercase tracking-widest text-primary/40">{method.payment_type}{method.bank ? ` • ${method.bank.toUpperCase()}` : ''}</p>
+                </button>
+              ))}
+            </div>
+            {selectedPaymentMethod === 'credit_card' && (
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Input
+                  placeholder="Card Number"
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(e.target.value)}
+                  className="rounded-2xl bg-white/70 border-white/70"
+                />
+                <Input
+                  placeholder="MM/YY"
+                  value={cardExp}
+                  onChange={(e) => setCardExp(e.target.value)}
+                  className="rounded-2xl bg-white/70 border-white/70"
+                />
+                <Input
+                  placeholder="CVV"
+                  value={cardCvv}
+                  onChange={(e) => setCardCvv(e.target.value)}
+                  className="rounded-2xl bg-white/70 border-white/70"
+                />
+                <Input
+                  placeholder="Card Token"
+                  value={cardToken}
+                  onChange={(e) => setCardToken(e.target.value)}
+                  className="rounded-2xl bg-white/70 border-white/70 md:col-span-3"
+                />
+                <p className="text-xs text-primary/50 md:col-span-3">
+                  Card token must be generated client-side using Midtrans Card Tokenization.
+                </p>
+              </div>
+            )}
+        </div>
+
+        {paymentInstruction && (
+          <div className="glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-xl space-y-4">
+            <h3 className="font-black text-xl text-primary tracking-tight">{t({ id: 'Instruksi Pembayaran', en: 'Payment Instructions' })}</h3>
+            {paymentInstruction.va_numbers && (
+              <div className="text-sm text-primary">
+                {paymentInstruction.va_numbers.map((va: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between border-b border-primary/5 py-2">
+                    <span className="font-bold uppercase">{va.bank}</span>
+                    <span className="font-mono">{va.va_number}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {paymentInstruction.permata_va_number && (
+              <div className="text-sm text-primary">
+                <div className="flex items-center justify-between border-b border-primary/5 py-2">
+                  <span className="font-bold uppercase">Permata</span>
+                  <span className="font-mono">{paymentInstruction.permata_va_number}</span>
+                </div>
+              </div>
+            )}
+            {paymentInstruction.actions && (
+              <div className="space-y-2">
+                {paymentInstruction.actions.map((action: any, idx: number) => (
+                  <a key={idx} href={action.url} target="_blank" className="text-sm font-bold text-accent underline">
+                    {action.name || 'Open Payment Link'}
+                  </a>
+                ))}
+              </div>
+            )}
+            {paymentInstruction.redirect_url && (
+              <a href={paymentInstruction.redirect_url} target="_blank" className="text-sm font-bold text-accent underline">
+                Open 3DS / Card Authentication
+              </a>
+            )}
+            {paymentInstruction.payment_code && (
+              <div className="text-sm text-primary mt-2">
+                <div className="flex items-center justify-between border-b border-primary/5 py-2">
+                  <span className="font-bold uppercase">{paymentInstruction.store || 'CStore'}</span>
+                  <span className="font-mono">{paymentInstruction.payment_code}</span>
+                </div>
+              </div>
+            )}
+            {paymentInstruction.qr_string && (
+              <p className="text-sm text-primary/70">QR String: {paymentInstruction.qr_string}</p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="relative">
@@ -322,7 +446,22 @@ function BookingContent() {
                         {t({ id: 'untuk Anda setelah mengklik tombol di bawah.', en: 'after you click the button below.' })}
                       </p>
                   </div>
-                  <Button className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 hover:scale-[1.02] transition-all" size="lg" form="booking-form" type="submit" disabled={isBooking || !priceData}>{isBooking ? t({ id: 'Menyiapkan...', en: 'Preparing...' }) : t({ id: 'Konfirmasi & Bayar', en: 'Confirm & Pay' })}</Button>
+                  <Button
+                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 hover:scale-[1.02] transition-all"
+                    size="lg"
+                    form="booking-form"
+                    type="submit"
+                    disabled={isBooking || !priceData}
+                  >
+                    {isBooking ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {t({ id: 'Processing...', en: 'Processing...' })}
+                      </span>
+                    ) : (
+                      t({ id: 'Konfirmasi & Bayar', en: 'Confirm & Pay' })
+                    )}
+                  </Button>
               </div>
               <div className="flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-primary/30"><Shield size={10} /> {t({ id: 'Transaksi Aman & Terenkripsi', en: 'Secure & Encrypted Transaction' })}</div>
           </div>

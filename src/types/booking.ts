@@ -6,6 +6,7 @@ export interface CalculatePriceRequest {
     total_guests: number;
     addons: { id: number; quantity: number }[];
     promo_code?: string;
+    payment_method_id?: string;
 }
 
 export interface PriceBreakdownItem {
@@ -39,6 +40,8 @@ export interface CreateBookingRequest {
     check_in: string;
     check_out: string;
     total_guests: number;
+    payment_method_id: string;
+    card_token?: string;
     guest_name: string;
     guest_phone: string;
     guest_email: string;
@@ -54,7 +57,12 @@ export interface CreateBookingResponse {
         booking_id: number;
         booking_code: string;
         status: string;
-        snap_token: string;
+        payment: {
+            payment_method_id: string;
+            payment_type: string;
+            bank?: string | null;
+            response: Record<string, any>;
+        };
         total_price: number;
     };
 }
@@ -77,7 +85,8 @@ export interface BookingDetail {
     check_out: string;
     total_price: number;
     status: string;
-    snap_token: string | null;
+    payment_type?: string | null;
+    payment_payload?: Record<string, any> | null;
     guest_name: string;
     guest_email: string;
     guest_phone: string;

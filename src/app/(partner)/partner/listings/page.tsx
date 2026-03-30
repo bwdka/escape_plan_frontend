@@ -50,7 +50,11 @@ export default function MyListingsPage() {
   const resolveImage = (src?: string) => {
     if (!src) return 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=400&q=80';
     if (src.startsWith('http')) return src;
-    return `${storageBase}${src.replace(/^\/+/, '')}`;
+    let normalized = src.replace(/^\/+/, '');
+    if (storageBase.includes('/storage/') && normalized.startsWith('storage/')) {
+      normalized = normalized.replace(/^storage\//, '');
+    }
+    return `${storageBase}${normalized}`;
   };
 
   return (
@@ -87,7 +91,13 @@ export default function MyListingsPage() {
                 <div className="flex flex-col xl:flex-row">
                   <div className="relative w-full xl:w-[340px] h-64 xl:h-auto bg-gray-100 overflow-hidden">
                     <Image 
-                      src={resolveImage(glamping.thumbnail)} 
+                      src={resolveImage(
+                        glamping.thumbnail ||
+                        glamping.thumbnail_url ||
+                        glamping.glamping_images?.find((img: any) => img.is_thumbnail)?.path ||
+                        glamping.glamping_images?.[0]?.path ||
+                        glamping.images?.[0]
+                      )} 
                       alt={glamping.name}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-700"

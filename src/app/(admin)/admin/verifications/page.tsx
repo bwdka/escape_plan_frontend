@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Check, X, Shield, Tent } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 
 export default function VerificationsPage() {
     const { data: pendingUsers } = useAdminUsers({ role: 'partner', is_verified: false });
@@ -14,6 +17,8 @@ export default function VerificationsPage() {
 
     const verifyUser = useAdminVerifyUser();
     const updateGlampingStatus = useAdminUpdateGlampingStatus();
+    const [rejectReason, setRejectReason] = useState("");
+    const [selectedGlampingId, setSelectedGlampingId] = useState<number | null>(null);
 
     const handleUserVerify = (id: number, verify: boolean) => {
         verifyUser.mutate({ id, is_verified: verify }, {
@@ -25,6 +30,20 @@ export default function VerificationsPage() {
         updateGlampingStatus.mutate({ id, status }, {
             onSuccess: () => toast.success(`Glamping ${status}`),
         });
+    };
+
+    const handleGlampingReject = () => {
+        if (!selectedGlampingId) return;
+        updateGlampingStatus.mutate(
+            { id: selectedGlampingId, status: 'rejected', rejection_reason: rejectReason },
+            {
+                onSuccess: () => {
+                    toast.success("Glamping rejected");
+                    setRejectReason("");
+                    setSelectedGlampingId(null);
+                }
+            }
+        );
     };
 
     return (
@@ -67,7 +86,12 @@ export default function VerificationsPage() {
                                         >
                                             <Check className="w-4 h-4 mr-2" /> Approve
                                         </Button>
-                                        <Button size="sm" variant="ghost" className="text-red-600 font-bold rounded-xl">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="text-red-600 font-bold rounded-xl"
+                                            onClick={() => handleUserVerify(user.id, false)}
+                                        >
                                             Reject
                                         </Button>
                                     </div>
@@ -104,9 +128,49 @@ export default function VerificationsPage() {
                                         >
                                             Approve
                                         </Button>
-                                        <Button size="sm" variant="ghost" className="text-red-600 font-bold rounded-xl">
-                                            Review
-                                        </Button>
+                                        <Dialog onOpenChange={(open) => {
+                                            if (open) {
+                                                setSelectedGlampingId(glamping.id);
+                                                setRejectReason("");
+                                            }
+                                        }}>
+                                            <DialogTrigger asChild>
+                                                <Button size="sm" variant="ghost" className="text-red-600 font-bold rounded-xl">
+                                                    Review
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-lg">
+                                                <DialogHeader>
+                                                    <DialogTitle>Reject Listing</DialogTitle>
+                                                    <DialogDescription>Add a short reason for rejection.</DialogDescription>
+                                                </DialogHeader>
+                                                <Textarea
+                                                    value={rejectReason}
+                                                    onChange={(e) => setRejectReason(e.target.value)}
+                                                    placeholder="e.g. Photos are blurry / Missing legal docs"
+                                                    className="rounded-2xl"
+                                                    rows={4}
+                                                />
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        className="rounded-2xl"
+                                                        onClick={() => {
+                                                            setRejectReason("");
+                                                            setSelectedGlampingId(null);
+                                                        }}
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        className="rounded-2xl bg-red-600 text-white"
+                                                        onClick={handleGlampingReject}
+                                                    >
+                                                        Reject
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
                                     </div>
                                 </div>
                             ))
