@@ -97,11 +97,11 @@ export function CustomerNavbar() {
                     )}
                   </button>
                   {isNotifOpen && (
-                    <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-primary/30 bg-black/70 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
-                      <div className="px-4 py-3 border-b border-primary/20">
+                    <div className="absolute right-1 mt-3 w-72 rounded-2xl border border-white/20 bg-black/70 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+                      <div className="px-5 py-3.5 border-b border-white/15">
                         <div className="flex items-center justify-between">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-primary/50">Notifications</p>
-                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/50">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">Notifications</p>
+                          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/70">
                             <button onClick={() => markAllRead()}>Mark all</button>
                             <span>•</span>
                             <button onClick={() => clearAll()}>Clear</button>
@@ -110,16 +110,16 @@ export function CustomerNavbar() {
                       </div>
                       <div className="max-h-72 overflow-y-auto">
                         {notifications.length === 0 ? (
-                          <div className="px-4 py-4 text-xs text-primary/50">No notifications yet.</div>
+                          <div className="px-5 py-4 text-xs text-white/70">No notifications yet.</div>
                         ) : (
                           notifications.slice(0, 6).map((n: any) => (
                             <button
                               key={n.id}
-                              className="w-full text-left px-4 py-3 border-b border-primary/10 text-sm text-primary/80 hover:bg-primary/10"
+                              className="w-full text-left px-5 py-3 border-b border-white/10 text-sm text-white/80 hover:bg-white/10"
                               onClick={() => markRead(n.id)}
                             >
-                              <div className="text-[10px] uppercase tracking-widest text-primary/40">{n.type}</div>
-                              <div className="font-semibold">{n.data?.preview || 'New update'}</div>
+                              <div className="text-[10px] uppercase tracking-widest text-white/50">{n.type}</div>
+                              <div className="font-semibold text-white/90">{n.data?.preview || 'New update'}</div>
                             </button>
                           ))
                         )}
