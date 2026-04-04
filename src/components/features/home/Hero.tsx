@@ -10,7 +10,7 @@ export function Hero() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
   
-  const y = useTransform(scrollY, [0, 1000], [0, 400]);
+  const y = useTransform(scrollY, [0, 1000], [0, 360]);
   const opacity = useTransform(scrollY, [0, 500], [1, 0]);
 
   return (
@@ -30,10 +30,10 @@ export function Hero() {
           }}
         />
         {/* Cinematic Overlays */}
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/30" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.12),transparent_40%)]" />
+        <div className="absolute inset-0 bg-black/12" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-transparent to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/22" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.10),transparent_45%),radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.06),transparent_40%)]" />
       </motion.div>
       
       {/* Content */}
@@ -50,16 +50,20 @@ export function Hero() {
           }}
           className="max-w-5xl mx-auto flex flex-col items-center gap-4 sm:gap-6"
         >
-          {/* Badge */}
+          {/* Trust Hook */}
           <motion.div 
             variants={{
               hidden: { y: 20, opacity: 0 },
               visible: { y: 0, opacity: 1, transition: { duration: 0.6 } }
             }}
-            className="inline-flex items-center gap-3 glass px-5 py-1.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] text-white/90 backdrop-blur-md border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
+            className="inline-flex flex-wrap items-center justify-center gap-3 glass px-5 py-2 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.22em] text-white/90 backdrop-blur-md border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
           >
             <span className="w-1 h-1 rounded-full bg-accent animate-pulse shadow-[0_0_10px_var(--accent)]" />
-            {t({ id: 'Pengalaman Outdoor Premium', en: 'Premium Outdoor Experiences' })}
+            <span>{t({ id: 'Rating 4.8', en: 'Rated 4.8' })}</span>
+            <span className="text-white/50">•</span>
+            <span>{t({ id: '300+ Villa', en: '300+ Villas' })}</span>
+            <span className="text-white/50">•</span>
+            <span>{t({ id: 'Lokasi populer', en: 'Popular Spots' })}</span>
           </motion.div>
 
           {/* Heading */}
@@ -73,7 +77,14 @@ export function Hero() {
             >
               PLAN YOUR
               <br />
-              <span className="text-accent italic font-serif pr-2 mix-blend-screen opacity-90">ESCAPE</span>
+              <motion.span
+                initial={{ letterSpacing: "0.04em", opacity: 0.7 }}
+                animate={{ letterSpacing: "0.01em", opacity: 0.95 }}
+                transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+                className="text-accent italic font-serif pr-2 mix-blend-screen"
+              >
+                ESCAPE
+              </motion.span>
             </motion.h1>
           </div>
 
@@ -101,10 +112,10 @@ export function Hero() {
           >
             <Link
               href="/search"
-              className="group relative px-8 py-4 bg-accent text-accent-foreground rounded-full text-xs font-black uppercase tracking-[0.2em] overflow-hidden transition-transform hover:scale-105 shadow-[0_0_60px_-10px_rgba(212,180,131,0.7)]"
+              className="group relative px-8 py-4 bg-accent text-accent-foreground rounded-full text-xs font-black uppercase tracking-[0.2em] overflow-hidden transition-all hover:scale-105 shadow-[0_0_60px_-10px_rgba(212,180,131,0.7)] hover:shadow-[0_0_90px_-10px_rgba(212,180,131,0.9)]"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                {t({ id: 'Jelajahi Sekarang', en: 'Explore Now' })}
+                {t({ id: 'Pesan Pelarianmu', en: 'Book Your Escape' })}
               </span>
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
             </Link>
@@ -116,6 +127,9 @@ export function Hero() {
               {t({ id: 'Jadi Host', en: 'Become a Host' })}
             </Link>
           </motion.div>
+
+          {/* Trust / Value */}
+          
         </motion.div>
       </div>
 

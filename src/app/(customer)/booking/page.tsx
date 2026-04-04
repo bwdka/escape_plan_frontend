@@ -42,6 +42,7 @@ function BookingContent() {
 
   const { data: userProfile } = useProfile();
   const { data: unitDetail } = useUnitDetail(unitId);
+  const glampingName = unitDetail?.glamping?.name;
   const { data: blockedDates } = useUnitBlockedDates(unitId);
   const { data: paymentMethods = [] } = usePaymentMethods();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
@@ -307,19 +308,40 @@ function BookingContent() {
         </div>
 
         <div className="glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-xl space-y-6">
-            <h3 className="font-black text-xl text-primary tracking-tight">{t({ id: 'Metode Pembayaran', en: 'Payment Method' })}</h3>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="font-black text-xl text-primary tracking-tight">{t({ id: 'Metode Pembayaran', en: 'Payment Method' })}</h3>
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 mt-1">{t({ id: 'Pilih metode yang paling nyaman', en: 'Choose the most convenient method' })}</p>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/40">
+                <Shield size={12} className="text-accent" /> {t({ id: 'Secure Payment', en: 'Secure Payment' })}
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {paymentMethods.map((method) => (
                 <button
                   key={method.id}
                   type="button"
                   onClick={() => setSelectedPaymentMethod(method.id)}
-                  className={`p-4 rounded-2xl border text-left transition-all ${selectedPaymentMethod === method.id ? 'border-accent bg-accent/5 shadow-md' : 'border-primary/10 bg-white/50'}`}
+                  className={`p-4 rounded-2xl border text-left transition-all flex items-center gap-4 ${selectedPaymentMethod === method.id ? 'border-accent bg-accent/5 shadow-md' : 'border-primary/10 bg-white/50 hover:border-accent/30'}`}
                 >
-                  <p className="text-sm font-black text-primary">{method.label}</p>
-                  <p className="text-[10px] uppercase tracking-widest text-primary/40">{method.payment_type}{method.bank ? ` • ${method.bank.toUpperCase()}` : ''}</p>
+                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary font-black uppercase text-[10px] flex items-center justify-center">
+                    {method.bank ? method.bank.slice(0, 3).toUpperCase() : method.payment_type.slice(0, 3).toUpperCase()}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-black text-primary">{method.label}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-primary/40">{method.payment_type}{method.bank ? ` • ${method.bank.toUpperCase()}` : ''}</p>
+                  </div>
                 </button>
               ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/40">
+              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'BCA', en: 'BCA' })}</span>
+              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'Mandiri', en: 'Mandiri' })}</span>
+              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'BNI', en: 'BNI' })}</span>
+              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'BRI', en: 'BRI' })}</span>
+              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'QRIS', en: 'QRIS' })}</span>
+              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'GoPay', en: 'GoPay' })}</span>
             </div>
             {selectedPaymentMethod === 'credit_card' && (
               <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -416,11 +438,18 @@ function BookingContent() {
         )}
       </div>
 
-      <div className="relative">
-          <div className="lg:sticky lg:top-32 glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-2xl space-y-8 overflow-hidden">
+      <div className="self-start h-fit">
+          <div className="lg:sticky lg:top-28 glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-2xl space-y-8 overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl -mr-16 -mt-16" />
               <h3 className="font-black text-xl text-primary tracking-tight relative">{t({ id: 'Ringkasan Pesanan', en: 'Booking Summary' })}</h3>
               <div className="relative space-y-6">
+                  <div className="rounded-2xl border border-primary/10 bg-white/70 p-4 space-y-2">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Villa', en: 'Villa' })}</div>
+                      <div className="font-black text-primary">{glampingName || t({ id: 'Escape Plan', en: 'Escape Plan' })}</div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Unit', en: 'Unit' })}: <span className="text-primary/70">{unitName}</span></div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Tanggal', en: 'Dates' })}: <span className="text-primary/70">{checkInParam} → {checkOutParam}</span></div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Tamu', en: 'Guests' })}: <span className="text-primary/70">{form.getValues('total_guests') || 1}</span></div>
+                  </div>
                   <div className="flex justify-between items-start gap-4">
                       <span className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Tenda', en: 'Unit' })}</span>
                       <span className="font-black text-primary text-right text-sm">{unitName}</span>
@@ -458,8 +487,14 @@ function BookingContent() {
                         {t({ id: 'untuk Anda setelah mengklik tombol di bawah.', en: 'after you click the button below.' })}
                       </p>
                   </div>
+                  <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                    <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">{t({ id: 'Reassurance', en: 'Reassurance' })}</p>
+                    <p className="text-[11px] font-bold text-primary/60 leading-relaxed">
+                      {t({ id: '100% transaksi aman & terenkripsi. Gratis reschedule sesuai kebijakan.', en: '100% secure & encrypted. Free reschedule per policy.' })}
+                    </p>
+                  </div>
                   <Button
-                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 hover:scale-[1.02] transition-all"
+                    className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.03] transition-all"
                     size="lg"
                     form="booking-form"
                     type="submit"
@@ -471,7 +506,7 @@ function BookingContent() {
                         {t({ id: 'Processing...', en: 'Processing...' })}
                       </span>
                     ) : (
-                      t({ id: 'Konfirmasi & Bayar', en: 'Confirm & Pay' })
+                      t({ id: 'Complete Booking', en: 'Complete Booking' })
                     )}
                   </Button>
               </div>

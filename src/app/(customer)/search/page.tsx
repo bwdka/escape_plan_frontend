@@ -3,12 +3,12 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useGlampings, useLocations } from '@/hooks/useGlampings';
-import { GlampingFilterParams } from '@/types/glamping';
+import { Glamping, GlampingFilterParams } from '@/types/glamping';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Star, Filter, Search, Heart, Calendar, Users, X, ChevronRight } from 'lucide-react';
+import { MapPin, Star, Filter, Search, Heart, Calendar, Users, X, ChevronRight, PawPrint, Wifi, Zap, Images } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -30,6 +30,8 @@ function SearchContent() {
   const [sidebarStyle, setSidebarStyle] = useState<React.CSSProperties>({});
   const [isSticky, setIsSticky] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [results, setResults] = useState<Glamping[]>([]);
   
   // Search states synced with URL
   const [location, setLocation] = useState(searchParams.get('location') || '');
@@ -69,6 +71,7 @@ function SearchContent() {
     pet_friendly: filters.pet_friendly ? filters.pet_friendly === 'true' : undefined,
     has_wifi: filters.has_wifi ? filters.has_wifi === 'true' : undefined,
     has_electricity: filters.has_electricity ? filters.has_electricity === 'true' : undefined,
+    page,
   });
 
   const handleFilterChange = (key: string, value: string) => {
@@ -109,6 +112,8 @@ function SearchContent() {
   };
 
   useEffect(() => {
+    setPage(1);
+    setResults([]);
     setLocation(searchParams.get('location') || '');
     setGuests(searchParams.get('guests') || '');
     const ci = searchParams.get('check_in');
@@ -124,6 +129,19 @@ function SearchContent() {
       has_electricity: searchParams.get('has_electricity') || '',
     });
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!data?.data) return;
+    if (page === 1) {
+      setResults(data.data);
+      return;
+    }
+    setResults((prev) => {
+      const seen = new Set(prev.map((item) => item.id));
+      const next = data.data.filter((item) => !seen.has(item.id));
+      return [...prev, ...next];
+    });
+  }, [data?.data, page]);
 
   useEffect(() => {
     try {
@@ -213,6 +231,16 @@ function SearchContent() {
     }
     return t({ id: 'Pilih Tanggal', en: 'Add dates' });
   };
+  const maxPriceValue = Number(filters.max_price || 5000000);
+  const activeFilterChips = [
+    filters.min_price ? `Min Rp ${Number(filters.min_price).toLocaleString('id-ID')}` : null,
+    filters.max_price ? `Max Rp ${Number(filters.max_price).toLocaleString('id-ID')}` : null,
+    filters.access_type ? `${t({ id: 'Akses', en: 'Access' })}: ${filters.access_type}` : null,
+    filters.bathroom_type ? `${t({ id: 'Kamar Mandi', en: 'Bathroom' })}: ${filters.bathroom_type}` : null,
+    filters.pet_friendly === 'true' ? t({ id: 'Pet Friendly', en: 'Pet Friendly' }) : null,
+    filters.has_wifi === 'true' ? 'WiFi' : null,
+    filters.has_electricity === 'true' ? t({ id: 'Listrik', en: 'Electricity' }) : null,
+  ].filter(Boolean) as string[];
 
   return (
     <div ref={containerRef} className="container mx-auto px-4 py-8 pb-32 lg:pb-8">
@@ -371,6 +399,21 @@ function SearchContent() {
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t({ id: 'Rentang Budget', en: 'Budget Range' })}</label>
               <div className="flex flex-col gap-3">
+                <div className="rounded-xl border border-primary/10 bg-white/70 px-3 py-3">
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-primary/40 mb-2">
+                    <span>{t({ id: 'Maksimal', en: 'Max' })}</span>
+                    <span>Rp {maxPriceValue.toLocaleString('id-ID')}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={5000000}
+                    step={100000}
+                    value={maxPriceValue}
+                    onChange={(e) => handleFilterChange('max_price', e.target.value)}
+                    className="w-full accent-primary"
+                  />
+                </div>
                 <Input 
                   placeholder={t({ id: 'Min Rp', en: 'Min Rp' })} 
                   type="number"
@@ -419,28 +462,31 @@ function SearchContent() {
             <div className="space-y-3">
               <label className="text-[10px] font-black uppercase tracking-widest text-primary/40 ml-1">{t({ id: 'Fasilitas', en: 'Essentials' })}</label>
               <div className="space-y-2 text-xs font-bold text-primary/70">
-                <label className="flex items-center gap-2">
+                <label className="flex items-center gap-3 rounded-xl border border-primary/10 bg-white/70 px-3 py-2 hover:bg-primary/5 transition-colors">
                   <input
                     type="checkbox"
                     checked={filters.pet_friendly === 'true'}
                     onChange={(e) => handleFilterChange('pet_friendly', e.target.checked ? 'true' : '')}
                   />
+                  <PawPrint className="w-4 h-4 text-accent" />
                   {t({ id: 'Pet Friendly', en: 'Pet Friendly' })}
                 </label>
-                <label className="flex items-center gap-2">
+                <label className="flex items-center gap-3 rounded-xl border border-primary/10 bg-white/70 px-3 py-2 hover:bg-primary/5 transition-colors">
                   <input
                     type="checkbox"
                     checked={filters.has_wifi === 'true'}
                     onChange={(e) => handleFilterChange('has_wifi', e.target.checked ? 'true' : '')}
                   />
+                  <Wifi className="w-4 h-4 text-accent" />
                   {t({ id: 'WiFi', en: 'WiFi' })}
                 </label>
-                <label className="flex items-center gap-2">
+                <label className="flex items-center gap-3 rounded-xl border border-primary/10 bg-white/70 px-3 py-2 hover:bg-primary/5 transition-colors">
                   <input
                     type="checkbox"
                     checked={filters.has_electricity === 'true'}
                     onChange={(e) => handleFilterChange('has_electricity', e.target.checked ? 'true' : '')}
                   />
+                  <Zap className="w-4 h-4 text-accent" />
                   {t({ id: 'Listrik', en: 'Electricity' })}
                 </label>
               </div>
@@ -513,7 +559,7 @@ function SearchContent() {
             </p>
           </div>
 
-          {isLoading ? (
+          {isLoading && results.length === 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="space-y-4">
@@ -527,7 +573,7 @@ function SearchContent() {
             <div className="text-center py-20 glass rounded-[3rem] border-red-100 text-red-600 font-bold">
               Wildness connection lost. Please try again.
             </div>
-          ) : data?.data.length === 0 ? (
+          ) : results.length === 0 ? (
           <div className="text-center py-16 md:py-24 glass rounded-[3.5rem] border-white/40 text-primary/30">
               <div className="w-20 h-20 rounded-3xl bg-primary/5 flex items-center justify-center mx-auto mb-6">
                 <Search className="w-10 h-10 opacity-20" />
@@ -544,7 +590,25 @@ function SearchContent() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-8 w-full">
-              {data?.data.map((glamping) => {
+              {activeFilterChips.length > 0 && (
+                <div className="col-span-full -mt-2 mb-2 flex flex-wrap items-center gap-2">
+                  {activeFilterChips.map((chip, idx) => (
+                    <span
+                      key={`${chip}-${idx}`}
+                      className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                  <button
+                    onClick={handleResetFilters}
+                    className="px-3 py-1 rounded-full border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/5 transition-colors"
+                  >
+                    {t({ id: 'Reset', en: 'Reset' })}
+                  </button>
+                </div>
+              )}
+              {results.map((glamping) => {
                 const storageBase = (process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8000/storage/').replace(/\/+$/, '/') ;
                 const imageUrl = glamping.thumbnail?.startsWith('http') 
                     ? glamping.thumbnail 
@@ -552,10 +616,33 @@ function SearchContent() {
                         ? `${storageBase}${glamping.thumbnail.replace(/^\/+/, '')}`
                         : 'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&q=80';
                 const isSaved = savedSlugs.includes(glamping.slug);
+                const reviewCount = (glamping as any).review_count as number | undefined;
+                const imageCount = glamping.images?.length;
+                const highlight =
+                  glamping.rating >= 4.8
+                    ? t({ id: 'Best Choice', en: 'Best Choice' })
+                    : glamping.rating >= 4.6
+                      ? t({ id: 'Popular', en: 'Popular' })
+                      : null;
+                const discount =
+                  glamping.price && glamping.price < 800000
+                    ? t({ id: 'Discount', en: 'Discount' })
+                    : null;
+                const locationLabel = (glamping as any).location_city || glamping.location;
+                const emotional =
+                  glamping.vibe
+                    ? `${t({ id: 'Cocok untuk', en: 'Perfect for' })} ${glamping.vibe}`
+                    : t({ id: 'Weekend getaway favorit', en: 'A favorite weekend getaway' });
 
                 return (
-                    <Link href={`/glamping/${glamping.slug}`} key={glamping.id} className="group">
-                    <div className="relative glass rounded-[2.5rem] border-white/40 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
+                    <Link href={`/glamping/${glamping.slug}`} key={glamping.id} className="group block">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                      className="relative glass rounded-[2.5rem] border-white/40 overflow-hidden shadow-sm transition-all duration-500 h-full flex flex-col group-hover:-translate-y-1.5 group-hover:shadow-2xl group-hover:shadow-black/20 group-hover:scale-[1.02]"
+                    >
                         <div className="p-3 pb-0">
                             <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden bg-gray-100">
                             <Image
@@ -564,14 +651,30 @@ function SearchContent() {
                                 fill
                                 placeholder="blur"
                                 blurDataURL={blurDataURL}
-                                className="object-cover group-hover:scale-110 transition-transform duration-700"
+                                className="object-cover group-hover:scale-[1.12] transition-transform duration-700 ease-out"
                             />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                              <div className="px-4 py-2 rounded-full bg-white/90 text-primary text-[10px] font-black uppercase tracking-widest shadow-xl">
+                                {t({ id: 'View Details', en: 'View Details' })}
+                              </div>
+                            </div>
                             <div className="absolute top-4 right-4">
                                 <Badge className="glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
                                 <Star className="w-3 h-3 fill-accent text-accent mr-1" />
                                 {glamping.rating}
                                 </Badge>
                             </div>
+                            {highlight && (
+                              <div className="absolute bottom-4 right-4 glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
+                                {highlight}
+                              </div>
+                            )}
+                            {discount && (
+                              <div className="absolute top-4 right-4 translate-y-10 glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
+                                {discount}
+                              </div>
+                            )}
                             <button
                               type="button"
                               onClick={(e) => {
@@ -580,12 +683,20 @@ function SearchContent() {
                                 toggleSave(glamping.slug);
                               }}
                               className={`absolute top-4 left-4 w-10 h-10 rounded-full backdrop-blur-md border border-white/30 flex items-center justify-center transition-all ${
-                                isSaved ? 'bg-primary text-primary-foreground' : 'bg-white/70 text-primary/60 hover:text-primary'
+                                isSaved ? 'bg-primary text-primary-foreground scale-105 shadow-lg shadow-primary/30' : 'bg-white/70 text-primary/60 hover:text-primary hover:scale-105'
                               }`}
                               aria-label={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
                             >
                               <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
                             </button>
+                            {imageCount && imageCount > 1 && (
+                              <div className="absolute top-4 right-4 translate-y-10">
+                                <div className="glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full flex items-center gap-1">
+                                  <Images className="w-3 h-3" />
+                                  {imageCount}
+                                </div>
+                              </div>
+                            )}
                             {isSaved && (
                               <div className="absolute bottom-4 left-4 glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
                                 {t({ id: 'Tersimpan', en: 'Saved' })}
@@ -593,11 +704,21 @@ function SearchContent() {
                             )}
                             </div>
                         </div>
-                        <div className="p-6 pt-4 flex flex-col flex-1">
+                        <div className="p-6 pt-4 flex flex-col flex-1 min-h-[220px]">
                             <h3 className="font-black text-xl text-primary tracking-tight line-clamp-1 group-hover:text-accent transition-colors">{glamping.name}</h3>
-                            <div className="flex items-center gap-1.5 text-primary/40 text-[10px] font-black uppercase tracking-widest mt-2">
+                            <div className="flex items-center gap-1.5 text-primary/50 text-[10px] font-black uppercase tracking-widest mt-2">
                                 <MapPin className="w-3 h-3" />
-                                {glamping.location}
+                                {locationLabel}
+                            </div>
+                            <div className="mt-2 text-xs font-bold text-primary/50 uppercase tracking-widest min-h-[16px]">
+                              {emotional}
+                            </div>
+                            <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/40">
+                              <Star className="w-3 h-3 fill-accent text-accent" />
+                              {glamping.rating}
+                              {typeof reviewCount === 'number' && (
+                                <span className="text-primary/30">({reviewCount} {t({ id: 'ulasan', en: 'reviews' })})</span>
+                              )}
                             </div>
                             <div className="flex flex-wrap gap-2 mt-4 mb-3">
                                 {glamping.vibe && (
@@ -621,18 +742,30 @@ function SearchContent() {
                                     </span>
                                 )}
                             </div>
-                            <div className="mt-auto pt-7 border-t border-primary/5 flex justify-between items-center">
-                                <div className="text-[10px] font-black uppercase tracking-widest text-primary/30">{t({ id: 'Mulai', en: 'From' })}</div>
-                                <div className="text-xl font-black text-primary">
+                            <div className="mt-auto pt-7 border-t border-primary/10 flex items-end justify-between gap-3">
+                                <div className="text-[10px] font-black uppercase tracking-widest text-primary/30">{t({ id: 'Mulai dari', en: 'From' })}</div>
+                                <div className="text-2xl font-black text-primary group-hover:text-accent transition-colors">
                                     <span className="text-sm font-bold mr-1 italic text-primary/30">Rp</span>
                                     {(glamping.price || 0).toLocaleString('id-ID')}
+                                    <span className="ml-2 text-[10px] font-black uppercase tracking-widest text-primary/40">/ {t({ id: 'malam', en: 'night' })}</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                     </Link>
                 );
               })}
+            </div>
+          )}
+          {data?.meta && data.meta.current_page < data.meta.last_page && (
+            <div className="flex justify-center mt-10">
+              <Button
+                className="h-12 rounded-full px-8 bg-primary text-primary-foreground font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={isLoading}
+              >
+                {isLoading ? t({ id: 'Memuat...', en: 'Loading...' }) : t({ id: 'Muat lebih banyak', en: 'Load more' })}
+              </Button>
             </div>
           )}
         </div>

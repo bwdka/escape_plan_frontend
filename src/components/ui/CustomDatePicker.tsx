@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, isSameMonth, isSameDay, isBefore, isAfter } from 'date-fns';
 import { cn } from '@/lib/utils';
 import '@/styles/datepicker.css';
@@ -14,6 +15,7 @@ interface CustomDatePickerProps {
   className?: string;
   triggerClassName?: string;
   showLabel?: boolean;
+  positionOverride?: 'top' | 'bottom' | 'center';
 }
 
 export const CustomDatePicker = ({
@@ -24,7 +26,8 @@ export const CustomDatePicker = ({
   highSeasons = [],
   className,
   triggerClassName,
-  showLabel = true
+  showLabel = true,
+  positionOverride
 }: CustomDatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(startDate || new Date());
@@ -45,6 +48,11 @@ export const CustomDatePicker = ({
       setTempDates([startDate, endDate]);
       if (startDate) setViewDate(startDate);
       setSelectingCheckin(true);
+
+      if (positionOverride && positionOverride !== 'center') {
+        setPosition(positionOverride);
+        return;
+      }
 
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect();
@@ -226,6 +234,7 @@ export const CustomDatePicker = ({
   };
 
   const nextMonthView = addMonths(viewDate, 1);
+  const showTwoMonths = positionOverride === 'center' ? !isMobile : !isMobile;
 
   return (
     <div className={cn("relative flex flex-col items-stretch", className)}>
@@ -251,7 +260,51 @@ export const CustomDatePicker = ({
         </div>
       </div>
 
-      {isOpen && (
+      {isOpen && positionOverride === 'center' && typeof window !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        >
+          <div
+            ref={containerRef}
+            className="datepicker open pos-bottom"
+            style={{ position: 'relative', display: 'block', left: 'auto', transform: 'none', width: 'min(95vw, 720px)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="dp-header">
+              <div className="dp-nav-container">
+                <button className="dp-nav-btn" onClick={() => setViewDate(subMonths(viewDate, 1))}>◀</button>
+                <div className="dp-mode-toggle">
+                  <button 
+                    className={cn("mode-btn", selectingCheckin && "active")}
+                    onClick={() => setSelectingCheckin(true)}
+                  >
+                    Check-in
+                  </button>
+                  <button 
+                    className={cn("mode-btn", !selectingCheckin && "active")}
+                    onClick={() => setSelectingCheckin(false)}
+                  >
+                    Check-out
+                  </button>
+                </div>
+                <button className="dp-nav-btn" onClick={() => setViewDate(addMonths(viewDate, 1))}>▶</button>
+              </div>
+            </div>
+            <div className="dp-calendars">
+              {renderCalendar(viewDate.getFullYear(), viewDate.getMonth())}
+              {showTwoMonths && renderCalendar(nextMonthView.getFullYear(), nextMonthView.getMonth())}
+            </div>
+            <div className="dp-footer">
+              <button className="dp-btn clear-btn" onClick={handleClear}>Clear</button>
+              <button className="dp-btn apply-btn" onClick={handleApply}>Apply</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {isOpen && positionOverride !== 'center' && (
         <div 
           ref={containerRef}
           className={cn("datepicker open", position === 'top' ? "pos-top" : "pos-bottom")}
@@ -284,7 +337,7 @@ export const CustomDatePicker = ({
           </div>
           <div className="dp-calendars">
             {renderCalendar(viewDate.getFullYear(), viewDate.getMonth())}
-            {!isMobile && renderCalendar(nextMonthView.getFullYear(), nextMonthView.getMonth())}
+            {showTwoMonths && renderCalendar(nextMonthView.getFullYear(), nextMonthView.getMonth())}
           </div>
           <div className="dp-footer">
             <button className="dp-btn clear-btn" onClick={handleClear}>Clear</button>

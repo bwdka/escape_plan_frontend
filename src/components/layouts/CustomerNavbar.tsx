@@ -54,16 +54,32 @@ export function CustomerNavbar() {
     }
   }, [token, profile, user, setAuth]);
 
+  const navLinkClass = (href: string) => {
+    const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
+    if (isHero) {
+      return `relative text-sm font-bold transition-all ${
+        isActive ? 'text-white' : 'text-white/70 hover:text-white'
+      } after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:bg-white/80 after:transition-all after:duration-300 ${
+        isActive ? 'after:w-full' : 'after:w-0 hover:after:w-full'
+      } hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.35)]`;
+    }
+    return `relative text-sm font-bold transition-all ${
+      isActive ? 'text-primary' : 'text-primary/60 hover:text-primary'
+    } after:absolute after:-bottom-2 after:left-0 after:h-[2px] after:bg-primary/70 after:transition-all after:duration-300 ${
+      isActive ? 'after:w-full' : 'after:w-0 hover:after:w-full'
+    } hover:drop-shadow-[0_0_10px_rgba(16,103,74,0.25)]`;
+  };
+
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl z-50">
       <nav
         className={`w-full transition-all duration-500 backdrop-blur-xl rounded-2xl ${
           isHero
             ? 'bg-white/10 border border-white/20 shadow-lg'
-            : 'bg-white/30 border border-white/40 shadow-xl'
+            : 'bg-white/65 border border-white/60 shadow-2xl shadow-black/10'
         }`}
       >
-        <div className="w-full px-4 sm:px-6 lg:px-10 h-20 flex items-center justify-between">
+        <div className={`w-full px-4 sm:px-6 lg:px-10 flex items-center justify-between transition-all duration-500 ${isScrolled ? 'h-16' : 'h-20'}`}>
           <Link href="/" className="flex items-center gap-2">
             <Image 
               src="/logo/logo_escape_plan.png" 
@@ -75,11 +91,13 @@ export function CustomerNavbar() {
           </Link>
           
           {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-8">
-              <Link href="/search" className={`text-sm font-bold transition-colors ${isHero ? 'text-white/90 hover:text-white' : 'text-primary/80 hover:text-primary'}`}>{t({ id: 'Penginapan', en: 'Stays' })}</Link>
-              <Link href="/wishlist" className={`text-sm font-bold transition-colors ${isHero ? 'text-white/70 hover:text-white' : 'text-primary/60 hover:text-primary'}`}>{t({ id: 'Wishlist', en: 'Wishlist' })}</Link>
-              <Link href="#" className={`text-sm font-bold transition-colors ${isHero ? 'text-white/70 hover:text-white' : 'text-primary/60 hover:text-primary'}`}>{t({ id: 'Pengalaman', en: 'Experiences' })}</Link>
-              <Link href="/partner/register" className={`text-sm font-bold transition-colors ${isHero ? 'text-white/70 hover:text-white' : 'text-primary/60 hover:text-primary'}`}>{t({ id: 'Jadi host', en: 'Become a host' })}</Link>
+          <div className="hidden lg:flex items-center gap-10">
+              <Link href="/search" className={navLinkClass('/search')}>{t({ id: 'Penginapan', en: 'Stays' })}</Link>
+              <Link href="/wishlist" className={navLinkClass('/wishlist')}>{t({ id: 'Wishlist', en: 'Wishlist' })}</Link>
+              <Link href="#" className={isHero ? 'text-sm font-bold text-white/70 hover:text-white transition-all' : 'text-sm font-bold text-primary/60 hover:text-primary transition-all'}>
+                {t({ id: 'Pengalaman', en: 'Experiences' })}
+              </Link>
+              <Link href="/partner/register" className={navLinkClass('/partner/register')}>{t({ id: 'Jadi host', en: 'Become a host' })}</Link>
               
               {mounted && isAuthenticated && (
                 <div className="relative">

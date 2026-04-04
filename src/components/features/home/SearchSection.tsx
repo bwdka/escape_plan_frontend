@@ -53,21 +53,24 @@ export function SearchSection() {
   };
 
   return (
-    <section className="relative -mt-12 z-30 container mx-auto px-4 pointer-events-none">
+    <section className="relative -mt-28 z-30 container mx-auto px-4 pointer-events-none">
       <motion.div 
         variants={slideUp}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
-        className="pointer-events-auto bg-white/80 dark:bg-black/60 backdrop-blur-xl rounded-[2.75rem] border border-white/20 shadow-[0_12px_40px_rgba(0,0,0,0.12)] p-3 sm:p-4 max-w-4xl xl:max-w-[64rem] mx-auto relative"
+        className="group pointer-events-auto bg-white/90 dark:bg-black/70 backdrop-blur-2xl rounded-[3rem] border border-white/30 shadow-[0_24px_80px_rgba(0,0,0,0.22)] p-4 sm:p-5 max-w-5xl xl:max-w-[70rem] mx-auto relative transition-all duration-300 focus-within:shadow-[0_30px_110px_rgba(0,0,0,0.28)] focus-within:-translate-y-1.5 focus-within:scale-[1.015]"
       >
-        <div className="absolute -top-20 -right-24 w-64 h-64 bg-accent/15 blur-3xl rounded-full pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/15 blur-3xl rounded-full pointer-events-none" />
-        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-2">
+        <div className="absolute -top-20 -right-24 w-64 h-64 bg-accent/12 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/12 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute top-6 left-8 text-[11px] font-black uppercase tracking-[0.2em] text-primary/60">
+          {t({ id: 'Temukan Villa', en: 'Find your villa' })}
+        </div>
+        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-3 pt-5">
           
           {/* Location Input */}
           <div className="relative flex-1 w-full group">
-            <div className="flex items-center gap-3 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer">
+            <div className="flex items-center gap-3 px-4 sm:px-5 lg:px-6 py-3 sm:py-3.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent shrink-0">
                 <MapPin className="w-5 h-5" />
               </div>
@@ -123,7 +126,7 @@ export function SearchSection() {
 
           {/* Date Picker */}
           <div className="flex-1 w-full group">
-            <div className="flex items-center gap-3 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer">
+            <div className="flex items-center gap-3 px-4 sm:px-5 lg:px-6 py-3 sm:py-3.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
@@ -147,7 +150,7 @@ export function SearchSection() {
 
           {/* Guests Input */}
           <div className="flex-1 w-full">
-            <div className="flex items-center gap-3 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer">
+            <div className="flex items-center gap-3 px-4 sm:px-5 lg:px-6 py-3 sm:py-3.5 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer">
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent shrink-0">
                 <Users className="w-5 h-5" />
               </div>
@@ -170,7 +173,7 @@ export function SearchSection() {
           {/* Search Button */}
           <button 
             onClick={handleSearch}
-            className="w-full lg:w-auto p-3 sm:p-4 bg-primary text-primary-foreground rounded-[1.25rem] hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-primary/25 flex items-center justify-center gap-2"
+            className="w-full lg:w-auto px-6 py-4 bg-primary text-primary-foreground rounded-[1.4rem] hover:scale-105 active:scale-95 transition-all shadow-[0_16px_40px_rgba(16,103,74,0.35)] hover:shadow-[0_20px_50px_rgba(16,103,74,0.45)] flex items-center justify-center gap-2"
           >
             <Search className="w-6 h-6" />
             <span className="lg:hidden font-bold">{t({ id: 'Cari', en: 'Search' })}</span>
