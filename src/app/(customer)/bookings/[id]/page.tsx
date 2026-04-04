@@ -193,6 +193,18 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                                 <span className="font-mono">{paymentPayload.permata_va_number}</span>
                               </div>
                             )}
+                            {paymentPayload.bill_key && paymentPayload.biller_code && (
+                              <div className="text-sm text-primary mt-2">
+                                <div className="flex items-center justify-between border-b border-primary/5 py-2">
+                                  <span className="font-bold uppercase">Mandiri Bill Key</span>
+                                  <span className="font-mono">{paymentPayload.bill_key}</span>
+                                </div>
+                                <div className="flex items-center justify-between border-b border-primary/5 py-2">
+                                  <span className="font-bold uppercase">Biller Code</span>
+                                  <span className="font-mono">{paymentPayload.biller_code}</span>
+                                </div>
+                              </div>
+                            )}
                             {paymentPayload.actions && (
                               <div className="mt-3 space-y-2">
                                 {paymentPayload.actions.map((action: any, idx: number) => (

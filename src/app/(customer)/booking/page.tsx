@@ -375,6 +375,18 @@ function BookingContent() {
                 </div>
               </div>
             )}
+            {paymentInstruction.bill_key && paymentInstruction.biller_code && (
+              <div className="text-sm text-primary">
+                <div className="flex items-center justify-between border-b border-primary/5 py-2">
+                  <span className="font-bold uppercase">Mandiri Bill Key</span>
+                  <span className="font-mono">{paymentInstruction.bill_key}</span>
+                </div>
+                <div className="flex items-center justify-between border-b border-primary/5 py-2">
+                  <span className="font-bold uppercase">Biller Code</span>
+                  <span className="font-mono">{paymentInstruction.biller_code}</span>
+                </div>
+              </div>
+            )}
             {paymentInstruction.actions && (
               <div className="space-y-2">
                 {paymentInstruction.actions.map((action: any, idx: number) => (
