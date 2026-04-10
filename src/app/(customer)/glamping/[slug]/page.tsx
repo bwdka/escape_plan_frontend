@@ -3,6 +3,7 @@
 import { Suspense, useState, use, useRef, useEffect, type CSSProperties } from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MapPin, Star, Users, Bed, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useGlampingBlockedDates, useGlampingDetail, useUnitBlockedDates } from '@/hooks/useGlampingDetail';
@@ -40,6 +41,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [sidebarStyle, setSidebarStyle] = useState<CSSProperties>({});
+  const [showOwnerInfo, setShowOwnerInfo] = useState(false);
   const { data: blockedDates } = useGlampingBlockedDates(glamping?.id);
   const { data: unitBlockedDates } = useUnitBlockedDates(selectedUnit?.id);
   const bookedDates = selectedUnit?.id 
@@ -94,6 +96,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
     ...(glamping?.gallery?.map((photo) => resolveImage(photo.url)) || []),
     ...(glamping?.images?.map((img) => resolveImage(img)) || []),
   ].filter(Boolean);
+  const ownerAvatar = glamping?.owner?.avatar ? resolveImage(glamping?.owner?.avatar) : '';
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -474,6 +477,44 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                     <p className="text-primary/70 leading-relaxed font-medium text-base md:text-lg italic underline decoration-accent/10 underline-offset-8">
                         &quot;{glamping.description}&quot;
                     </p>
+                    {glamping.owner?.name && (
+                      <div className="mt-6 rounded-2xl border border-black/5 bg-white p-4 md:p-5">
+                        <button
+                          type="button"
+                          onClick={() => setShowOwnerInfo((prev) => !prev)}
+                          className="w-full text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            {ownerAvatar ? (
+                              <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/15">
+                                <Image src={ownerAvatar} alt={glamping.owner.name} fill className="object-cover" />
+                              </div>
+                            ) : (
+                              <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
+                                {glamping.owner.name.charAt(0)}
+                              </div>
+                            )}
+                            <div className="space-y-0.5">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Pemilik', en: 'Owner' })}</p>
+                              <p className="font-black text-primary">{glamping.owner.name}</p>
+                            </div>
+                          </div>
+                        </button>
+
+                        {showOwnerInfo && (
+                          <div className="mt-4 space-y-3">
+                            <p className="text-xs font-bold text-primary/70">
+                              {t({ id: 'Host yang mengelola glamping ini.', en: 'Host managing this glamping.' })}
+                            </p>
+                            <Button asChild variant="outline" className="rounded-full px-5 text-[10px] font-black uppercase tracking-widest">
+                              <Link href={`/owners/${glamping.owner.id}/products`}>
+                                {t({ id: 'Lihat Semua Produk Pemilik', en: 'View All Owner Products' })}
+                              </Link>
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                       {[
                         {

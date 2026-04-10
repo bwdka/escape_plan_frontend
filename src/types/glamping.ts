@@ -106,6 +106,19 @@ export interface GlampingDetail extends Glamping {
         check_out: string;
         is_pet_friendly: boolean;
     };
+    owner?: {
+        id: number;
+        name: string;
+        avatar?: string | null;
+        phone?: string | null;
+        products: Array<{
+            id: number;
+            slug: string;
+            name: string;
+            thumbnail?: string | null;
+            price: number;
+        }>;
+    };
     amenities: Amenity[];
     gallery: GalleryItem[];
     weather_code?: string;
