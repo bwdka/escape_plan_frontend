@@ -1,0 +1,68 @@
+'use client';
+
+import { useState } from "react";
+import { Hero } from "@/components/features/home/Hero";
+import { SearchSection } from "@/components/features/home/SearchSection";
+import { CategoryTabs } from "@/components/features/home/CategoryTabs";
+import { GlampingGrid } from "@/components/features/home/GlampingGrid";
+import { StatsSection } from "@/components/features/home/StatsSection";
+import { FeaturesSection } from "@/components/features/home/FeaturesSection";
+import { useGlampings } from "@/hooks/useGlampings";
+import { useI18n } from "@/i18n/I18nProvider";
+
+export default function HomePage() {
+  const [selectedCategory, setSelectedCategory] = useState("Glamping");
+  const { t } = useI18n();
+
+  const { data, isLoading } = useGlampings({
+     vibe: selectedCategory === "All" ? undefined : selectedCategory.toLowerCase()
+  });
+
+  const glampings = data?.data || [];
+  
+  const filteredPopular = glampings.slice(0, 4);
+  const exploreMore = glampings.slice(4, 8);
+
+  return (
+    <div className="-mt-28 pb-20 overflow-x-hidden relative">
+      <div className="ambient-orb absolute -top-24 right-[-120px] h-[320px] w-[320px] rounded-full bg-accent/40" />
+      <div className="ambient-orb float-slow absolute top-[40vh] left-[-120px] h-[260px] w-[260px] rounded-full bg-primary/30" />
+      <Hero />
+      <SearchSection />
+      
+      <CategoryTabs 
+        selectedCategory={selectedCategory} 
+        onSelectCategory={setSelectedCategory} 
+      />
+      
+      {isLoading ? (
+        <div className="container mx-auto px-4 mt-16 text-center">
+            <div className="animate-pulse flex flex-col items-center gap-4">
+                <div className="h-8 w-64 bg-gray-200 rounded"></div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full">
+                    {[1, 2, 3, 4].map(i => <div key={i} className="h-64 bg-gray-100 rounded-xl"></div>)}
+                </div>
+            </div>
+        </div>
+      ) : (
+        <div key={selectedCategory} className="animate-fade-up">
+          <GlampingGrid 
+            title={t({ id: `${selectedCategory} Populer Saat Ini`, en: `${selectedCategory} Stays Popular Right Now` })} 
+            glampings={filteredPopular} 
+          />
+          
+          <StatsSection />
+          
+          <FeaturesSection />
+          
+          {exploreMore.length > 0 && (
+            <GlampingGrid 
+                title={t({ id: 'Jelajahi Penginapan Lainnya', en: 'Explore Other Stays' })} 
+                glampings={exploreMore} 
+            />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
