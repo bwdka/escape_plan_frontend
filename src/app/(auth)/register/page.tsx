@@ -39,7 +39,7 @@ function RegisterForm() {
     name: z.string().min(2, t({ id: 'Nama minimal 2 karakter', en: 'Name must be at least 2 characters' })),
     email: z.string().email(t({ id: 'Email tidak valid', en: 'Invalid email address' })),
     phone: z.string().min(10, t({ id: 'Nomor telepon tidak valid', en: 'Phone number must be valid' })),
-    role: z.enum(['customer', 'partner']),
+    role: z.enum(['customer', 'partner']), // Select between customer or partner
     password: z.string().min(6, t({ id: 'Password minimal 6 karakter', en: 'Password must be at least 6 characters' })),
     password_confirmation: z.string(),
   }).refine((data) => data.password === data.password_confirmation, {
