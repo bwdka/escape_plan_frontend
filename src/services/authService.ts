@@ -13,13 +13,13 @@ export const AuthService = {
   },
 
   async getGoogleRedirectUrl(redirect?: string, role?: 'customer' | 'partner') {
-    const response = await api.get<{ url: string }>('/auth/google/redirect', {
+    const response = await api.get<{ data: { url: string } }>('/auth/google/redirect', {
       params: {
         ...(redirect ? { redirect } : {}),
         ...(role ? { role } : {}),
       },
     });
-    return response.data;
+    return response.data.data;
   },
 
   async logout() {
