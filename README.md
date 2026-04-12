@@ -65,3 +65,22 @@ Escape Plan adalah platform Online Travel Agency (OTA) khusus untuk penyewaan gl
 - **Revenue Stream:** Komisi X% dari setiap transaksi sukses.
 - **Value Proposition:** Kemudahan pencarian glamping yang terkurasi dan sistem pembayaran yang aman (Escrow).
 - **Retention:** Sistem review untuk menjaga kualitas layanan dari partner.
+
+---
+
+## 🛠️ Technical Stack
+
+- **Frontend Framework:** Next.js 15 (App Router)
+- **State Management:** Zustand
+- **Data Fetching:** TanStack Query (React Query)
+- **Styling:** Tailwind CSS & Framer Motion
+- **UI Components:** Radix UI & Lucide React
+- **Form Handling:** React Hook Form & Zod
+- **API Client:** Axios
+
+## 🤝 Contribution Guide
+
+1. **Clone the repository.**
+2. **Create a new branch** from `development`.
+3. **Make your changes** and ensure they are tested.
+4. **Submit a Pull Request** to the `development` branch for review.
