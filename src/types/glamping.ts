@@ -56,6 +56,7 @@ export interface Unit {
     description?: string;
     capacity: number;
     price_per_night: number;
+    price_weekend?: number;
     max_stock: number;
     available_stock: number;
     photos: string[];

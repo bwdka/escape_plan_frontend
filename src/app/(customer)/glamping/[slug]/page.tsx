@@ -4,7 +4,7 @@ import { Suspense, useState, use, useRef, useEffect, type CSSProperties } from '
 import Image from 'next/image';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { MapPin, Star, Users, Bed, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useGlampingBlockedDates, useGlampingDetail, useUnitBlockedDates } from '@/hooks/useGlampingDetail';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
@@ -18,11 +18,13 @@ import { Unit } from '@/types/glamping';
 import { useI18n } from '@/i18n/I18nProvider';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AMENITY_ICON_FALLBACK, AMENITY_ICON_MAP } from '@/lib/amenities';
+import { useCalculatePriceQuery } from '@/hooks/useBooking';
 
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=800&q=80';
 
 function GlampingDetailContent({ params }: { params: { slug: string } }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: glamping, isLoading, isError } = useGlampingDetail(params.slug);
   const sanctuariesRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -34,7 +36,10 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
   const [hasUserSelectedUnit, setHasUserSelectedUnit] = useState(false);
-  const [dates, setDates] = useState<[Date | null, Date | null]>([null, null]);
+  const [dates, setDates] = useState<[Date | null, Date | null]>([
+    searchParams.get('check_in') ? new Date(searchParams.get('check_in')!) : null,
+    searchParams.get('check_out') ? new Date(searchParams.get('check_out')!) : null,
+  ]);
   const [startDate, endDate] = dates;
   const [isSaved, setIsSaved] = useState(false);
   const pathname = usePathname();
@@ -44,9 +49,31 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   const [showOwnerInfo, setShowOwnerInfo] = useState(false);
   const { data: blockedDates } = useGlampingBlockedDates(glamping?.id);
   const { data: unitBlockedDates } = useUnitBlockedDates(selectedUnit?.id);
+  const selectedStayNights =
+    startDate && endDate
+      ? Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / 86400000))
+      : 1;
+  const minUnitPrice =
+    glamping?.units?.reduce(
+      (min, unit) => Math.min(min, unit.price_per_night),
+      glamping?.units?.[0]?.price_per_night || 0
+    ) ?? 0;
+  const { data: selectedUnitPrice } = useCalculatePriceQuery({
+    unit_id: selectedUnit?.id ?? 0,
+    check_in: startDate?.toISOString().split('T')[0] || '',
+    check_out: endDate?.toISOString().split('T')[0] || '',
+    quantity: 1,
+    total_guests: selectedUnit?.capacity ?? 1,
+    addons: [],
+    enabled: !!selectedUnit?.id && !!startDate && !!endDate,
+  });
   const bookedDates = selectedUnit?.id 
     ? (unitBlockedDates ?? blockedDates ?? []) 
     : (blockedDates ?? []);
+  const selectedUnitNightlyPrice =
+    selectedUnit && selectedUnitPrice
+      ? Math.round(selectedUnitPrice.base_price / selectedStayNights)
+      : (selectedUnit?.price_per_night ?? minUnitPrice);
 
   const policyText = (() => {
     const type = glamping?.cancellation_policy || 'moderate';
@@ -196,7 +223,6 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
     : t({ id: 'Temukan pengalaman glamping terbaik dengan fasilitas premium.', en: 'Discover premium glamping experiences with curated amenities.' });
   const totalAvailable = glamping.units.reduce((sum, unit) => sum + (unit.available_stock || 0), 0);
   const weeklyBooked = Math.min(12, Math.max(3, Math.round(glamping.rating * 2)));
-  const minUnitPrice = glamping.units.reduce((min, unit) => Math.min(min, unit.price_per_night), glamping.units[0]?.price_per_night || 0);
 
   const handleBook = (unit: Unit) => {
     if (!startDate || !endDate) {
@@ -208,7 +234,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
         glamping_id: glamping.id.toString(),
         unit_id: unit.id.toString(),
         unit_name: unit.name,
-        price: unit.price_per_night.toString(),
+        price: selectedUnitNightlyPrice.toString(),
         check_in: startDate.toISOString().split('T')[0],
         check_out: endDate.toISOString().split('T')[0],
     });
@@ -628,11 +654,18 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                                                     <p className="text-xs md:text-sm text-primary/40 font-bold mt-1 line-clamp-2">{unit.description || t({ id: 'Rasakan kenyamanan terbaik di alam.', en: 'Experience ultimate comfort in nature.' })}</p>
                                                 </div>
                                                 <div className="text-left sm:text-right">
-                                                    <div className="text-xl md:text-2xl font-black text-primary">
-                                                        <span className="text-xs md:text-sm font-bold mr-1 italic text-primary/30">Rp</span>
-                                                        {unit.price_per_night.toLocaleString('id-ID')}
-                                                    </div>
-                                                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-primary/30">{t({ id: 'Per Malam', en: 'Per Night' })}</span>
+                            <div className="text-xl md:text-2xl font-black text-primary">
+                                <span className="text-xs md:text-sm font-bold mr-1 italic text-primary/30">Rp</span>
+                                                        {selectedUnit?.id === unit.id && startDate && endDate
+                                                          ? selectedUnitNightlyPrice.toLocaleString('id-ID')
+                                                          : unit.price_per_night.toLocaleString('id-ID')}
+                                                        </div>
+                                                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-primary/30">{t({ id: 'Weekday / Malam', en: 'Weekday / Night' })}</span>
+                                                    {unit.price_weekend && unit.price_weekend !== unit.price_per_night && (
+                                                      <div className="text-xs font-bold text-primary/50 mt-0.5">
+                                                        Rp {unit.price_weekend.toLocaleString('id-ID')} <span className="text-[9px] uppercase tracking-widest">{t({ id: 'weekend', en: 'weekend' })}</span>
+                                                      </div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="flex gap-4 md:gap-6 mt-4 md:mt-6">
@@ -672,10 +705,15 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                         <>
                             <div className="text-3xl md:text-4xl font-black text-primary">
                                 <span className="text-base md:text-lg font-bold mr-1 italic text-primary/30">Rp</span>
-                                {(selectedUnit?.price_per_night ?? minUnitPrice).toLocaleString('id-ID')}
+                                {selectedUnitNightlyPrice.toLocaleString('id-ID')}
                                 <span className="ml-2 text-[10px] font-black uppercase tracking-widest text-primary/40">/ {t({ id: 'malam', en: 'night' })}</span>
                             </div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Harga Terbaik Dijamin', en: 'Guaranteed Best Rate' })}</p>
+                            {startDate && endDate && (
+                              <p className="text-[10px] font-black uppercase tracking-widest text-accent">
+                                {t({ id: 'Harga mengikuti tanggal terpilih', en: 'Price follows selected dates' })}
+                              </p>
+                            )}
                             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/50">
                               <Star className="w-3 h-3 fill-accent text-accent" />
                               {glamping.rating}

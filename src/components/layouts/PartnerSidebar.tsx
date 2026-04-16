@@ -12,13 +12,38 @@ interface PartnerSidebarProps {
   onClose?: () => void;
 }
 
-const sidebarItems = [
-  { icon: LayoutDashboard, label: { id: 'Dashboard', en: 'Dashboard' }, href: '/partner/dashboard' },
-  { icon: Tent, label: { id: 'Listing Saya', en: 'My Listings' }, href: '/partner/listings' },
-  { icon: Calendar, label: { id: 'Kalender', en: 'Calendar' }, href: '/partner/calendar' },
-  { icon: MessageCircle, label: { id: 'Pesan', en: 'Messages' }, href: '/partner/messages' },
-  { icon: BarChart3, label: { id: 'Analitik', en: 'Analytics' }, href: '/partner/analytics' },
-  { icon: Settings, label: { id: 'Pengaturan', en: 'Settings' }, href: '/partner/settings' },
+const sidebarGroups = [
+  {
+    group: { id: 'Ikhtisar', en: 'Overview' },
+    items: [
+      { icon: LayoutDashboard, label: { id: 'Dashboard', en: 'Dashboard' }, href: '/partner/dashboard' },
+    ]
+  },
+  {
+    group: { id: 'Operasional', en: 'Operations' },
+    items: [
+      { icon: Calendar, label: { id: 'Kalender', en: 'Calendar' }, href: '/partner/calendar' },
+      { icon: MessageCircle, label: { id: 'Pesan', en: 'Messages' }, href: '/partner/messages' },
+    ]
+  },
+  {
+    group: { id: 'Properti', en: 'Property' },
+    items: [
+      { icon: Tent, label: { id: 'Listing Saya', en: 'My Listings' }, href: '/partner/listings' },
+    ]
+  },
+  {
+    group: { id: 'Finansial', en: 'Financials' },
+    items: [
+      { icon: BarChart3, label: { id: 'Analitik', en: 'Analytics' }, href: '/partner/analytics' },
+    ]
+  },
+  {
+    group: { id: 'Sistem', en: 'System' },
+    items: [
+      { icon: Settings, label: { id: 'Pengaturan', en: 'Settings' }, href: '/partner/settings' },
+    ]
+  }
 ];
 
 export function PartnerSidebar({ isOpen = false, onClose }: PartnerSidebarProps) {
@@ -54,26 +79,34 @@ export function PartnerSidebar({ isOpen = false, onClose }: PartnerSidebarProps)
         </button>
       </div>
       
-      <div className="relative flex-1 py-10 flex flex-col gap-2 px-4">
-        {sidebarItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-[0.25em] transition-all duration-300",
-                isActive 
-                  ? "bg-white/15 text-white shadow-xl shadow-black/20 translate-x-1 ring-1 ring-white/20" 
-                  : "text-white/60 hover:bg-white/10 hover:text-white hover:translate-x-1"
-              )}
-            >
-              <span className={cn("h-2 w-2 rounded-full transition-all", isActive ? "bg-accent" : "bg-white/30 group-hover:bg-white/60")} />
-              <item.icon className="h-4 w-4" />
-              {t(item.label)}
-            </Link>
-          );
-        })}
+      <div className="relative flex-1 py-6 flex flex-col gap-6 px-4 overflow-y-auto">
+        {sidebarGroups.map((group, gIdx) => (
+          <div key={gIdx} className="space-y-2">
+            <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-white/30">
+              {t(group.group)}
+            </p>
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "group flex items-center gap-3 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
+                      isActive 
+                        ? "bg-white/15 text-white shadow-xl shadow-black/20 translate-x-1 ring-1 ring-white/20" 
+                        : "text-white/50 hover:bg-white/10 hover:text-white hover:translate-x-1"
+                    )}
+                  >
+                    <item.icon className={cn("h-3.5 w-3.5 transition-all", isActive ? "text-accent" : "text-white/40 group-hover:text-white/70")} />
+                    {t(item.label)}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="relative p-6 border-t border-white/10">

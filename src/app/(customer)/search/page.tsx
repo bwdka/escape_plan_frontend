@@ -615,6 +615,9 @@ function SearchContent() {
                     : glamping.thumbnail 
                         ? `${storageBase}${glamping.thumbnail.replace(/^\/+/, '')}`
                         : 'https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?auto=format&fit=crop&q=80';
+                const detailHref = searchParams.toString()
+                  ? `/glamping/${glamping.slug}?${searchParams.toString()}`
+                  : `/glamping/${glamping.slug}`;
                 const isSaved = savedSlugs.includes(glamping.slug);
                 const reviewCount = (glamping as any).review_count as number | undefined;
                 const imageCount = glamping.images?.length;
@@ -635,7 +638,7 @@ function SearchContent() {
                     : t({ id: 'Weekend getaway favorit', en: 'A favorite weekend getaway' });
 
                 return (
-                    <Link href={`/glamping/${glamping.slug}`} key={glamping.id} className="group block">
+                    <Link href={detailHref} key={glamping.id} className="group block">
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}

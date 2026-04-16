@@ -135,6 +135,8 @@ export const CustomDatePicker = ({
         if (booked) return;
         nextStart = date;
         nextEnd = tempStartDate;
+      } else if (isSameDay(date, tempStartDate)) {
+        return;
       } else {
         if (hasBookedBetween(tempStartDate, date)) return;
         nextStart = tempStartDate;
@@ -194,7 +196,7 @@ export const CustomDatePicker = ({
             const canUseAsCheckout =
               !selectingCheckin &&
               tempStartDate &&
-              !isBefore(date, tempStartDate) &&
+              isAfter(date, tempStartDate) &&
               !hasBookedBetween(tempStartDate, date);
             const isBookedButCheckoutAllowed = isBooked && canUseAsCheckout;
             const nextBooked = tempStartDate ? getNextBookedAfterStart(tempStartDate) : null;
