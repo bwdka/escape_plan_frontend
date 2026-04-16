@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, parseISO } from 'date-fns';
+import { EditPriceModal } from '@/components/features/partner/EditPriceModal';
 
 export default function PartnerCalendarPage() {
     const { data: listingsResponse } = usePartnerListings();
@@ -21,7 +22,6 @@ export default function PartnerCalendarPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedGlampingId, setSelectedGlampingId] = useState<string>("");
     
-    // Set first glamping as default if none selected
     useEffect(() => {
         if (!selectedGlampingId && glampings.length > 0) {
             setSelectedGlampingId(glampings[0].id.toString());
@@ -30,8 +30,8 @@ export default function PartnerCalendarPage() {
 
     const { data: units } = usePartnerUnits(Number(selectedGlampingId));
     const [selectedUnitId, setSelectedUnitId] = useState<string>("");
-
     const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+    const [editPriceData, setEditPriceData] = useState<{unitId: number, date: string} | null>(null);
     
     const { data: calendarData, isLoading, refetch } = usePartnerCalendar(
         Number(selectedGlampingId), 
@@ -40,7 +40,6 @@ export default function PartnerCalendarPage() {
     );
     const { mutate: blockDate, isPending: isBlocking } = useBlockDate();
 
-    // Calendar Grid Logic
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -166,14 +165,20 @@ export default function PartnerCalendarPage() {
                       </div>
                     ))}
                     
-import { EditPriceModal } from '@/components/features/partner/EditPriceModal';
-import { useState, useEffect } from 'react';
-
-// ... inside PartnerCalendarPage component
-
-    const [editPriceData, setEditPriceData] = useState<{unitId: number, date: string} | null>(null);
-
-    // ... inside the grid rendering loop
+                    {daysInMonth.map((day) => {
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const dayData = calendarData?.find(d => {
+                        if (!d?.date) return false;
+                        try {
+                          return isSameDay(parseISO(d.date), day);
+                        } catch {
+                          return d.date === dayStr;
+                        }
+                      });
+                      const hasBlocked = !!dayData?.details?.some((unit: any) =>
+                        (unit.bookings || []).some((b: any) => b?.guest_name === 'Blocked' || b?.source === 'Owner')
+                      );
+                      
                       return (
                         <div key={dayStr} className="min-h-[110px] bg-white/80 p-2 flex flex-col gap-1 hover:bg-white transition-colors">
                           <div className={`text-sm font-semibold ${!isSameMonth(day, currentDate) ? 'text-primary/25' : 'text-primary'}`}>
@@ -214,7 +219,7 @@ import { useState, useEffect } from 'react';
           {editPriceData && (
               <EditPriceModal 
                 isOpen={!!editPriceData} 
-                onClose={() => setEditPriceData(null)}
+                onClose={() => {setEditPriceData(null); refetch()}}
                 unitId={editPriceData.unitId}
                 date={editPriceData.date}
               />
