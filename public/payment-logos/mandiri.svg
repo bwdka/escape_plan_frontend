@@ -1,0 +1,5 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='128' height='40' viewBox='0 0 128 40'>
+  <rect width='128' height='40' rx='8' fill='#003d79'/>
+  <path d='M20 11 C30 3, 44 3, 54 11' stroke='#f59e0b' stroke-width='3' fill='none'/>
+  <text x='74' y='25' text-anchor='middle' font-family='Arial, sans-serif' font-size='16' font-weight='700' fill='#ffffff'>MANDIRI</text>
+</svg>

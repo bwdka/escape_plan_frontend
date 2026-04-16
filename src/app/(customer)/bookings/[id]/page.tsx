@@ -40,7 +40,13 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
 
     calculateTimeLeft();
     const interval = setInterval(calculateTimeLeft, 1000);
-    return () => clearInterval(interval);
+    const statusPollInterval = setInterval(() => {
+      refetch();
+    }, 8000);
+    return () => {
+      clearInterval(interval);
+      clearInterval(statusPollInterval);
+    };
   }, [booking, refetch]);
 
   if (isLoading) return (
@@ -171,6 +177,9 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                                     <p className="text-[10px] md:text-xs font-bold text-primary/40 leading-relaxed">
                                       {t({ id: 'Pesanan sedang ditahan. Selesaikan pembayaran sebelum kedaluwarsa.', en: 'Your escape is being held. Complete payment before it expires.' })}
                                     </p>
+                                    <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-accent/80 mt-2">
+                                      {t({ id: 'Status pembayaran dicek otomatis', en: 'Payment status refreshes automatically' })}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -208,7 +217,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                             {paymentPayload.actions && (
                               <div className="mt-3 space-y-2">
                                 {paymentPayload.actions.map((action: any, idx: number) => (
-                                  <a key={idx} href={action.url} target="_blank" className="text-sm font-bold text-accent underline">
+                                  <a key={idx} href={action.url} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-accent underline">
                                     {action.name || 'Open Payment Link'}
                                   </a>
                                 ))}

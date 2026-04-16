@@ -10,14 +10,30 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useProfile } from '@/hooks/useAuth';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useClearNotifications } from '@/hooks/useNotifications';
-import { Bell } from 'lucide-react';
+import { Bell, CheckCircle2, Clock3, XCircle } from 'lucide-react';
+
+type GuestPaymentTracker = {
+  bookingId: number;
+  status: 'PENDING_PAYMENT' | 'PAID' | 'CANCELLED' | string;
+  trackingToken?: string | null;
+  updatedAt?: string;
+  vaBank?: string | null;
+  vaNumber?: string | null;
+  permataVaNumber?: string | null;
+  billKey?: string | null;
+  billerCode?: string | null;
+  paymentCode?: string | null;
+  store?: string | null;
+};
 
 export function CustomerNavbar() {
   const { isAuthenticated, user, logout, setAuth } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isGuestNotifOpen, setIsGuestNotifOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [guestTracker, setGuestTracker] = useState<GuestPaymentTracker | null>(null);
   const pathname = usePathname();
   const isHero = pathname === '/' && !isScrolled;
   const dashboardLink = user?.role === 'admin'
@@ -34,12 +50,75 @@ export function CustomerNavbar() {
   const { mutate: markAllRead } = useMarkAllNotificationsRead();
   const { mutate: clearAll } = useClearNotifications();
   const unreadCount = notifications.filter((n: any) => !n.read_at).length;
+  const guestStatusLabel = guestTracker?.status === 'PAID'
+    ? 'Payment Confirmed'
+    : guestTracker?.status === 'CANCELLED'
+      ? 'Payment Failed/Expired'
+      : 'Waiting for Payment';
+  const GuestStatusIcon = guestTracker?.status === 'PAID'
+    ? CheckCircle2
+    : guestTracker?.status === 'CANCELLED'
+      ? XCircle
+      : Clock3;
+  const guestStatusColor = guestTracker?.status === 'PAID'
+    ? 'text-emerald-400'
+    : guestTracker?.status === 'CANCELLED'
+      ? 'text-red-400'
+      : 'text-amber-300';
 
   useEffect(() => {
     setMounted(true);
     if (typeof window !== 'undefined') {
       setToken(localStorage.getItem('token'));
+      const rawTracker = localStorage.getItem('guest_payment_tracker');
+      if (rawTracker) {
+        try {
+          const parsed = JSON.parse(rawTracker) as GuestPaymentTracker;
+          if (parsed?.bookingId && parsed?.status) {
+            setGuestTracker(parsed);
+          }
+        } catch {
+          setGuestTracker(null);
+        }
+      }
     }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== 'guest_payment_tracker') return;
+      if (!event.newValue) {
+        setGuestTracker(null);
+        return;
+      }
+      try {
+        const parsed = JSON.parse(event.newValue) as GuestPaymentTracker;
+        setGuestTracker(parsed);
+      } catch {
+        setGuestTracker(null);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const interval = setInterval(() => {
+      const rawTracker = localStorage.getItem('guest_payment_tracker');
+      if (!rawTracker) {
+        setGuestTracker(null);
+        return;
+      }
+      try {
+        const parsed = JSON.parse(rawTracker) as GuestPaymentTracker;
+        setGuestTracker(parsed);
+      } catch {
+        setGuestTracker(null);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -174,6 +253,84 @@ export function CustomerNavbar() {
                    </div>
               ) : (
                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <button
+                          type="button"
+                          className="relative h-10 w-10 rounded-full border border-primary/10 bg-white/20 flex items-center justify-center"
+                          onClick={() => setIsGuestNotifOpen((v) => !v)}
+                          aria-label="Guest payment notifications"
+                        >
+                          <Bell className={`w-4 h-4 ${isHero ? 'text-white' : 'text-primary'}`} />
+                          {guestTracker && (
+                            <span className={`absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full ${
+                              guestTracker.status === 'PAID' ? 'bg-emerald-500' : guestTracker.status === 'CANCELLED' ? 'bg-red-500' : 'bg-amber-500'
+                            }`} />
+                          )}
+                        </button>
+                        {isGuestNotifOpen && (
+                          <div className="absolute right-0 mt-3 w-72 rounded-2xl border border-white/20 bg-black/70 backdrop-blur-xl shadow-2xl overflow-hidden z-50">
+                            <div className="px-5 py-3.5 border-b border-white/15">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">Payment Updates</p>
+                            </div>
+                            <div className="px-5 py-4 space-y-2">
+                              {guestTracker ? (
+                                <>
+                                  <div className="flex items-center gap-2">
+                                    <GuestStatusIcon className={`w-4 h-4 ${guestStatusColor}`} />
+                                    <p className="text-xs font-bold text-white">{guestStatusLabel}</p>
+                                  </div>
+                                  <p className="text-[10px] uppercase tracking-widest text-white/60">Booking ESC-{guestTracker.bookingId}</p>
+                                  {guestTracker.vaBank && guestTracker.vaNumber && (
+                                    <p className="text-xs text-white/85">
+                                      <span className="font-bold uppercase mr-1">{guestTracker.vaBank}</span>
+                                      <span className="font-mono">{guestTracker.vaNumber}</span>
+                                    </p>
+                                  )}
+                                  {guestTracker.permataVaNumber && (
+                                    <p className="text-xs text-white/85">
+                                      <span className="font-bold uppercase mr-1">Permata</span>
+                                      <span className="font-mono">{guestTracker.permataVaNumber}</span>
+                                    </p>
+                                  )}
+                                  {guestTracker.billKey && guestTracker.billerCode && (
+                                    <p className="text-xs text-white/85 font-mono">
+                                      BK {guestTracker.billKey} • BC {guestTracker.billerCode}
+                                    </p>
+                                  )}
+                                  {guestTracker.paymentCode && (
+                                    <p className="text-xs text-white/85">
+                                      <span className="font-bold uppercase mr-1">{guestTracker.store || 'CStore'}</span>
+                                      <span className="font-mono">{guestTracker.paymentCode}</span>
+                                    </p>
+                                  )}
+                                  {guestTracker.trackingToken && (
+                                    <Link
+                                      href={`/booking/status?booking_id=${guestTracker.bookingId}&token=${encodeURIComponent(guestTracker.trackingToken)}`}
+                                      className="inline-block text-[10px] uppercase tracking-widest font-bold text-accent"
+                                      onClick={() => setIsGuestNotifOpen(false)}
+                                    >
+                                      View payment details
+                                    </Link>
+                                  )}
+                                  <button
+                                    type="button"
+                                    className="text-[10px] uppercase tracking-widest font-bold text-white/60"
+                                    onClick={() => {
+                                      localStorage.removeItem('guest_payment_tracker');
+                                      setGuestTracker(null);
+                                      setIsGuestNotifOpen(false);
+                                    }}
+                                  >
+                                    Clear
+                                  </button>
+                                </>
+                              ) : (
+                                <p className="text-xs text-white/70">No payment updates yet.</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       <Link href="/login" className={`text-sm font-bold hover:opacity-80 px-4 transition-colors ${isHero ? 'text-white' : 'text-primary'}`}>
                           Login
                       </Link>

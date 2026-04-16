@@ -1,8 +1,7 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,14 +10,15 @@ import { useProfile } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Loader2, Shield, Plus, Minus, AlertCircle } from 'lucide-react';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useUnitBlockedDates, useUnitDetail } from '@/hooks/useGlampingDetail';
 import { AMENITY_ICON_FALLBACK, AMENITY_ICON_MAP } from '@/lib/amenities';
+import api from '@/lib/axios';
 
 type BookingFormValues = {
   guest_name: string;
@@ -32,8 +32,8 @@ type BookingFormValues = {
 
 function BookingContent() {
   const { t } = useI18n();
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const unitId = Number(searchParams.get('unit_id'));
   const unitName = searchParams.get('unit_name');
@@ -47,6 +47,14 @@ function BookingContent() {
   const { data: paymentMethods = [] } = usePaymentMethods();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
   const [paymentInstruction, setPaymentInstruction] = useState<any | null>(null);
+  const [createdBookingId, setCreatedBookingId] = useState<number | null>(null);
+  const [guestTrackingToken, setGuestTrackingToken] = useState<string | null>(null);
+  const [trackedBookingStatus, setTrackedBookingStatus] = useState<string | null>(null);
+  const [showPaymentInstructionModal, setShowPaymentInstructionModal] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [hasAuthToken, setHasAuthToken] = useState(false);
+  const [logoLoadFailed, setLogoLoadFailed] = useState<Record<string, boolean>>({});
+  const paymentInstructionRef = useRef<HTMLDivElement | null>(null);
   const [cardToken, setCardToken] = useState<string>('');
   const [cardNumber, setCardNumber] = useState('');
   const [cardExp, setCardExp] = useState('');
@@ -119,6 +127,11 @@ function BookingContent() {
   const { mutate: createBooking, isPending: isBooking } = useCreateBooking();
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setHasAuthToken(!!localStorage.getItem('token'));
+  }, []);
+
+  useEffect(() => {
     if (userProfile) {
         form.setValue('guest_name', userProfile.name);
         form.setValue('guest_email', userProfile.email);
@@ -174,22 +187,169 @@ function BookingContent() {
         card_token: selectedPaymentMethod === 'credit_card' ? cardToken : undefined,
     }, { 
         onSuccess: (res: any) => {
-            setPaymentInstruction(res.payment?.response || null);
+            const bookingId = Number(res.booking_id || 0);
+            const safeBookingId = Number.isFinite(bookingId) && bookingId > 0 ? bookingId : null;
+            setCreatedBookingId(safeBookingId);
+            setGuestTrackingToken(res.guest_tracking_token || null);
+            setTrackedBookingStatus(res.status || 'PENDING_PAYMENT');
+            const instruction = res.payment?.response || null;
+            if (typeof window !== 'undefined' && safeBookingId) {
+              localStorage.setItem('guest_payment_tracker', JSON.stringify(
+                buildGuestTracker(safeBookingId, res.status || 'PENDING_PAYMENT', instruction, res.guest_tracking_token || null)
+              ));
+            }
+            setPaymentInstruction(instruction);
+            if (instruction) {
+              setShowPaymentInstructionModal(true);
+              setTimeout(() => {
+                paymentInstructionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 250);
+            }
             toast.success(t({ id: 'Booking dibuat. Silakan selesaikan pembayaran.', en: 'Booking created. Please complete payment.' }));
         },
         onError: (err: any) => toast.error(err.response?.data?.message || t({ id: 'Booking gagal dibuat', en: 'Booking creation failed' }))
     });
   };
 
+  useEffect(() => {
+    if (!createdBookingId || !guestTrackingToken) return;
+
+    let active = true;
+    const poll = async () => {
+      try {
+        const { data } = await api.post('/bookings/guest-status', {
+          booking_id: createdBookingId,
+          tracking_token: guestTrackingToken,
+        });
+        if (!active) return;
+
+        const nextStatus = data?.data?.status;
+        if (!nextStatus) return;
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('guest_payment_tracker', JSON.stringify(
+            buildGuestTracker(createdBookingId, nextStatus, data?.data?.payment_payload || paymentInstruction, guestTrackingToken)
+          ));
+        }
+        if (nextStatus === trackedBookingStatus) return;
+
+        setTrackedBookingStatus(nextStatus);
+
+        if (nextStatus === 'PAID') {
+          toast.success(t({ id: 'Pembayaran berhasil dikonfirmasi', en: 'Payment has been confirmed' }));
+        } else if (nextStatus === 'CANCELLED') {
+          toast.error(t({ id: 'Pembayaran gagal atau kedaluwarsa', en: 'Payment failed or expired' }));
+        }
+      } catch {
+        // ignore transient polling error
+      }
+    };
+
+    poll();
+    const interval = setInterval(poll, 8000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [createdBookingId, guestTrackingToken, trackedBookingStatus, t]);
+
+  const scrollToPaymentInstruction = () => {
+    paymentInstructionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const buildGuestTracker = (bookingId: number, status: string, payload?: any, token?: string | null) => ({
+    bookingId,
+    status,
+    trackingToken: token || null,
+    updatedAt: new Date().toISOString(),
+    vaBank: payload?.va_numbers?.[0]?.bank || null,
+    vaNumber: payload?.va_numbers?.[0]?.va_number || null,
+    permataVaNumber: payload?.permata_va_number || null,
+    billKey: payload?.bill_key || null,
+    billerCode: payload?.biller_code || null,
+    paymentCode: payload?.payment_code || null,
+    store: payload?.store || null,
+  });
+
+  const goToStatusPage = () => {
+    if (!createdBookingId) return;
+    if (hasAuthToken) {
+      router.push(`/bookings/${createdBookingId}`);
+      return;
+    }
+    if (guestTrackingToken) {
+      router.push(`/booking/status?booking_id=${createdBookingId}&token=${encodeURIComponent(guestTrackingToken)}`);
+      return;
+    }
+    scrollToPaymentInstruction();
+  };
+
   if (!unitId) return <div className="p-8 text-center">{t({ id: 'Sesi Booking Tidak Valid', en: 'Invalid booking session' })}</div>;
   const policyType = unitDetail?.glamping?.cancellation_policy || 'moderate';
   const policyLabel = policyType === 'flexible' ? t({ id: 'Fleksibel', en: 'Flexible' }) : policyType === 'strict' ? t({ id: 'Ketat', en: 'Strict' }) : t({ id: 'Moderat', en: 'Moderate' });
+  const selectedPaymentMethodData = paymentMethods.find((method) => method.id === selectedPaymentMethod);
+  const getPaymentBrandMeta = (method: { payment_type: string; bank?: string; label: string }) => {
+    const source = `${method.payment_type} ${method.bank || ''} ${method.label}`.toLowerCase();
+    if (source.includes('qris')) return { short: 'QRIS', badge: 'from-red-600 to-red-500', ring: 'ring-red-500/25', text: 'text-red-700', soft: 'bg-red-50' };
+    if (source.includes('gopay') || source.includes('go_pay')) return { short: 'GoPay', badge: 'from-sky-600 to-cyan-500', ring: 'ring-sky-500/25', text: 'text-sky-700', soft: 'bg-sky-50' };
+    if (source.includes('bca')) return { short: 'BCA', badge: 'from-blue-700 to-blue-500', ring: 'ring-blue-500/25', text: 'text-blue-700', soft: 'bg-blue-50' };
+    if (source.includes('bni')) return { short: 'BNI', badge: 'from-orange-600 to-orange-500', ring: 'ring-orange-500/25', text: 'text-orange-700', soft: 'bg-orange-50' };
+    if (source.includes('bri')) return { short: 'BRI', badge: 'from-indigo-700 to-blue-600', ring: 'ring-indigo-500/25', text: 'text-indigo-700', soft: 'bg-indigo-50' };
+    if (source.includes('mandiri')) return { short: 'Mandiri', badge: 'from-yellow-500 to-amber-500', ring: 'ring-amber-500/25', text: 'text-amber-700', soft: 'bg-amber-50' };
+    if (source.includes('permata')) return { short: 'Permata', badge: 'from-emerald-600 to-emerald-500', ring: 'ring-emerald-500/25', text: 'text-emerald-700', soft: 'bg-emerald-50' };
+    if (source.includes('cimb')) return { short: 'CIMB', badge: 'from-rose-600 to-red-500', ring: 'ring-rose-500/25', text: 'text-rose-700', soft: 'bg-rose-50' };
+    if (source.includes('credit_card') || source.includes('credit card') || source.includes('card')) return { short: 'Card', badge: 'from-zinc-700 to-zinc-600', ring: 'ring-zinc-500/25', text: 'text-zinc-700', soft: 'bg-zinc-50' };
+    return { short: (method.bank || method.payment_type || 'Pay').slice(0, 6).toUpperCase(), badge: 'from-primary to-primary/80', ring: 'ring-primary/20', text: 'text-primary', soft: 'bg-primary/5' };
+  };
+  const getPaymentDisplayName = (method: { payment_type: string; bank?: string; label: string }) => {
+    const source = `${method.payment_type} ${method.bank || ''} ${method.label}`.toLowerCase();
+    if (source.includes('qris')) return 'QRIS';
+    if (source.includes('gopay') || source.includes('go_pay')) return 'GoPay';
+    if (source.includes('bca')) return 'BCA';
+    if (source.includes('bni')) return 'BNI';
+    if (source.includes('bri')) return 'BRI';
+    if (source.includes('mandiri')) return 'Mandiri';
+    if (source.includes('permata')) return 'Permata';
+    if (source.includes('cimb')) return 'CIMB';
+    if (source.includes('credit_card') || source.includes('credit card') || source.includes('card')) return 'Card';
+    return method.label
+      .replace(/virtual account/gi, '')
+      .replace(/bill payment/gi, '')
+      .replace(/bank[_\s-]*transfer/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+  const getPaymentLogoSrc = (method: { payment_type: string; bank?: string; label: string; [key: string]: unknown }) => {
+    const dynamicLogo = [
+      method.logo_url,
+      method.logo,
+      method.icon,
+      method.image,
+      method.brand_logo,
+      method.payment_logo,
+    ].find((item) => typeof item === 'string' && item.trim().length > 0) as string | undefined;
+    if (dynamicLogo) return dynamicLogo;
+
+    const source = `${method.payment_type} ${method.bank || ''} ${method.label}`.toLowerCase();
+    if (source.includes('qris')) return 'https://commons.wikimedia.org/wiki/Special:FilePath/QRIS_logo.svg';
+    if (source.includes('gopay') || source.includes('go_pay')) return 'https://commons.wikimedia.org/wiki/Special:FilePath/Gopay_logo.svg';
+    if (source.includes('bca')) return 'https://commons.wikimedia.org/wiki/Special:FilePath/Bank_Central_Asia.svg';
+    if (source.includes('bni')) return 'https://commons.wikimedia.org/wiki/Special:FilePath/Bank_Negara_Indonesia_logo_(2004).svg';
+    if (source.includes('bri')) return 'https://commons.wikimedia.org/wiki/Special:FilePath/BANK_BRI_logo.svg';
+    if (source.includes('mandiri')) return 'https://commons.wikimedia.org/wiki/Special:FilePath/Bank_Mandiri_logo_2016.svg';
+    if (source.includes('permata')) return 'https://commons.wikimedia.org/wiki/Special:FilePath/PermataBank_(2024)_prototype_logo.svg';
+    if (source.includes('cimb')) return 'https://commons.wikimedia.org/wiki/Special:FilePath/CIMB_Niaga_logo.svg';
+    if (source.includes('credit_card') || source.includes('credit card') || source.includes('card')) return '/payment-logos/card.svg';
+    return null;
+  };
+  const selectedPaymentBrand = selectedPaymentMethodData ? getPaymentBrandMeta(selectedPaymentMethodData) : null;
+  const selectedPaymentLogo = selectedPaymentMethodData ? getPaymentLogoSrc(selectedPaymentMethodData) : null;
 
   return (
+    <>
     <div className="container mx-auto px-4 py-10 md:py-16 grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16 max-w-6xl">
       <div className="lg:col-span-2 space-y-10">
         <div className="flex flex-col gap-6">
-            <Image src="/logo/logo_escape_plan.png" alt="Escape Plan Logo" width={120} height={40} className="opacity-80 object-contain" />
             <div className="flex flex-col gap-2">
                 <h1 className="text-4xl font-black text-primary tracking-tighter">{t({ id: 'Konfirmasi Pesanan', en: 'Confirm Your Booking' })}</h1>
                 <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">{t({ id: 'Lengkapi data Anda untuk mengamankan tenda ini', en: 'Complete your details to secure this stay' })}</p>
@@ -307,78 +467,12 @@ function BookingContent() {
             </div>
         </div>
 
-        <div className="glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-xl space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="font-black text-xl text-primary tracking-tight">{t({ id: 'Metode Pembayaran', en: 'Payment Method' })}</h3>
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 mt-1">{t({ id: 'Pilih metode yang paling nyaman', en: 'Choose the most convenient method' })}</p>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/40">
-                <Shield size={12} className="text-accent" /> {t({ id: 'Secure Payment', en: 'Secure Payment' })}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {paymentMethods.map((method) => (
-                <button
-                  key={method.id}
-                  type="button"
-                  onClick={() => setSelectedPaymentMethod(method.id)}
-                  className={`p-4 rounded-2xl border text-left transition-all flex items-center gap-4 ${selectedPaymentMethod === method.id ? 'border-accent bg-accent/5 shadow-md' : 'border-primary/10 bg-white/50 hover:border-accent/30'}`}
-                >
-                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary font-black uppercase text-[10px] flex items-center justify-center">
-                    {method.bank ? method.bank.slice(0, 3).toUpperCase() : method.payment_type.slice(0, 3).toUpperCase()}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-black text-primary">{method.label}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-primary/40">{method.payment_type}{method.bank ? ` • ${method.bank.toUpperCase()}` : ''}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/40">
-              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'BCA', en: 'BCA' })}</span>
-              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'Mandiri', en: 'Mandiri' })}</span>
-              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'BNI', en: 'BNI' })}</span>
-              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'BRI', en: 'BRI' })}</span>
-              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'QRIS', en: 'QRIS' })}</span>
-              <span className="px-3 py-1 rounded-full bg-primary/5">{t({ id: 'GoPay', en: 'GoPay' })}</span>
-            </div>
-            {selectedPaymentMethod === 'credit_card' && (
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Input
-                  placeholder="Card Number"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  className="rounded-2xl bg-white/70 border-white/70"
-                />
-                <Input
-                  placeholder="MM/YY"
-                  value={cardExp}
-                  onChange={(e) => setCardExp(e.target.value)}
-                  className="rounded-2xl bg-white/70 border-white/70"
-                />
-                <Input
-                  placeholder="CVV"
-                  value={cardCvv}
-                  onChange={(e) => setCardCvv(e.target.value)}
-                  className="rounded-2xl bg-white/70 border-white/70"
-                />
-                <Input
-                  placeholder="Card Token"
-                  value={cardToken}
-                  onChange={(e) => setCardToken(e.target.value)}
-                  className="rounded-2xl bg-white/70 border-white/70 md:col-span-3"
-                />
-                <p className="text-xs text-primary/50 md:col-span-3">
-                  Card token must be generated client-side using Midtrans Card Tokenization.
-                </p>
-              </div>
-            )}
-        </div>
-
         {paymentInstruction && (
-          <div className="glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-xl space-y-4">
+          <div ref={paymentInstructionRef} className="glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-xl space-y-4 ring-2 ring-accent/20">
             <h3 className="font-black text-xl text-primary tracking-tight">{t({ id: 'Instruksi Pembayaran', en: 'Payment Instructions' })}</h3>
+            <p className="text-xs font-bold uppercase tracking-widest text-accent">
+              {t({ id: 'Penting: selesaikan pembayaran sebelum batas waktu berakhir', en: 'Important: complete payment before the deadline' })}
+            </p>
             {paymentInstruction.va_numbers && (
               <div className="text-sm text-primary">
                 {paymentInstruction.va_numbers.map((va: any, idx: number) => (
@@ -412,14 +506,14 @@ function BookingContent() {
             {paymentInstruction.actions && (
               <div className="space-y-2">
                 {paymentInstruction.actions.map((action: any, idx: number) => (
-                  <a key={idx} href={action.url} target="_blank" className="text-sm font-bold text-accent underline">
+                  <a key={idx} href={action.url} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-accent underline">
                     {action.name || 'Open Payment Link'}
                   </a>
                 ))}
               </div>
             )}
             {paymentInstruction.redirect_url && (
-              <a href={paymentInstruction.redirect_url} target="_blank" className="text-sm font-bold text-accent underline">
+              <a href={paymentInstruction.redirect_url} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-accent underline">
                 Open 3DS / Card Authentication
               </a>
             )}
@@ -479,6 +573,35 @@ function BookingContent() {
                   )}
               </div>
               <div className="space-y-4">
+                  {paymentInstruction && (
+                    <div className="p-4 rounded-2xl border border-accent/30 bg-accent/5 space-y-3">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-accent">
+                        {t({ id: 'Instruksi pembayaran sudah tersedia', en: 'Payment instructions are ready' })}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={scrollToPaymentInstruction}
+                        className="w-full h-10 rounded-xl border-accent/40 text-accent font-black uppercase tracking-[0.12em]"
+                      >
+                        {t({ id: 'Lihat Instruksi Pembayaran', en: 'View Payment Instructions' })}
+                      </Button>
+                      {createdBookingId && (
+                        <Button
+                          type="button"
+                          onClick={goToStatusPage}
+                          className="w-full h-10 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-[0.12em]"
+                        >
+                          {t({ id: 'Buka Status Booking', en: 'Open Booking Status' })}
+                        </Button>
+                      )}
+                      {trackedBookingStatus && (
+                        <p className="text-[10px] font-black uppercase tracking-widest text-primary/50 text-center">
+                          {t({ id: 'Status saat ini', en: 'Current Status' })}: {trackedBookingStatus}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div className="p-4 bg-accent/5 rounded-2xl border border-accent/10">
                       <p className="text-[9px] font-black text-accent uppercase tracking-widest mb-1">{t({ id: 'Inventory Hold', en: 'Inventory Hold' })}</p>
                       <p className="text-[11px] font-bold text-primary/60 leading-relaxed">
@@ -492,6 +615,143 @@ function BookingContent() {
                     <p className="text-[11px] font-bold text-primary/60 leading-relaxed">
                       {t({ id: '100% transaksi aman & terenkripsi. Gratis reschedule sesuai kebijakan.', en: '100% secure & encrypted. Free reschedule per policy.' })}
                     </p>
+                  </div>
+                  <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-12 rounded-2xl border-primary/20 bg-white/70 font-black uppercase tracking-[0.15em] text-primary hover:bg-white"
+                      >
+                        {t({ id: 'Pilih Metode Pembayaran', en: 'Choose Payment Method' })}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl rounded-3xl p-0 overflow-hidden border-white/80">
+                      <div className="p-6 md:p-8 space-y-6 max-h-[80vh] overflow-y-auto">
+                        <DialogHeader className="space-y-2 text-left">
+                          <DialogTitle className="font-black text-xl text-primary tracking-tight">{t({ id: 'Metode Pembayaran', en: 'Payment Method' })}</DialogTitle>
+                          <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                            {t({ id: 'Pilih metode yang paling nyaman', en: 'Choose the most convenient method' })}
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {paymentMethods.map((method) => (
+                            <button
+                              key={method.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedPaymentMethod(method.id);
+                                if (method.id !== 'credit_card') {
+                                  setCardNumber('');
+                                  setCardExp('');
+                                  setCardCvv('');
+                                  setCardToken('');
+                                }
+                              }}
+                              className={`p-4 rounded-2xl border text-left transition-all flex items-center gap-4 hover:-translate-y-0.5 ${selectedPaymentMethod === method.id ? 'border-accent/70 bg-accent/[0.04] shadow-md ring-2 ring-accent/10' : 'border-primary/10 bg-white/70 hover:border-accent/30 hover:bg-white'}`}
+                            >
+                              {(() => {
+                                const brand = getPaymentBrandMeta(method);
+                                const logoSrc = getPaymentLogoSrc(method);
+                                const showLogo = !!logoSrc && !logoLoadFailed[method.id];
+                                return (
+                                  <div className="w-16 h-10 rounded-xl bg-transparent flex items-center justify-center overflow-hidden px-2">
+                                    {showLogo ? (
+                                      <img
+                                        src={logoSrc}
+                                        alt={`${method.label} logo`}
+                                        className="max-w-[52px] max-h-7 object-contain"
+                                        onError={() => setLogoLoadFailed((prev) => ({ ...prev, [method.id]: true }))}
+                                      />
+                                    ) : (
+                                      <span className={`inline-flex h-6 min-w-[2.5rem] px-2 items-center justify-center rounded-md bg-gradient-to-r ${brand.badge} text-white text-[10px] font-black tracking-wide`}>
+                                        {brand.short}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                              <div className="flex-1">
+                                <p className="text-sm font-black text-primary leading-tight">{getPaymentDisplayName(method)}</p>
+                                {selectedPaymentMethod === method.id ? (
+                                  <p className="mt-1 text-[9px] font-black uppercase tracking-wider text-accent">
+                                    Selected
+                                  </p>
+                                ) : null}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+
+                        {selectedPaymentMethod === 'credit_card' && (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Input
+                              placeholder="Card Number"
+                              value={cardNumber}
+                              onChange={(e) => setCardNumber(e.target.value)}
+                              className="rounded-2xl bg-white/70 border-white/70"
+                            />
+                            <Input
+                              placeholder="MM/YY"
+                              value={cardExp}
+                              onChange={(e) => setCardExp(e.target.value)}
+                              className="rounded-2xl bg-white/70 border-white/70"
+                            />
+                            <Input
+                              placeholder="CVV"
+                              value={cardCvv}
+                              onChange={(e) => setCardCvv(e.target.value)}
+                              className="rounded-2xl bg-white/70 border-white/70"
+                            />
+                            <Input
+                              placeholder="Card Token"
+                              value={cardToken}
+                              onChange={(e) => setCardToken(e.target.value)}
+                              className="rounded-2xl bg-white/70 border-white/70 md:col-span-3"
+                            />
+                            <p className="text-xs text-primary/50 md:col-span-3">
+                              Card token must be generated client-side using Midtrans Card Tokenization.
+                            </p>
+                          </div>
+                        )}
+
+                        <Button
+                          type="button"
+                          className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-[0.15em]"
+                          onClick={() => setIsPaymentModalOpen(false)}
+                        >
+                          {t({ id: 'Simpan Pilihan', en: 'Save Selection' })}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <div className="p-4 bg-white/70 rounded-2xl border border-primary/10 space-y-3">
+                    <div className="flex items-start">
+                      <p className="text-[9px] font-black text-primary/50 uppercase tracking-widest leading-relaxed">
+                        {t({ id: 'Metode Pembayaran Terpilih', en: 'Selected Payment Method' })}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {selectedPaymentBrand && (
+                        <div className="inline-flex h-9 min-w-[5.25rem] px-3 items-center justify-center rounded-lg bg-transparent overflow-hidden shrink-0">
+                          {selectedPaymentLogo && !logoLoadFailed[selectedPaymentMethod] ? (
+                            <img
+                              src={selectedPaymentLogo}
+                              alt={`${selectedPaymentMethodData?.label || 'Payment method'} logo`}
+                              className="max-w-[72px] max-h-7 object-contain"
+                              onError={() => setLogoLoadFailed((prev) => ({ ...prev, [selectedPaymentMethod]: true }))}
+                            />
+                          ) : (
+                            <span className={`inline-flex h-7 px-2.5 items-center justify-center rounded-md bg-gradient-to-r ${selectedPaymentBrand.badge} text-white text-[11px] font-black tracking-wide`}>
+                              {selectedPaymentBrand.short}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <Button
                     className="w-full h-16 rounded-[1.5rem] bg-primary text-primary-foreground font-black uppercase tracking-[0.2em] shadow-2xl shadow-primary/40 hover:scale-[1.03] transition-all"
@@ -514,6 +774,56 @@ function BookingContent() {
           </div>
       </div>
     </div>
+    <Dialog open={showPaymentInstructionModal} onOpenChange={setShowPaymentInstructionModal}>
+      <DialogContent className="max-w-md rounded-3xl">
+        <DialogHeader className="text-left">
+          <DialogTitle className="font-black text-xl text-primary">
+            {t({ id: 'Instruksi Pembayaran Siap', en: 'Payment Instructions Ready' })}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-primary/70">
+            {t({ id: 'Booking berhasil dibuat. Lanjutkan pembayaran sekarang agar pesanan tidak hangus.', en: 'Booking is created. Complete payment now to secure your booking.' })}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          {paymentInstruction?.va_numbers?.[0] && (
+            <p className="text-sm text-primary">
+              <span className="font-black uppercase mr-2">{paymentInstruction.va_numbers[0].bank}</span>
+              <span className="font-mono">{paymentInstruction.va_numbers[0].va_number}</span>
+            </p>
+          )}
+          {paymentInstruction?.payment_code && (
+            <p className="text-sm text-primary">
+              <span className="font-black uppercase mr-2">{paymentInstruction.store || 'CStore'}</span>
+              <span className="font-mono">{paymentInstruction.payment_code}</span>
+            </p>
+          )}
+        </div>
+        <Button
+          type="button"
+          className="w-full h-11 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-[0.12em]"
+          onClick={() => {
+            setShowPaymentInstructionModal(false);
+            scrollToPaymentInstruction();
+          }}
+        >
+          {t({ id: 'Lihat Instruksi Sekarang', en: 'See Instructions Now' })}
+        </Button>
+        {createdBookingId && (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-11 rounded-2xl font-black uppercase tracking-[0.12em]"
+            onClick={() => {
+              setShowPaymentInstructionModal(false);
+              goToStatusPage();
+            }}
+          >
+            {t({ id: 'Pantau Status Pembayaran', en: 'Track Payment Status' })}
+          </Button>
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
