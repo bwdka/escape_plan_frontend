@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { useI18n } from '@/i18n/I18nProvider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock3, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock3, XCircle, Loader2 } from 'lucide-react';
 
 type GuestStatusResponse = {
   id: number;
@@ -18,7 +18,7 @@ type GuestStatusResponse = {
   created_at: string;
 };
 
-export default function GuestBookingStatusPage() {
+function GuestBookingStatusContent() {
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const bookingId = Number(searchParams.get('booking_id') || 0);
@@ -174,5 +174,20 @@ export default function GuestBookingStatusPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function GuestBookingStatusPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-10 md:py-14 max-w-2xl flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-sm font-bold text-primary/60">Loading...</p>
+        </div>
+      </div>
+    }>
+      <GuestBookingStatusContent />
+    </Suspense>
   );
 }
