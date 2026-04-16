@@ -166,20 +166,14 @@ export default function PartnerCalendarPage() {
                       </div>
                     ))}
                     
-                    {daysInMonth.map((day) => {
-                      const dayStr = format(day, 'yyyy-MM-dd');
-                      const dayData = calendarData?.find(d => {
-                        if (!d?.date) return false;
-                        try {
-                          return isSameDay(parseISO(d.date), day);
-                        } catch {
-                          return d.date === dayStr;
-                        }
-                      });
-                      const hasBlocked = !!dayData?.details?.some((unit: any) =>
-                        (unit.bookings || []).some((b: any) => b?.guest_name === 'Blocked' || b?.source === 'Owner')
-                      );
-                      
+import { EditPriceModal } from '@/components/features/partner/EditPriceModal';
+import { useState, useEffect } from 'react';
+
+// ... inside PartnerCalendarPage component
+
+    const [editPriceData, setEditPriceData] = useState<{unitId: number, date: string} | null>(null);
+
+    // ... inside the grid rendering loop
                       return (
                         <div key={dayStr} className="min-h-[110px] bg-white/80 p-2 flex flex-col gap-1 hover:bg-white transition-colors">
                           <div className={`text-sm font-semibold ${!isSameMonth(day, currentDate) ? 'text-primary/25' : 'text-primary'}`}>
@@ -190,11 +184,18 @@ export default function PartnerCalendarPage() {
                             <div className="space-y-1">
                               {dayData.status === 'fully_booked' && <Badge variant="destructive" className="text-[10px] w-full justify-center">Full</Badge>}
                               {(dayData.status === 'blocked' || hasBlocked) && <Badge variant="secondary" className="text-[10px] w-full justify-center">Blocked</Badge>}
-                              {dayData.details?.map((unit, uIdx) => (
-                                <div key={uIdx} className="text-[10px] bg-blue-50 text-blue-700 p-1 rounded truncate">
-                                  {unit.unit_name}: {unit.stock_left} left
-                                </div>
-                              ))}
+                              {dayData.details?.map((unit: any, uIdx: number) => {
+                                const unitInfo = units?.find((u: any) => u.title === unit.unit_name);
+                                return (
+                                    <button 
+                                        key={uIdx} 
+                                        onClick={() => setEditPriceData({unitId: unitInfo?.id, date: dayStr})}
+                                        className="w-full text-left text-[10px] bg-blue-50 text-blue-700 p-1 rounded truncate hover:bg-blue-100"
+                                    >
+                                      {unit.unit_name}: {unit.stock_left} left
+                                    </button>
+                                );
+                              })}
                             </div>
                           ) : (
                             <div className="h-full flex items-center justify-center">
@@ -209,6 +210,15 @@ export default function PartnerCalendarPage() {
               )}
             </CardContent>
           </Card>
+          
+          {editPriceData && (
+              <EditPriceModal 
+                isOpen={!!editPriceData} 
+                onClose={() => setEditPriceData(null)}
+                unitId={editPriceData.unitId}
+                date={editPriceData.date}
+              />
+          )}
         </div>
     );
 }
