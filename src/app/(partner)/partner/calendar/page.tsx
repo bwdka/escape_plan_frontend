@@ -195,9 +195,11 @@ export default function PartnerCalendarPage() {
                                     <button 
                                         key={uIdx} 
                                         onClick={() => setEditPriceData({unitId: unitInfo?.id, date: dayStr})}
-                                        className="w-full text-left text-[10px] bg-blue-50 text-blue-700 p-1 rounded truncate hover:bg-blue-100"
+                                        className="w-full text-left text-[10px] bg-blue-50 text-blue-700 p-1.5 rounded truncate hover:bg-blue-100 flex flex-col"
                                     >
-                                      {unit.unit_name}: {unit.stock_left} left
+                                      <span className="font-bold">{unit.unit_name}</span>
+                                      <span className="opacity-80">Rp {Number(unit.price || 0).toLocaleString('id-ID')}</span>
+                                      <span className="opacity-60">{unit.stock_left} left</span>
                                     </button>
                                 );
                               })}
