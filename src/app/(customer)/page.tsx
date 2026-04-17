@@ -9,6 +9,8 @@ import { StatsSection } from "@/components/features/home/StatsSection";
 import { FeaturesSection } from "@/components/features/home/FeaturesSection";
 import { useGlampings } from "@/hooks/useGlampings";
 import { useI18n } from "@/i18n/I18nProvider";
+import Link from "next/link";
+import { Compass, ShieldCheck, Timer } from "lucide-react";
 
 export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("Glamping");
@@ -29,6 +31,43 @@ export default function HomePage() {
       <div className="ambient-orb float-slow absolute top-[40vh] left-[-120px] h-[260px] w-[260px] rounded-full bg-primary/30" />
       <Hero />
       <SearchSection />
+      <section className="container mx-auto px-4 mt-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {[
+            {
+              icon: Compass,
+              title: t({ id: "Pilih Sesuai Mood", en: "Pick by Mood" }),
+              desc: t({ id: "Filter cepat berdasarkan vibe dan kebutuhan perjalananmu.", en: "Use quick filters based on your travel vibe and needs." }),
+            },
+            {
+              icon: ShieldCheck,
+              title: t({ id: "Properti Terkurasi", en: "Curated Properties" }),
+              desc: t({ id: "Daftar pilihan dengan rating tinggi dan host terverifikasi.", en: "Browse top-rated choices with verified hosts." }),
+            },
+            {
+              icon: Timer,
+              title: t({ id: "Booking Lebih Cepat", en: "Faster Booking" }),
+              desc: t({ id: "Flow pencarian ke checkout dirancang minim friksi.", en: "Search-to-checkout flow is designed to reduce friction." }),
+            },
+          ].map((item) => (
+            <div key={item.title} className="rounded-[2rem] bg-white/80 border border-primary/10 p-6 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center mb-4">
+                <item.icon className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-black text-primary tracking-tight">{item.title}</h3>
+              <p className="mt-2 text-sm font-bold text-primary/60">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 flex justify-center">
+          <Link
+            href="/search"
+            className="rounded-full bg-primary text-primary-foreground px-6 py-3 text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
+          >
+            {t({ id: "Mulai Cari Escape", en: "Start Finding Escapes" })}
+          </Link>
+        </div>
+      </section>
       
       <CategoryTabs 
         selectedCategory={selectedCategory} 

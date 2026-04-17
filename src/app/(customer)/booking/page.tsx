@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type ComponentType } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, Shield, Plus, Minus, AlertCircle } from 'lucide-react';
+import { Loader2, Shield, Plus, Minus, AlertCircle, CheckCircle2, Circle, CalendarDays, UsersRound } from 'lucide-react';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useUnitBlockedDates, useUnitDetail } from '@/hooks/useGlampingDetail';
@@ -28,6 +28,43 @@ type BookingFormValues = {
   check_in: string;
   check_out: string;
   total_guests: number;
+};
+
+type PaymentInstruction = {
+  va_numbers?: Array<{ bank: string; va_number: string }>;
+  permata_va_number?: string;
+  bill_key?: string;
+  biller_code?: string;
+  actions?: Array<{ name?: string; url: string }>;
+  redirect_url?: string;
+  payment_code?: string;
+  store?: string;
+  qr_string?: string;
+};
+
+type AddonSelection = {
+  id: number;
+  quantity: number;
+  name: string;
+  price: number;
+  icon: ComponentType<{ size?: number; className?: string }>;
+};
+
+type CreateBookingSuccessPayload = {
+  booking_id?: number;
+  guest_tracking_token?: string | null;
+  status?: string;
+  payment?: {
+    response?: PaymentInstruction | null;
+  } | null;
+};
+
+type ApiErrorPayload = {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
 };
 
 function BookingContent() {
@@ -46,7 +83,7 @@ function BookingContent() {
   const { data: blockedDates } = useUnitBlockedDates(unitId);
   const { data: paymentMethods = [] } = usePaymentMethods();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
-  const [paymentInstruction, setPaymentInstruction] = useState<any | null>(null);
+  const [paymentInstruction, setPaymentInstruction] = useState<PaymentInstruction | null>(null);
   const [createdBookingId, setCreatedBookingId] = useState<number | null>(null);
   const [guestTrackingToken, setGuestTrackingToken] = useState<string | null>(null);
   const [trackedBookingStatus, setTrackedBookingStatus] = useState<string | null>(null);
@@ -60,7 +97,7 @@ function BookingContent() {
   const [cardExp, setCardExp] = useState('');
   const [cardCvv, setCardCvv] = useState('');
 
-  const [selectedAddons, setSelectedAddons] = useState<{id: number, quantity: number, name: string, price: number, icon: any}[]>([]);
+  const [selectedAddons, setSelectedAddons] = useState<AddonSelection[]>([]);
 
   const bookingSchema = z.object({
     guest_name: z.string().min(3, t({ id: 'Nama lengkap harus diisi', en: 'Full name is required' })),
@@ -104,8 +141,19 @@ function BookingContent() {
 
   const checkInValue = form.watch('check_in');
   const checkOutValue = form.watch('check_out');
+  const watchedGuests = form.watch('total_guests');
   const startDate = checkInValue ? new Date(checkInValue) : null;
   const endDate = checkOutValue ? new Date(checkOutValue) : null;
+  const stayNights = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    return Math.max(0, Math.ceil((endDate.getTime() - startDate.getTime()) / 86400000));
+  }, [startDate, endDate]);
+  const stayDateLabel = useMemo(() => {
+    if (!startDate || !endDate) return t({ id: 'Pilih tanggal menginap', en: 'Select stay dates' });
+    return `${startDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} - ${endDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  }, [endDate, startDate, t]);
+  const activeAddonCount = selectedAddons.filter((addon) => addon.quantity > 0).length;
+  const activeAddonTotal = selectedAddons.reduce((total, addon) => total + addon.quantity * addon.price, 0);
 
   const handleDateChange = (dates: [Date | null, Date | null]) => {
       const [start, end] = dates;
@@ -147,7 +195,7 @@ function BookingContent() {
     }
   }, [paymentMethods, selectedPaymentMethod]);
 
-  const resolveAddonIcon = (addon: any) => {
+  const resolveAddonIcon = (addon: { icon?: string | null; name?: string | null }) => {
     const raw = (addon?.icon || addon?.name || '').toString().toLowerCase();
     if (!raw) return AMENITY_ICON_FALLBACK;
     const normalized = raw
@@ -163,7 +211,7 @@ function BookingContent() {
       setSelectedAddons([]);
       return;
     }
-    setSelectedAddons(addons.map((addon: any) => ({
+    setSelectedAddons(addons.map((addon: { id: number; name: string; price: number; icon?: string | null }) => ({
       id: addon.id,
       quantity: 0,
       name: addon.name,
@@ -186,7 +234,7 @@ function BookingContent() {
         payment_method_id: selectedPaymentMethod,
         card_token: selectedPaymentMethod === 'credit_card' ? cardToken : undefined,
     }, { 
-        onSuccess: (res: any) => {
+        onSuccess: (res: CreateBookingSuccessPayload) => {
             const bookingId = Number(res.booking_id || 0);
             const safeBookingId = Number.isFinite(bookingId) && bookingId > 0 ? bookingId : null;
             setCreatedBookingId(safeBookingId);
@@ -207,7 +255,10 @@ function BookingContent() {
             }
             toast.success(t({ id: 'Booking dibuat. Silakan selesaikan pembayaran.', en: 'Booking created. Please complete payment.' }));
         },
-        onError: (err: any) => toast.error(err.response?.data?.message || t({ id: 'Booking gagal dibuat', en: 'Booking creation failed' }))
+        onError: (err: unknown) => {
+          const maybeErr = err as ApiErrorPayload;
+          toast.error(maybeErr.response?.data?.message || t({ id: 'Booking gagal dibuat', en: 'Booking creation failed' }));
+        }
     });
   };
 
@@ -251,13 +302,13 @@ function BookingContent() {
       active = false;
       clearInterval(interval);
     };
-  }, [createdBookingId, guestTrackingToken, trackedBookingStatus, t]);
+  }, [createdBookingId, guestTrackingToken, paymentInstruction, trackedBookingStatus, t]);
 
   const scrollToPaymentInstruction = () => {
     paymentInstructionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const buildGuestTracker = (bookingId: number, status: string, payload?: any, token?: string | null) => ({
+  const buildGuestTracker = (bookingId: number, status: string, payload?: PaymentInstruction | null, token?: string | null) => ({
     bookingId,
     status,
     trackingToken: token || null,
@@ -354,6 +405,42 @@ function BookingContent() {
                 <h1 className="text-4xl font-black text-primary tracking-tighter">{t({ id: 'Konfirmasi Pesanan', en: 'Confirm Your Booking' })}</h1>
                 <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">{t({ id: 'Lengkapi data Anda untuk mengamankan tenda ini', en: 'Complete your details to secure this stay' })}</p>
             </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-primary/10 bg-white/75 p-5 md:p-6">
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-4">
+            {t({ id: 'Progress Booking', en: 'Booking Progress' })}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              {
+                key: 'dates',
+                done: !!checkInValue && !!checkOutValue && stayNights > 0,
+                title: t({ id: 'Tanggal valid', en: 'Valid dates' }),
+                desc: stayDateLabel,
+              },
+              {
+                key: 'guest',
+                done: watchedGuests > 0,
+                title: t({ id: 'Jumlah tamu', en: 'Guest count' }),
+                desc: `${watchedGuests || 0} ${t({ id: 'tamu', en: 'guests' })}`,
+              },
+              {
+                key: 'payment',
+                done: !!selectedPaymentMethod,
+                title: t({ id: 'Pembayaran dipilih', en: 'Payment selected' }),
+                desc: selectedPaymentMethodData ? getPaymentDisplayName(selectedPaymentMethodData) : t({ id: 'Belum dipilih', en: 'Not selected yet' }),
+              },
+            ].map((item) => (
+              <div key={item.key} className="rounded-2xl border border-primary/10 bg-white p-4">
+                <div className="flex items-center gap-2 text-primary mb-1">
+                  {item.done ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Circle className="w-4 h-4 text-primary/40" />}
+                  <p className="text-[10px] font-black uppercase tracking-widest">{item.title}</p>
+                </div>
+                <p className="text-xs font-bold text-primary/60">{item.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
         
         <div className="glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 space-y-8 md:space-y-10 shadow-xl">
@@ -475,7 +562,7 @@ function BookingContent() {
             </p>
             {paymentInstruction.va_numbers && (
               <div className="text-sm text-primary">
-                {paymentInstruction.va_numbers.map((va: any, idx: number) => (
+                {paymentInstruction.va_numbers.map((va, idx: number) => (
                   <div key={idx} className="flex items-center justify-between border-b border-primary/5 py-2">
                     <span className="font-bold uppercase">{va.bank}</span>
                     <span className="font-mono">{va.va_number}</span>
@@ -505,7 +592,7 @@ function BookingContent() {
             )}
             {paymentInstruction.actions && (
               <div className="space-y-2">
-                {paymentInstruction.actions.map((action: any, idx: number) => (
+                {paymentInstruction.actions.map((action, idx: number) => (
                   <a key={idx} href={action.url} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-accent underline">
                     {action.name || 'Open Payment Link'}
                   </a>
@@ -541,8 +628,19 @@ function BookingContent() {
                       <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Villa', en: 'Villa' })}</div>
                       <div className="font-black text-primary">{glampingName || t({ id: 'Escape Plan', en: 'Escape Plan' })}</div>
                       <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Unit', en: 'Unit' })}: <span className="text-primary/70">{unitName}</span></div>
-                      <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Tanggal', en: 'Dates' })}: <span className="text-primary/70">{checkInParam} → {checkOutParam}</span></div>
-                      <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Tamu', en: 'Guests' })}: <span className="text-primary/70">{form.getValues('total_guests') || 1}</span></div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Tanggal', en: 'Dates' })}: <span className="text-primary/70">{stayDateLabel}</span></div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Durasi', en: 'Duration' })}: <span className="text-primary/70">{stayNights > 0 ? `${stayNights} ${t({ id: 'malam', en: 'nights' })}` : '-'}</span></div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Tamu', en: 'Guests' })}: <span className="text-primary/70">{watchedGuests || 1}</span></div>
+                      <div className="flex flex-wrap items-center gap-2 pt-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-primary">
+                          <CalendarDays className="w-3 h-3" />
+                          {stayNights > 0 ? `${stayNights} ${t({ id: 'malam', en: 'nights' })}` : t({ id: 'Tanggal belum lengkap', en: 'Dates incomplete' })}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-accent">
+                          <UsersRound className="w-3 h-3" />
+                          {watchedGuests || 1} {t({ id: 'tamu', en: 'guests' })}
+                        </span>
+                      </div>
                   </div>
                   <div className="flex justify-between items-start gap-4">
                       <span className="text-[10px] font-black uppercase tracking-widest text-primary/40">{t({ id: 'Tenda', en: 'Unit' })}</span>
@@ -552,13 +650,21 @@ function BookingContent() {
                   {isCalculating ? (
                       <div className="flex justify-center py-10"><Loader2 className="animate-spin text-accent" /></div>
                   ) : calculationError ? (
-                      <div className="p-4 bg-red-50 rounded-xl border border-red-100"><p className="text-[10px] font-bold text-red-500 uppercase leading-relaxed">{(calculationError as any).response?.data?.message || t({ id: 'Kesalahan kalkulasi harga', en: 'Price calculation error' })}</p></div>
+                      <div className="p-4 bg-red-50 rounded-xl border border-red-100"><p className="text-[10px] font-bold text-red-500 uppercase leading-relaxed">{((calculationError as ApiErrorPayload | null)?.response?.data?.message) || t({ id: 'Kesalahan kalkulasi harga', en: 'Price calculation error' })}</p></div>
                   ) : priceData ? (
                       <div className="space-y-4">
                           {priceData.breakdown.map((item, idx) => (
                               <div key={idx} className="flex justify-between items-center"><span className="text-xs font-bold text-primary/60">{item.label}</span><span className="text-sm font-black text-primary">Rp {item.value.toLocaleString('id-ID')}</span></div>
                           ))}
-                          <div className="pt-4 mt-4 border-t border-primary/5 flex justify-between items-center"><span className="text-xs font-black uppercase text-primary/40">{t({ id: 'Subtotal', en: 'Subtotal' })}</span><span className="text-lg font-black text-primary">Rp {(priceData as any).attractive_price?.toLocaleString('id-ID') ?? '0'}</span></div>
+                          {activeAddonCount > 0 && (
+                            <div className="rounded-xl border border-primary/10 bg-primary/5 px-3 py-2 flex justify-between items-center">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">
+                                {t({ id: 'Add-on dipilih', en: 'Selected add-ons' })} ({activeAddonCount})
+                              </span>
+                              <span className="text-xs font-black text-primary">Rp {activeAddonTotal.toLocaleString('id-ID')}</span>
+                            </div>
+                          )}
+                          <div className="pt-4 mt-4 border-t border-primary/5 flex justify-between items-center"><span className="text-xs font-black uppercase text-primary/40">{t({ id: 'Subtotal', en: 'Subtotal' })}</span><span className="text-lg font-black text-primary">Rp {priceData.attractive_price.toLocaleString('id-ID')}</span></div>
                           <div className="space-y-2">
                               <div className="flex justify-between items-center text-[10px] font-bold text-primary/40 uppercase tracking-widest"><span>{t({ id: 'Pajak (PPN 11%)', en: 'Tax (VAT 11%)' })}</span><span>Rp {priceData.tax_amount.toLocaleString('id-ID')}</span></div>
                               <div className="flex justify-between items-center text-[10px] font-bold text-primary/40 uppercase tracking-widest"><span>{t({ id: 'Biaya Aplikasi', en: 'Service Fee' })}</span><span>Rp {priceData.service_fee.toLocaleString('id-ID')}</span></div>
@@ -758,7 +864,7 @@ function BookingContent() {
                     size="lg"
                     form="booking-form"
                     type="submit"
-                    disabled={isBooking || !priceData}
+                    disabled={isBooking || !priceData || !selectedPaymentMethod || !form.formState.isValid}
                   >
                     {isBooking ? (
                       <span className="flex items-center gap-2">
@@ -769,6 +875,13 @@ function BookingContent() {
                       t({ id: 'Complete Booking', en: 'Complete Booking' })
                     )}
                   </Button>
+                  {(!selectedPaymentMethod || !form.formState.isValid) && (
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 text-center">
+                      {!selectedPaymentMethod
+                        ? t({ id: 'Pilih metode pembayaran dulu', en: 'Select payment method first' })
+                        : t({ id: 'Lengkapi data tamu yang wajib', en: 'Complete required guest information' })}
+                    </p>
+                  )}
               </div>
               <div className="flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-primary/30"><Shield size={10} /> {t({ id: 'Transaksi Aman & Terenkripsi', en: 'Secure & Encrypted Transaction' })}</div>
           </div>

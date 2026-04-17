@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useGlampings, useLocations } from '@/hooks/useGlampings';
 import { Glamping, GlampingFilterParams } from '@/types/glamping';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Star, Filter, Search, Heart, Calendar, Users, X, ChevronRight, PawPrint, Wifi, Zap, Images } from 'lucide-react';
+import { MapPin, Star, Filter, Search, Heart, Calendar, Users, X, PawPrint, Wifi, Zap, Images } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -27,11 +27,11 @@ function SearchContent() {
   const [savedSlugs, setSavedSlugs] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const [sidebarStyle, setSidebarStyle] = useState<React.CSSProperties>({});
-  const [isSticky, setIsSticky] = useState(false);
+  const [sidebarStyle, setSidebarStyle] = useState<CSSProperties>({});
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [results, setResults] = useState<Glamping[]>([]);
+  const [sortBy, setSortBy] = useState<'relevance' | 'price_low' | 'price_high' | 'rating_high'>('relevance');
   
   // Search states synced with URL
   const [location, setLocation] = useState(searchParams.get('location') || '');
@@ -112,6 +112,7 @@ function SearchContent() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
     setResults([]);
     setLocation(searchParams.get('location') || '');
@@ -133,6 +134,7 @@ function SearchContent() {
   useEffect(() => {
     if (!data?.data) return;
     if (page === 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults(data.data);
       return;
     }
@@ -147,6 +149,7 @@ function SearchContent() {
     try {
       const raw = localStorage.getItem('saved_glampings');
       const parsed = raw ? (JSON.parse(raw) as string[]) : [];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSavedSlugs(parsed);
     } catch {
       setSavedSlugs([]);
@@ -156,7 +159,6 @@ function SearchContent() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
-      setIsSticky(currentScroll > 80);
 
       if (window.innerWidth < 1024) {
         setSidebarStyle({});
@@ -231,16 +233,111 @@ function SearchContent() {
     }
     return t({ id: 'Pilih Tanggal', en: 'Add dates' });
   };
-  const maxPriceValue = Number(filters.max_price || 5000000);
+
+  const querySummary = [
+    location || t({ id: 'Semua lokasi', en: 'All locations' }),
+    dateRange[0] && dateRange[1]
+      ? `${dateRange[0].toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${dateRange[1].toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`
+      : t({ id: 'Tanggal fleksibel', en: 'Flexible dates' }),
+    guests
+      ? `${guests} ${t({ id: 'tamu', en: 'guests' })}`
+      : t({ id: 'Jumlah tamu fleksibel', en: 'Flexible guests' }),
+  ].join(' • ');
+
+  const quickFilters = [
+    {
+      id: 'pet',
+      active: filters.pet_friendly === 'true',
+      label: t({ id: 'Pet Friendly', en: 'Pet Friendly' }),
+      onToggle: () => handleFilterChange('pet_friendly', filters.pet_friendly === 'true' ? '' : 'true'),
+    },
+    {
+      id: 'wifi',
+      active: filters.has_wifi === 'true',
+      label: 'WiFi',
+      onToggle: () => handleFilterChange('has_wifi', filters.has_wifi === 'true' ? '' : 'true'),
+    },
+    {
+      id: 'private_bathroom',
+      active: filters.bathroom_type === 'private',
+      label: t({ id: 'Kamar mandi private', en: 'Private bathroom' }),
+      onToggle: () => handleFilterChange('bathroom_type', filters.bathroom_type === 'private' ? '' : 'private'),
+    },
+    {
+      id: 'under_1m',
+      active: filters.max_price === '1000000',
+      label: t({ id: 'Di bawah 1 jt', en: 'Under 1M IDR' }),
+      onToggle: () => handleFilterChange('max_price', filters.max_price === '1000000' ? '' : '1000000'),
+    },
+  ];
+
   const activeFilterChips = [
-    filters.min_price ? `Min Rp ${Number(filters.min_price).toLocaleString('id-ID')}` : null,
-    filters.max_price ? `Max Rp ${Number(filters.max_price).toLocaleString('id-ID')}` : null,
-    filters.access_type ? `${t({ id: 'Akses', en: 'Access' })}: ${filters.access_type}` : null,
-    filters.bathroom_type ? `${t({ id: 'Kamar Mandi', en: 'Bathroom' })}: ${filters.bathroom_type}` : null,
-    filters.pet_friendly === 'true' ? t({ id: 'Pet Friendly', en: 'Pet Friendly' }) : null,
-    filters.has_wifi === 'true' ? 'WiFi' : null,
-    filters.has_electricity === 'true' ? t({ id: 'Listrik', en: 'Electricity' }) : null,
-  ].filter(Boolean) as string[];
+    filters.min_price
+      ? {
+          key: 'min_price',
+          label: `Min Rp ${Number(filters.min_price).toLocaleString('id-ID')}`,
+          onRemove: () => handleFilterChange('min_price', ''),
+        }
+      : null,
+    filters.max_price
+      ? {
+          key: 'max_price',
+          label: `Max Rp ${Number(filters.max_price).toLocaleString('id-ID')}`,
+          onRemove: () => handleFilterChange('max_price', ''),
+        }
+      : null,
+    filters.access_type
+      ? {
+          key: 'access_type',
+          label: `${t({ id: 'Akses', en: 'Access' })}: ${filters.access_type}`,
+          onRemove: () => handleFilterChange('access_type', ''),
+        }
+      : null,
+    filters.bathroom_type
+      ? {
+          key: 'bathroom_type',
+          label: `${t({ id: 'Kamar Mandi', en: 'Bathroom' })}: ${filters.bathroom_type}`,
+          onRemove: () => handleFilterChange('bathroom_type', ''),
+        }
+      : null,
+    filters.pet_friendly === 'true'
+      ? {
+          key: 'pet_friendly',
+          label: t({ id: 'Pet Friendly', en: 'Pet Friendly' }),
+          onRemove: () => handleFilterChange('pet_friendly', ''),
+        }
+      : null,
+    filters.has_wifi === 'true'
+      ? {
+          key: 'has_wifi',
+          label: 'WiFi',
+          onRemove: () => handleFilterChange('has_wifi', ''),
+        }
+      : null,
+    filters.has_electricity === 'true'
+      ? {
+          key: 'has_electricity',
+          label: t({ id: 'Listrik', en: 'Electricity' }),
+          onRemove: () => handleFilterChange('has_electricity', ''),
+        }
+      : null,
+  ].filter(Boolean) as { key: string; label: string; onRemove: () => void }[];
+
+  const displayedResults = useMemo(() => {
+    const sorted = [...results];
+    if (sortBy === 'price_low') {
+      return sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+    }
+    if (sortBy === 'price_high') {
+      return sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+    }
+    if (sortBy === 'rating_high') {
+      return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+    return sorted;
+  }, [results, sortBy]);
+
+  const maxPriceValue = Number(filters.max_price || 5000000);
 
   return (
     <div ref={containerRef} className="container mx-auto px-4 py-8 pb-32 lg:pb-8">
@@ -559,6 +656,43 @@ function SearchContent() {
             </p>
           </div>
 
+          <div className="mb-8 space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {quickFilters.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={item.onToggle}
+                  className={cn(
+                    'px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors',
+                    item.active
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-primary/15 bg-white text-primary/70 hover:bg-primary/5'
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-primary/10 bg-white/75 px-4 py-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary/50">{querySummary}</p>
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                  {t({ id: 'Urutkan', en: 'Sort' })}
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'relevance' | 'price_low' | 'price_high' | 'rating_high')}
+                  className="h-9 rounded-full border border-primary/15 bg-white px-3 text-[10px] font-black uppercase tracking-widest text-primary"
+                >
+                  <option value="relevance">{t({ id: 'Paling Relevan', en: 'Most Relevant' })}</option>
+                  <option value="rating_high">{t({ id: 'Rating Tertinggi', en: 'Top Rated' })}</option>
+                  <option value="price_low">{t({ id: 'Harga Terendah', en: 'Lowest Price' })}</option>
+                  <option value="price_high">{t({ id: 'Harga Tertinggi', en: 'Highest Price' })}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           {isLoading && results.length === 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
               {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -592,13 +726,15 @@ function SearchContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-8 w-full">
               {activeFilterChips.length > 0 && (
                 <div className="col-span-full -mt-2 mb-2 flex flex-wrap items-center gap-2">
-                  {activeFilterChips.map((chip, idx) => (
-                    <span
-                      key={`${chip}-${idx}`}
-                      className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest"
+                  {activeFilterChips.map((chip) => (
+                    <button
+                      key={chip.key}
+                      onClick={chip.onRemove}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/15 transition-colors"
                     >
-                      {chip}
-                    </span>
+                      {chip.label}
+                      <X className="w-3 h-3" />
+                    </button>
                   ))}
                   <button
                     onClick={handleResetFilters}
@@ -608,7 +744,7 @@ function SearchContent() {
                   </button>
                 </div>
               )}
-              {results.map((glamping) => {
+              {displayedResults.map((glamping) => {
                 const storageBase = (process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8000/storage/').replace(/\/+$/, '/') ;
                 const imageUrl = glamping.thumbnail?.startsWith('http') 
                     ? glamping.thumbnail 
@@ -619,7 +755,8 @@ function SearchContent() {
                   ? `/glamping/${glamping.slug}?${searchParams.toString()}`
                   : `/glamping/${glamping.slug}`;
                 const isSaved = savedSlugs.includes(glamping.slug);
-                const reviewCount = (glamping as any).review_count as number | undefined;
+                const reviewCountCandidate = (glamping as { review_count?: unknown }).review_count;
+                const reviewCount = typeof reviewCountCandidate === 'number' ? reviewCountCandidate : undefined;
                 const imageCount = glamping.images?.length;
                 const highlight =
                   glamping.rating >= 4.8
@@ -631,7 +768,8 @@ function SearchContent() {
                   glamping.price && glamping.price < 800000
                     ? t({ id: 'Discount', en: 'Discount' })
                     : null;
-                const locationLabel = (glamping as any).location_city || glamping.location;
+                const locationCityCandidate = (glamping as { location_city?: unknown }).location_city;
+                const locationLabel = typeof locationCityCandidate === 'string' ? locationCityCandidate : glamping.location;
                 const emotional =
                   glamping.vibe
                     ? `${t({ id: 'Cocok untuk', en: 'Perfect for' })} ${glamping.vibe}`
@@ -662,20 +800,26 @@ function SearchContent() {
                                 {t({ id: 'View Details', en: 'View Details' })}
                               </div>
                             </div>
-                            <div className="absolute top-4 right-4">
-                                <Badge className="glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
+                            <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                              <Badge className="glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
                                 <Star className="w-3 h-3 fill-accent text-accent mr-1" />
                                 {glamping.rating}
-                                </Badge>
+                              </Badge>
+                              {discount && (
+                                <div className="glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
+                                  {discount}
+                                </div>
+                              )}
+                              {imageCount && imageCount > 1 && (
+                                <div className="glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full flex items-center gap-1">
+                                  <Images className="w-3 h-3" />
+                                  {imageCount}
+                                </div>
+                              )}
                             </div>
                             {highlight && (
                               <div className="absolute bottom-4 right-4 glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
                                 {highlight}
-                              </div>
-                            )}
-                            {discount && (
-                              <div className="absolute top-4 right-4 translate-y-10 glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
-                                {discount}
                               </div>
                             )}
                             <button
@@ -692,14 +836,6 @@ function SearchContent() {
                             >
                               <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
                             </button>
-                            {imageCount && imageCount > 1 && (
-                              <div className="absolute top-4 right-4 translate-y-10">
-                                <div className="glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full flex items-center gap-1">
-                                  <Images className="w-3 h-3" />
-                                  {imageCount}
-                                </div>
-                              </div>
-                            )}
                             {isSaved && (
                               <div className="absolute bottom-4 left-4 glass text-white font-black text-[10px] uppercase tracking-widest border-none px-3 py-1.5 rounded-full">
                                 {t({ id: 'Tersimpan', en: 'Saved' })}

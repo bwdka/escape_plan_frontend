@@ -1,6 +1,7 @@
 'use client';
 
 import { FaInstagram, FaFacebookF, FaTwitter, FaTiktok, FaCcVisa, FaCcMastercard, FaCcAmex, FaCcPaypal } from 'react-icons/fa';
+import Link from 'next/link';
 import { useI18n } from '@/i18n/I18nProvider';
 
 export function CustomerFooter() {
@@ -43,7 +44,7 @@ export function CustomerFooter() {
                 </p>
                 <div className="flex flex-wrap gap-3">
                     {[FaInstagram, FaFacebookF, FaTwitter, FaTiktok].map((Icon, i) => (
-                        <a key={i} href="#" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary-foreground/60 hover:text-accent hover:border-accent hover:bg-white/10 transition-all duration-300">
+                        <a key={i} href={['https://instagram.com', 'https://facebook.com', 'https://x.com', 'https://tiktok.com'][i]} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-primary-foreground/60 hover:text-accent hover:border-accent hover:bg-white/10 transition-all duration-300">
                             <Icon size={16} />
                         </a>
                     ))}
@@ -53,22 +54,22 @@ export function CustomerFooter() {
             <div>
                 <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-6 text-accent">{t({ id: 'Jelajahi', en: 'Discover' })}</h4>
                 <ul className="space-y-3 text-sm text-primary-foreground/50 font-bold">
-                    <li><a href="/search" className="hover:text-primary-foreground transition-colors">{t({ id: 'Semua Penginapan', en: 'All Stays' })}</a></li>
-                    <li><a href="#" className="hover:text-primary-foreground transition-colors">{t({ id: 'Tenda Mewah', en: 'Luxury Tents' })}</a></li>
-                    <li><a href="#" className="hover:text-primary-foreground transition-colors">{t({ id: 'Kabins Kayu', en: 'Wooden Cabins' })}</a></li>
-                    <li><a href="#" className="hover:text-primary-foreground transition-colors">{t({ id: 'Rumah Pohon', en: 'Treehouse Stays' })}</a></li>
-                    <li><a href="#" className="hover:text-primary-foreground transition-colors">{t({ id: 'Kubah Pegunungan', en: 'Mountain Domes' })}</a></li>
+                    <li><Link href="/search" className="hover:text-primary-foreground transition-colors">{t({ id: 'Semua Penginapan', en: 'All Stays' })}</Link></li>
+                    <li><Link href="/wishlist" className="hover:text-primary-foreground transition-colors">{t({ id: 'Wishlist', en: 'Wishlist' })}</Link></li>
+                    <li><Link href="/bookings/my-trips" className="hover:text-primary-foreground transition-colors">{t({ id: 'Perjalanan Saya', en: 'My Trips' })}</Link></li>
+                    <li><Link href="/messages" className="hover:text-primary-foreground transition-colors">{t({ id: 'Pesan', en: 'Messages' })}</Link></li>
+                    <li><Link href="/partner/register" className="hover:text-primary-foreground transition-colors">{t({ id: 'Jadi Host', en: 'Become Host' })}</Link></li>
                 </ul>
             </div>
 
             <div>
                 <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-6 text-accent">{t({ id: 'Destinasi', en: 'Destinations' })}</h4>
                 <ul className="space-y-3 text-sm text-primary-foreground/50 font-bold">
-                    <li><a href="#" className="hover:text-primary-foreground transition-colors">Lembang, Bandung</a></li>
-                    <li><a href="#" className="hover:text-primary-foreground transition-colors">Puncak, Bogor</a></li>
-                    <li><a href="#" className="hover:text-primary-foreground transition-colors">Kintamani, Bali</a></li>
-                    <li><a href="#" className="hover:text-primary-foreground transition-colors">Ciwidey, Bandung</a></li>
-                    <li><a href="#" className="hover:text-primary-foreground transition-colors">Sentul, Bogor</a></li>
+                    <li><Link href="/search?location=Lembang" className="hover:text-primary-foreground transition-colors">Lembang, Bandung</Link></li>
+                    <li><Link href="/search?location=Puncak" className="hover:text-primary-foreground transition-colors">Puncak, Bogor</Link></li>
+                    <li><Link href="/search?location=Kintamani" className="hover:text-primary-foreground transition-colors">Kintamani, Bali</Link></li>
+                    <li><Link href="/search?location=Ciwidey" className="hover:text-primary-foreground transition-colors">Ciwidey, Bandung</Link></li>
+                    <li><Link href="/search?location=Sentul" className="hover:text-primary-foreground transition-colors">Sentul, Bogor</Link></li>
                 </ul>
             </div>
 
@@ -76,9 +77,9 @@ export function CustomerFooter() {
                 <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-6 text-accent">{t({ id: 'Bergabung', en: 'Join Us' })}</h4>
                 <div className="glass p-6 rounded-3xl border-white/5 space-y-4">
                     <p className="text-xs font-bold leading-relaxed">{t({ id: 'Punya properti unik? Mulai jadi host hari ini.', en: 'Have a unique property? Start hosting today.' })}</p>
-                    <a href="/partner/register" className="block w-full bg-accent text-accent-foreground text-center py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
+                    <Link href="/partner/register" className="block w-full bg-accent text-accent-foreground text-center py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:scale-[1.02] transition-all">
                         {t({ id: 'Jadi Host', en: 'Become a Host' })}
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>
@@ -88,9 +89,9 @@ export function CustomerFooter() {
                 &copy; {new Date().getFullYear()} Escape Plan Global. {t({ id: 'Seluruh hak cipta dilindungi.', en: 'All rights reserved.' })}
             </div>
             <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-[10px] font-black uppercase tracking-widest text-primary-foreground/30">
-                <a href="#" className="hover:text-accent transition-colors">{t({ id: 'Privasi', en: 'Privacy' })}</a>
-                <a href="#" className="hover:text-accent transition-colors">{t({ id: 'Ketentuan', en: 'Terms' })}</a>
-                <a href="#" className="hover:text-accent transition-colors">{t({ id: 'Cookies', en: 'Cookies' })}</a>
+                <Link href="/profile" className="hover:text-accent transition-colors">{t({ id: 'Privasi', en: 'Privacy' })}</Link>
+                <Link href="/bookings/my-trips" className="hover:text-accent transition-colors">{t({ id: 'Ketentuan', en: 'Terms' })}</Link>
+                <Link href="/search" className="hover:text-accent transition-colors">{t({ id: 'Cookies', en: 'Cookies' })}</Link>
             </div>
             <div className="flex flex-wrap gap-4 text-lg text-primary-foreground/20">
                 <FaCcVisa />
