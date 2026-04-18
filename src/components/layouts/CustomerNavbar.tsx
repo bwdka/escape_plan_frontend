@@ -11,6 +11,8 @@ import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useProfile } from '@/hooks/useAuth';
 import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useClearNotifications } from '@/hooks/useNotifications';
 import { Bell, CheckCircle2, Clock3, XCircle } from 'lucide-react';
+import { MiniSearch } from '@/components/features/search/MiniSearch';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type GuestPaymentTracker = {
   bookingId: number;
@@ -33,9 +35,12 @@ export function CustomerNavbar() {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isGuestNotifOpen, setIsGuestNotifOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [guestTracker, setGuestTracker] = useState<GuestPaymentTracker | null>(null);
   const pathname = usePathname();
-  const isHero = pathname === '/' && !isScrolled;
+  const isHomePage = pathname === '/';
+  const isHero = isHomePage && !isScrolled;
+  const showMiniSearch = isScrolled || !isHomePage;
   const dashboardLink = user?.role === 'admin'
     ? '/admin/dashboard'
     : user?.role === 'partner'
@@ -159,24 +164,37 @@ export function CustomerNavbar() {
         }`}
       >
         <div className={`w-full px-4 sm:px-6 lg:px-10 flex items-center justify-between transition-all duration-500 ${isScrolled ? 'h-16' : 'h-20'}`}>
-          <Link href="/" className="flex items-center gap-2">
-            <Image 
-              src="/logo/logo_escape_plan.png" 
-              alt="Escape Plan Logo" 
-              width={110} 
-              height={32} 
-              className={`object-contain transition-all duration-500 ${isHero ? 'brightness-0 invert' : ''}`}
-            />
-          </Link>
+          <div className={`transition-all duration-300 ${isSearchExpanded ? 'opacity-0 w-0 pointer-events-none' : 'opacity-100 w-auto'}`}>
+            <Link href="/" className="flex items-center gap-2">
+              <Image 
+                src="/logo/logo_escape_plan.png" 
+                alt="Escape Plan Logo" 
+                width={110} 
+                height={32} 
+                className={`object-contain transition-all duration-500 ${isHero ? 'brightness-0 invert' : ''}`}
+              />
+            </Link>
+          </div>
           
-          {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-10">
+          {/* Center Search (on scroll) */}
+          <div className={`flex-1 hidden lg:flex justify-center transition-all duration-300 ${isSearchExpanded ? 'max-w-2xl' : 'max-w-xl'}`}>
+            <AnimatePresence>
+              {showMiniSearch && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: -10 }}
+                >
+                  <MiniSearch onToggle={setIsSearchExpanded} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          {/* Desktop Nav Right Side */}
+          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
               <Link href="/search" className={navLinkClass('/search')}>{t({ id: 'Penginapan', en: 'Stays' })}</Link>
               <Link href="/wishlist" className={navLinkClass('/wishlist')}>{t({ id: 'Wishlist', en: 'Wishlist' })}</Link>
-              <Link href="#" className={isHero ? 'text-sm font-bold text-white/70 hover:text-white transition-all' : 'text-sm font-bold text-primary/60 hover:text-primary transition-all'}>
-                {t({ id: 'Pengalaman', en: 'Experiences' })}
-              </Link>
-              <Link href="/partner/register" className={navLinkClass('/partner/register')}>{t({ id: 'Jadi host', en: 'Become a host' })}</Link>
               
               {mounted && isAuthenticated && (
                 <div className="relative">
@@ -331,12 +349,14 @@ export function CustomerNavbar() {
                           </div>
                         )}
                       </div>
+                   <div className="flex items-center gap-1 xl:gap-2 whitespace-nowrap">
                       <Link href="/login" className={`text-sm font-bold hover:opacity-80 px-4 transition-colors ${isHero ? 'text-white' : 'text-primary'}`}>
                           Login
                       </Link>
                       <Link href="/register" className="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-bold hover:shadow-xl hover:-translate-y-0.5 transition-all shadow-lg shadow-primary/20 active:scale-95">
                           Join Now
                       </Link>
+                   </div>
                    </div>
               )}
               <LanguageToggle className="ml-2" />

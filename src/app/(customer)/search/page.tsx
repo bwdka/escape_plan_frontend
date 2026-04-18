@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Star, Filter, Search, Heart, Calendar, Users, X, PawPrint, Wifi, Zap, Images } from 'lucide-react';
+import { MapPin, Star, Filter, Search, Heart, Calendar, Users, X, PawPrint, Wifi, Zap, Images, Compass } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -708,20 +708,42 @@ function SearchContent() {
               Wildness connection lost. Please try again.
             </div>
           ) : results.length === 0 ? (
-          <div className="text-center py-16 md:py-24 glass rounded-[3.5rem] border-white/40 text-primary/30">
-              <div className="w-20 h-20 rounded-3xl bg-primary/5 flex items-center justify-center mx-auto mb-6">
-                <Search className="w-10 h-10 opacity-20" />
-              </div>
-              <p className="font-black uppercase tracking-[0.2em] text-sm">{t({ id: 'Tidak ada tempat yang sesuai kriteria', en: 'No sanctuaries match your criteria' })}</p>
-              <p className="text-[10px] font-bold text-primary/30 uppercase tracking-widest mt-3">{t({ id: 'Coba reset filter untuk melihat semua', en: 'Try resetting filters to see all' })}</p>
-              <Button
-                onClick={handleResetFilters}
-                variant="outline"
-                className="mt-6 rounded-full text-[10px] font-black uppercase tracking-widest"
-              >
-                {t({ id: 'Reset Filter', en: 'Reset Filters' })}
-              </Button>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-24 md:py-32 glass rounded-[4rem] border-white/40 shadow-xl overflow-hidden relative"
+            >
+               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,103,74,0.03),transparent_70%)] pointer-events-none" />
+               <motion.div 
+                 animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                 className="w-24 h-24 rounded-[2rem] bg-accent/10 flex items-center justify-center mx-auto mb-8 shadow-[0_20px_40px_rgba(212,180,131,0.1)] border border-accent/20"
+               >
+                 <Compass className="w-12 h-12 text-accent" />
+               </motion.div>
+               <h3 className="font-display text-2xl font-bold text-primary tracking-tight mb-2">
+                 {t({ id: 'Petualangan Baru Menunggu', en: 'A New Adventure Awaits' })}
+               </h3>
+               <p className="font-black uppercase tracking-[0.25em] text-[10px] text-primary/40 max-w-xs mx-auto leading-relaxed">
+                 {t({ id: 'Kami tidak menemukan tempat yang sesuai kriteria pencarianmu.', en: 'We couldn\'t find any sanctuaries matching your current filters.' })}
+               </p>
+               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                 <Button
+                   onClick={handleResetFilters}
+                   className="rounded-full h-12 px-8 bg-primary text-primary-foreground font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                 >
+                   {t({ id: 'Reset Semua Filter', en: 'Reset All Filters' })}
+                 </Button>
+                 <Button
+                   variant="ghost"
+                   className="rounded-full h-12 px-8 font-black uppercase tracking-widest text-primary/60 hover:text-primary hover:bg-primary/5 transition-all"
+                   onClick={() => setLocation('')}
+                 >
+                   {t({ id: 'Hapus Lokasi', en: 'Clear Location' })}
+                 </Button>
+               </div>
+            </motion.div>
+
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-8 w-full">
               {activeFilterChips.length > 0 && (

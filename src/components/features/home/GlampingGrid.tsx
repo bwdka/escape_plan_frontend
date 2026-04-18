@@ -125,72 +125,77 @@ export function GlampingGrid({ title, glampings, viewAllLink = '/search' }: Glam
                             <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-70" />
                             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-70" />
                             
-                            {/* Badges */}
-                            <div className="absolute top-4 left-4 flex flex-col gap-2">
+                            {/* Badges with shimmer effect */}
+                            <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
                                 {idx === 0 && (
-                                  <span className="glass-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md">
+                                  <motion.span 
+                                    animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                                    className="glass-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md bg-gradient-to-r from-transparent via-white/10 to-transparent bg-[length:200%_100%]"
+                                  >
                                     {t({ id: 'Pilihan Terbaik', en: 'Best Choice' })}
-                                  </span>
+                                  </motion.span>
                                 )}
                                 {showPopular && (
-                                  <span className="glass-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md inline-flex items-center gap-2">
+                                  <motion.span 
+                                    animate={{ y: [0, -4, 0] }}
+                                    transition={{ duration: 3, repeat: Infinity }}
+                                    className="glass-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md inline-flex items-center gap-2 border border-amber-300/30 shadow-[0_0_15px_rgba(252,211,77,0.15)]"
+                                  >
                                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                                     {t({ id: 'Favorit', en: 'Popular' })}
-                                  </span>
+                                  </motion.span>
                                 )}
                                 {showLimited && (
-                                  <span className="glass-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md">
+                                  <span className="glass-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md bg-red-500/20 border border-red-500/30">
                                     {t({ id: 'Hampir Penuh', en: 'Limited' })} • {remaining} {t({ id: 'tersisa', en: 'left' })}
-                                  </span>
-                                )}
-                                {item.slug && savedSlugs.includes(item.slug) && (
-                                  <span className="glass-dark text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest backdrop-blur-md">
-                                    {t({ id: 'Tersimpan', en: 'Saved' })}
                                   </span>
                                 )}
                             </div>
                             
-                            <button 
+                            <motion.button 
+                                whileTap={{ scale: 0.8 }}
                                 onClick={(e) => handleWishlist(e, item.name || 'Item', item.slug)}
-                                className={`absolute top-4 right-4 w-10 h-10 rounded-full backdrop-blur-md border border-white/30 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 ${
+                                className={`absolute top-4 right-4 z-20 w-10 h-10 rounded-full backdrop-blur-md border border-white/30 flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 duration-300 ${
                                   item.slug && savedSlugs.includes(item.slug)
-                                    ? 'bg-primary text-primary-foreground'
+                                    ? 'bg-red-500 text-white border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.4)]'
                                     : 'bg-black/40 text-white hover:bg-white hover:text-red-500'
                                 }`}
                             >
-                                <Heart className={`w-5 h-5 ${item.slug && savedSlugs.includes(item.slug) ? 'fill-current' : ''}`} />
-                            </button>
+                                <Heart className={`w-5 h-5 transition-transform ${item.slug && savedSlugs.includes(item.slug) ? 'fill-current scale-110' : ''}`} />
+                            </motion.button>
 
-                            {/* Price Tag Overlay */}
-                            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                                <div className="glass-dark px-4 py-2 rounded-xl backdrop-blur-md">
-                                  <span className="text-xs text-white/80 font-medium uppercase tracking-wider block mb-0.5">Start from</span>
-                                  <span className="text-white font-bold">
+                            {/* Price Tag Overlay with better hierarchy */}
+                            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end z-20">
+                                <motion.div 
+                                  whileHover={{ scale: 1.05 }}
+                                  className="glass-dark px-4 py-2 rounded-xl backdrop-blur-md border border-white/10"
+                                >
+                                  <span className="text-[8px] text-white/50 font-black uppercase tracking-[0.2em] block mb-0.5">Start from</span>
+                                  <span className="text-white text-base font-black tracking-tight">
                                     Rp {(item.price || 0).toLocaleString('id-ID')}
                                   </span>
-                                </div>
-                                <div className="glass-dark px-3 py-2 rounded-xl backdrop-blur-md flex items-center gap-2">
-                                  <Star className="w-4 h-4 text-amber-300 fill-current" />
-                                  <div className="text-xs font-bold text-white">{item.rating || 4.8}</div>
+                                </motion.div>
+                                <div className="glass-dark px-3 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 border border-white/10 shadow-xl">
+                                  <Star className="w-4 h-4 text-amber-300 fill-current shadow-[0_0_10px_rgba(252,211,77,0.3)]" />
+                                  <div className="text-xs font-black text-white">{item.rating || 4.8}</div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Content */}
-                        <div className="p-6 flex-1 flex flex-col gap-2">
+                        {/* Content Polish */}
+                        <div className="p-7 flex-1 flex flex-col gap-3">
                             <div className="flex justify-between items-start gap-2">
-                                <h3 className="font-display text-lg font-bold text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-1">
+                                <h3 className="font-display text-xl font-bold text-foreground leading-tight group-hover:text-primary transition-colors tracking-tight line-clamp-1">
                                     {item.name}
                                 </h3>
-                                <div className="flex items-center gap-1 text-amber-400 shrink-0">
-                                    <Star className="w-3.5 h-3.5 fill-current" />
-                                    <span className="text-sm font-bold text-foreground">{item.rating || 4.8}</span>
-                                </div>
                             </div>
                             
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                                <MapPin className="w-3.5 h-3.5" />
-                                <p className="text-xs font-bold uppercase tracking-wider truncate">
+                            <div className="flex items-center gap-1.5 text-muted-foreground/80">
+                                <div className="p-1 rounded-md bg-primary/5">
+                                  <MapPin className="w-3.5 h-3.5 text-primary/60" />
+                                </div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.15em] truncate">
                                     {item.location || 'Indonesia'}
                                 </p>
                             </div>
