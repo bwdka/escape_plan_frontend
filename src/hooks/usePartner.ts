@@ -8,6 +8,7 @@ import {
     DashboardStatsResponse, 
     IcalSyncRequest, 
     IcalSyncResponse,
+    PartnerBookingsResponse,
     PartnerGuestBookingsResponse
 } from '@/types/partner';
 
@@ -165,6 +166,40 @@ export const usePartnerGuestBookings = () => {
         queryFn: async () => {
             const { data } = await api.get<PartnerGuestBookingsResponse>('/partner/guest-bookings');
             return data.data;
+        }
+    });
+};
+
+export const usePartnerBookings = (params?: {
+    q?: string;
+    status?: string;
+    payment_status?: string;
+    check_in_from?: string;
+    check_in_to?: string;
+    page?: number;
+    per_page?: number;
+}) => {
+    return useQuery({
+        queryKey: ['partner-bookings', params],
+        queryFn: async () => {
+            const { data } = await api.get<PartnerBookingsResponse>('/partner/bookings', { params });
+            return data;
+        }
+    });
+};
+
+export const usePartnerBookingAction = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ bookingId, action }: { bookingId: number; action: 'check_in' | 'check_out' | 'no_show' | 'cancel' }) => {
+            const { data } = await api.patch(`/partner/bookings/${bookingId}/action`, { action });
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['partner-bookings'] });
+            queryClient.invalidateQueries({ queryKey: ['partner-guest-bookings'] });
+            queryClient.invalidateQueries({ queryKey: ['partner-calendar'] });
+            queryClient.invalidateQueries({ queryKey: ['partner-dashboard'] });
         }
     });
 };

@@ -13,7 +13,7 @@ export const useAdminStats = () => {
   });
 };
 
-export const useAdminUsers = (params?: any) => {
+export const useAdminUsers = (params?: Record<string, unknown>) => {
   return useQuery({
     queryKey: ['admin-users', params],
     queryFn: async () => {
@@ -37,7 +37,7 @@ export const useAdminVerifyUser = () => {
   });
 };
 
-export const useAdminGlampings = (params?: any) => {
+export const useAdminGlampings = (params?: Record<string, unknown>) => {
   return useQuery({
     queryKey: ['admin-glampings', params],
     queryFn: async () => {
@@ -60,12 +60,62 @@ export const useAdminUpdateGlampingStatus = () => {
   });
 };
 
-export const useAdminBookings = (params?: any) => {
+export const useAdminBookings = (params?: Record<string, unknown>) => {
   return useQuery({
     queryKey: ['admin-bookings', params],
     queryFn: async () => {
       const { data } = await api.get('/admin/bookings', { params });
       return data;
+    },
+  });
+};
+
+export const useAdminRefundBooking = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: number; reason?: string }) => {
+      const { data } = await api.post(`/admin/bookings/${id}/refund`, { reason });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+  });
+};
+
+export const useAdminWithdrawals = (params?: Record<string, unknown>) => {
+  return useQuery({
+    queryKey: ['admin-withdrawals', params],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/withdrawals', { params });
+      return data;
+    },
+  });
+};
+
+export const useAdminApproveWithdrawal = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, note, proof_image_path }: { id: number; note?: string; proof_image_path?: string }) => {
+      const { data } = await api.post(`/admin/withdrawals/${id}/approve`, { note, proof_image_path });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-withdrawals'] });
+    },
+  });
+};
+
+export const useAdminRejectWithdrawal = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, note }: { id: number; note?: string }) => {
+      const { data } = await api.post(`/admin/withdrawals/${id}/reject`, { note });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-withdrawals'] });
     },
   });
 };

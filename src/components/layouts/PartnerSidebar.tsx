@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Tent, Calendar, Settings, LogOut, X, MessageCircle, BarChart3, Users } from 'lucide-react';
+import { LayoutDashboard, Tent, Calendar, Settings, LogOut, X, MessageCircle, BarChart3, Users, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -23,6 +23,7 @@ const sidebarGroups = [
     group: { id: 'Operasional', en: 'Operations' },
     items: [
       { icon: Calendar, label: { id: 'Kalender', en: 'Calendar' }, href: '/partner/calendar' },
+      { icon: ClipboardList, label: { id: 'Reservasi', en: 'Reservations' }, href: '/partner/bookings' },
       { icon: Users, label: { id: 'Tamu Booking', en: 'Booking Guests' }, href: '/partner/guests' },
       { icon: MessageCircle, label: { id: 'Pesan', en: 'Messages' }, href: '/partner/messages' },
     ]

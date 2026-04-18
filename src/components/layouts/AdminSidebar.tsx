@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Shield, FileText, LogOut, X, BarChart3, Layers } from 'lucide-react';
+import { LayoutDashboard, Users, Shield, FileText, LogOut, X, BarChart3, Layers, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -16,6 +16,7 @@ const sidebarItems = [
   { icon: LayoutDashboard, label: { id: 'Ringkasan', en: 'Overview' }, href: '/admin/dashboard' },
   { icon: Users, label: { id: 'Manajemen User', en: 'User Management' }, href: '/admin/users' },
   { icon: FileText, label: { id: 'Pemesanan', en: 'Bookings' }, href: '/admin/bookings' },
+  { icon: Wallet, label: { id: 'Penarikan', en: 'Withdrawals' }, href: '/admin/withdrawals' },
   { icon: Shield, label: { id: 'Verifikasi', en: 'Verifications' }, href: '/admin/verifications' },
   { icon: Layers, label: { id: 'Fasilitas', en: 'Facilities' }, href: '/admin/facilities' },
   { icon: BarChart3, label: { id: 'Analitik', en: 'Analytics' }, href: '/admin/analytics' },

@@ -68,3 +68,19 @@ export interface PartnerGuestBooking {
 export interface PartnerGuestBookingsResponse {
     data: PartnerGuestBooking[];
 }
+
+export interface PartnerBooking extends PartnerGuestBooking {
+    check_in_status?: string;
+}
+
+export interface PartnerBookingsMeta {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
+export interface PartnerBookingsResponse {
+    data: PartnerBooking[];
+    meta: PartnerBookingsMeta;
+}
