@@ -5,6 +5,7 @@ import { CustomerFooter } from "@/components/layouts/CustomerFooter";
 import { BottomSearchNav } from "@/components/layouts/BottomSearchNav";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 
 export default function CustomerLayout({
   children,
@@ -25,7 +26,9 @@ export default function CustomerLayout({
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="flex-1 pt-28"
         >
-          {children}
+          <Suspense fallback={null}>
+            {children}
+          </Suspense>
         </motion.main>
       </AnimatePresence>
       <BottomSearchNav />

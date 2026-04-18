@@ -13,6 +13,7 @@ import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead,
 import { Bell, CheckCircle2, Clock3, XCircle } from 'lucide-react';
 import { MiniSearch } from '@/components/features/search/MiniSearch';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Suspense } from 'react';
 
 type GuestPaymentTracker = {
   bookingId: number;
@@ -185,9 +186,12 @@ export function CustomerNavbar() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: -10 }}
                 >
-                  <MiniSearch onToggle={setIsSearchExpanded} />
+                  <Suspense fallback={<div className="h-10 w-32 bg-white/20 rounded-full animate-pulse" />}>
+                    <MiniSearch onToggle={setIsSearchExpanded} />
+                  </Suspense>
                 </motion.div>
               )}
+
             </AnimatePresence>
           </div>
           
