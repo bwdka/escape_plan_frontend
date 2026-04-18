@@ -7,7 +7,8 @@ import {
     CalendarResponse, 
     DashboardStatsResponse, 
     IcalSyncRequest, 
-    IcalSyncResponse 
+    IcalSyncResponse,
+    PartnerGuestBookingsResponse
 } from '@/types/partner';
 
 export const usePartnerDashboard = () => {
@@ -157,3 +158,13 @@ export const useSyncIcal = (glampingId: number) => {
         }
     });
 }
+
+export const usePartnerGuestBookings = () => {
+    return useQuery({
+        queryKey: ['partner-guest-bookings'],
+        queryFn: async () => {
+            const { data } = await api.get<PartnerGuestBookingsResponse>('/partner/guest-bookings');
+            return data.data;
+        }
+    });
+};

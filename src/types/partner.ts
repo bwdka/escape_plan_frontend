@@ -48,3 +48,23 @@ export interface IcalSyncResponse {
         export_url: string;
     };
 }
+
+export interface PartnerGuestBooking {
+    booking_id: number;
+    booking_code: string;
+    guest_name: string;
+    guest_email?: string;
+    guest_phone?: string;
+    glamping_name?: string;
+    unit_name?: string;
+    check_in?: string;
+    check_out?: string;
+    booking_status?: string;
+    payment_status?: string;
+    total_price: number;
+    created_at?: string;
+}
+
+export interface PartnerGuestBookingsResponse {
+    data: PartnerGuestBooking[];
+}
