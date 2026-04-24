@@ -46,7 +46,7 @@ export function MiniSearch({ onToggle }: { onToggle?: (expanded: boolean) => voi
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-primary" />
           {!isExpanded ? (
-            <div className="flex items-center gap-2 divide-x divide-primary/10 text-[10px] font-black uppercase tracking-widest text-primary truncate">
+            <div className="flex items-center gap-2 divide-x divide-primary/10 text-[10px] font-black tracking-widest text-primary truncate">
               <span className="px-2">{location || t({ id: 'Kemana saja', en: 'Anywhere' })}</span>
               <span className="px-2">{dateRange[0] ? dateRange[0].toLocaleDateString() : t({ id: 'Kapan saja', en: 'Any week' })}</span>
               <span className="px-2 text-primary/60">{guests ? `${guests} tamu` : t({ id: 'Tambah tamu', en: 'Add guests' })}</span>
