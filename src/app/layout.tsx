@@ -56,11 +56,11 @@ export default function RootLayout({
           <Toaster position="top-center" />
 
         </Providers>
-        <Script 
-          src="https://app.midtrans.com/snap/snap.js" 
-          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-        />
-      </body>
+        <Script
+          src="https://app.midtrans.com/snap/snap.js"
+          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || ""}
+          strategy="afterInteractive"
+        />      </body>
 
     </html>
 

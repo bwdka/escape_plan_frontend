@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { useBookingDetail, useCreateReview } from "@/hooks/useBooking";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,10 +11,12 @@ import Link from "next/link";
 import { useI18n } from "@/i18n/I18nProvider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useParams } from 'next/navigation';
 
-export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const { data: booking, isLoading, isError, refetch } = useBookingDetail(resolvedParams.id);
+export default function BookingDetailPage() {
+  const params = useParams();
+  const id = params?.id as string;
+  const { data: booking, isLoading, isError, refetch } = useBookingDetail(id);
   const createReview = useCreateReview();
   const [timeLeft, setTimeLeft] = useState<string>("");
   const { t } = useI18n();
