@@ -25,7 +25,7 @@ const glampingSchema = z.object({
   description: z.string().min(10, "Description is too short"),
   address: z.string().min(5, "Address is required"),
   access_type: z.enum(['city_car', 'suv_only', 'motor_only']),
-  cancellation_policy: z.enum(['flexible', 'moderate', 'strict']),
+  cancellation_policy: z.enum(['flexible', 'moderate', 'strict', 'non_refundable']),
   reschedule_allowed: z.boolean().optional(),
   min_nights: z.number().min(1).max(30).optional(),
   prep_days: z.number().min(0).max(7).optional(),
@@ -241,6 +241,7 @@ export function GlampingForm({ initialData, id }: GlampingFormProps) {
                   <SelectItem value="flexible">Flexible</SelectItem>
                   <SelectItem value="moderate">Moderate</SelectItem>
                   <SelectItem value="strict">Strict</SelectItem>
+                  <SelectItem value="non_refundable">Non-refundable</SelectItem>
                 </SelectContent>
               </Select>
             </div>

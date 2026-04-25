@@ -32,6 +32,7 @@ function SearchContent() {
   const [page, setPage] = useState(1);
   const [results, setResults] = useState<Glamping[]>([]);
   const [sortBy, setSortBy] = useState<'relevance' | 'price_low' | 'price_high' | 'rating_high'>('relevance');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   
   // Search states synced with URL
   const [location, setLocation] = useState(searchParams.get('location') || '');
@@ -345,7 +346,25 @@ function SearchContent() {
       {/* 1. DESKTOP SEARCH BAR (Centered above cards) */}
 
       {/* 2. MOBILE FLOATING BUTTON (Airbnb Style) */}
-      <div className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[140] w-[calc(100%-2rem)] max-w-[280px]">
+      <div className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[140] w-[calc(100%-2rem)] max-w-[280px] flex flex-col gap-3">
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
+          className="w-full bg-primary shadow-2xl rounded-full py-3 px-6 flex items-center justify-center gap-2 text-white transition-all"
+        >
+          {viewMode === 'list' ? (
+            <>
+              <MapPin className="w-4 h-4" />
+              <span className="text-xs font-black uppercase tracking-widest">{t({ id: 'Lihat Peta', en: 'Map View' })}</span>
+            </>
+          ) : (
+            <>
+              <Filter className="w-4 h-4" />
+              <span className="text-xs font-black uppercase tracking-widest">{t({ id: 'Lihat Daftar', en: 'List View' })}</span>
+            </>
+          )}
+        </motion.button>
+
         <motion.button 
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsSearchOpen(true)}
@@ -743,7 +762,56 @@ function SearchContent() {
                  </Button>
                </div>
             </motion.div>
+          ) : viewMode === 'map' ? (
+            <div className="w-full h-[70vh] rounded-[3rem] bg-gray-100 border border-primary/10 overflow-hidden relative shadow-inner">
+               <div className="absolute inset-0 bg-[#e5e3df]" />
+               {/* Simulating Map Markers */}
+               {displayedResults.map((g) => {
+                 const lat = Number(g.latitude) || 0;
+                 const lng = Number(g.longitude) || 0;
+                 if (!lat || !lng) return null;
+                 
+                 // Rough projection for visualization
+                 const top = ((lat - (-10)) / (10 - (-10))) * 100;
+                 const left = ((lng - 95) / (141 - 95)) * 100;
 
+                 return (
+                   <motion.div
+                     key={g.id}
+                     initial={{ scale: 0 }}
+                     animate={{ scale: 1 }}
+                     className="absolute cursor-pointer group"
+                     style={{ top: `${50 + (lat + 6.2) * 20}%`, left: `${50 + (lng - 106.8) * 20}%` }}
+                   >
+                      <div className="relative">
+                        <div className="px-3 py-1 bg-primary text-white text-[10px] font-black rounded-full shadow-lg group-hover:bg-accent transition-colors">
+                          Rp {((g as any).price || 0).toLocaleString('id-ID')}
+                        </div>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-primary group-hover:border-t-accent transition-colors" />
+                      </div>
+                      
+                      {/* Hover Preview */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
+                        <div className="w-48 bg-white rounded-2xl shadow-2xl overflow-hidden border border-black/5">
+                          <div className="relative h-24 w-full">
+                            <Image src={g.thumbnail || ''} alt={g.name} fill className="object-cover" />
+                          </div>
+                          <div className="p-3">
+                            <p className="text-[10px] font-black text-primary line-clamp-1">{g.name}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Star className="w-2 h-2 fill-accent text-accent" />
+                              <span className="text-[8px] font-bold text-primary/60">{g.rating}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                   </motion.div>
+                 );
+               })}
+               <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-black/5">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">{t({ id: 'Mode Simulasi Peta', en: 'Map Simulation Mode' })}</p>
+               </div>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-8 w-full">
               {activeFilterChips.length > 0 && (

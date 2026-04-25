@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { AxiosError } from 'axios';
 import { 
@@ -9,7 +9,8 @@ import {
     CreateBookingRequest, 
     CreateBookingResponse, 
     MyTripsResponse,
-    BookingDetailResponse
+    BookingDetailResponse,
+    CreateReviewRequest
 } from '@/types/booking';
 
 export type PaymentMethod = {
@@ -30,7 +31,16 @@ export const useCalculatePrice = () => {
 
 export const useCalculatePriceQuery = (payload: CalculatePriceRequest & { enabled: boolean }) => {
   return useQuery({
-    queryKey: ['calculate-price', payload.unit_id, payload.check_in, payload.check_out, JSON.stringify(payload.addons), payload.total_guests, payload.payment_method_id],
+    queryKey: [
+      'calculate-price',
+      payload.unit_id,
+      payload.check_in,
+      payload.check_out,
+      JSON.stringify(payload.addons),
+      payload.total_guests,
+      payload.payment_method_id,
+      payload.promo_code,
+    ],
     queryFn: async () => {
       const { data } = await api.post<CalculatePriceResponse>('/bookings/calculate', payload);
       return data.data;
@@ -82,5 +92,18 @@ export const useBookingDetail = (id: string) => {
       return data.data;
     },
     enabled: !!id,
+  });
+};
+
+export const useCreateReview = (bookingId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: CreateReviewRequest) => {
+      const { data } = await api.post(`/bookings/${bookingId}/review`, payload);
+      return data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['booking', String(bookingId)] });
+    },
   });
 };

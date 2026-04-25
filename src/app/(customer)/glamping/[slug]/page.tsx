@@ -83,6 +83,9 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
     if (type === 'strict') {
       return t({ id: 'Pembatalan ketat, refund terbatas mendekati hari H.', en: 'Strict cancellation with limited refunds close to arrival.' });
     }
+    if (type === 'non_refundable') {
+      return t({ id: 'Non-refundable: pembatalan tidak mendapatkan refund.', en: 'Non-refundable: cancellations are not eligible for refunds.' });
+    }
     return t({ id: 'Pembatalan moderat, refund sebagian sebelum check-in.', en: 'Moderate cancellation with partial refunds before check-in.' });
   })();
   const storageBase = (process.env.NEXT_PUBLIC_STORAGE_URL || 'http://localhost:8000/storage/').replace(/\/+$/, '/');
@@ -503,6 +506,27 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                     <p className="text-primary/70 leading-relaxed font-medium text-base md:text-lg italic underline decoration-accent/10 underline-offset-8">
                         &quot;{glamping.description}&quot;
                     </p>
+                    
+                    {/* Detailed Ratings */}
+                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 rounded-2xl bg-primary/5 border border-primary/10">
+                        {[
+                          { label: t({ id: 'Kebersihan', en: 'Cleanliness' }), score: (glamping as any).detailed_ratings?.cleanliness || 5.0 },
+                          { label: t({ id: 'Layanan', en: 'Service' }), score: (glamping as any).detailed_ratings?.service || 5.0 },
+                          { label: t({ id: 'Lokasi', en: 'Location' }), score: (glamping as any).detailed_ratings?.location || 5.0 },
+                          { label: t({ id: 'Nilai Harga', en: 'Value' }), score: (glamping as any).detailed_ratings?.value || 5.0 },
+                        ].map((item) => (
+                          <div key={item.label} className="space-y-2">
+                            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-primary/60">
+                              <span>{item.label}</span>
+                              <span className="text-primary">{item.score.toFixed(1)}</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
+                              <div className="h-full bg-accent rounded-full" style={{ width: `${(item.score / 5) * 100}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+
                     {glamping.owner?.name && (
                       <div className="mt-6 rounded-2xl border border-black/5 bg-white p-4 md:p-5">
                         <button
@@ -541,27 +565,35 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
                         )}
                       </div>
                     )}
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        {
-                          name: 'Alya',
-                          text: t({ id: 'View gunungnya bikin tenang, pengin balik lagi.', en: 'The mountain view was unreal. Would book again.' }),
-                        },
-                        {
-                          name: 'Rizky',
-                          text: t({ id: 'Bersih, nyaman, dan proses booking super cepat.', en: 'Clean, cozy, and the booking flow was super fast.' }),
-                        },
-                      ].map((review) => (
-                        <div key={review.name} className="rounded-2xl border border-black/5 bg-white p-4 flex items-start gap-3">
-                          <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black">
-                            {review.name.charAt(0)}
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs font-black uppercase tracking-widest text-primary/40">{review.name}</div>
-                            <div className="text-sm font-bold text-primary/70">{review.text}</div>
-                          </div>
-                        </div>
-                      ))}
+                    
+                    <div className="mt-8 space-y-4">
+                      <h3 className="text-sm font-black uppercase tracking-widest text-primary/40">{t({ id: 'Ulasan Tamu', en: 'Guest Reviews' })}</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {((glamping as any).reviews || []).length > 0 ? (
+                          (glamping as any).reviews.map((review: any) => (
+                            <div key={review.id} className="rounded-2xl border border-black/5 bg-white p-4 flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black">
+                                {review.user_name.charAt(0)}
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="text-xs font-black uppercase tracking-widest text-primary/40">{review.user_name}</div>
+                                  <div className="flex items-center text-[10px] text-accent">
+                                    <Star className="w-2.5 h-2.5 fill-current" />
+                                    <span className="ml-1 font-bold">{review.rating}</span>
+                                  </div>
+                                </div>
+                                <div className="text-[10px] font-bold text-primary/30 uppercase tracking-widest">{review.created_at}</div>
+                                <div className="text-sm font-bold text-primary/70">{review.comment}</div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm font-bold text-primary/40 italic col-span-2 py-4">
+                            {t({ id: 'Belum ada ulasan untuk tempat ini.', en: 'No reviews yet for this sanctuary.' })}
+                          </p>
+                        )}
+                      </div>
                     </div>
                 </section>
 

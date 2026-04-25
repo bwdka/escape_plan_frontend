@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, Shield, Plus, Minus, AlertCircle, CheckCircle2, Circle, CalendarDays, UsersRound } from 'lucide-react';
+import { Loader2, Shield, Plus, Minus, AlertCircle, CheckCircle2, Circle, CalendarDays, UsersRound, X } from 'lucide-react';
 import { CustomDatePicker } from '@/components/ui/CustomDatePicker';
 import { useI18n } from '@/i18n/I18nProvider';
 import { useUnitBlockedDates, useUnitDetail } from '@/hooks/useGlampingDetail';
@@ -98,6 +98,8 @@ function BookingContent() {
   const [cardCvv, setCardCvv] = useState('');
 
   const [selectedAddons, setSelectedAddons] = useState<AddonSelection[]>([]);
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState('');
 
   const bookingSchema = z.object({
     guest_name: z.string().min(3, t({ id: 'Nama lengkap harus diisi', en: 'Full name is required' })),
@@ -169,8 +171,19 @@ function BookingContent() {
     total_guests: form.watch('total_guests'),
     addons: activeAddons,
     payment_method_id: selectedPaymentMethod || undefined,
+    promo_code: appliedPromo || undefined,
     enabled: !!unitId && !!form.watch('check_in') && !!form.watch('check_out')
   });
+
+  useEffect(() => {
+    if (!appliedPromo) return;
+    if (isCalculating) return;
+    if (!priceData) return;
+
+    if ((priceData.discount_amount || 0) <= 0) {
+      toast.error(t({ id: 'Kode promo tidak valid / tidak memenuhi syarat.', en: 'Promo code is invalid / not eligible.' }));
+    }
+  }, [appliedPromo, isCalculating, priceData, t]);
 
   const { mutate: createBooking, isPending: isBooking } = useCreateBooking();
 
@@ -232,6 +245,7 @@ function BookingContent() {
         addons: activeAddons,
         quantity: 1,
         payment_method_id: selectedPaymentMethod,
+        promo_code: appliedPromo || undefined,
         card_token: selectedPaymentMethod === 'credit_card' ? cardToken : undefined,
     }, { 
         onSuccess: (res: CreateBookingSuccessPayload) => {
@@ -620,7 +634,40 @@ function BookingContent() {
       </div>
 
       <div className="self-start h-fit">
-          <div className="lg:sticky lg:top-28 glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-2xl space-y-8 overflow-hidden">
+          <div className="lg:sticky lg:top-28 space-y-6">
+              <div className="glass p-6 md:p-8 rounded-[2rem] border-white/40 shadow-xl space-y-4">
+                  <h3 className="font-black text-sm text-primary uppercase tracking-widest">{t({ id: 'Punya Kode Promo?', en: 'Have a Promo Code?' })}</h3>
+                  <div className="flex gap-2">
+                      <Input 
+                          placeholder="KODEPROMO" 
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                          className="rounded-xl border-primary/10 bg-white/70 h-11 uppercase font-black tracking-widest"
+                      />
+                      <Button 
+                          type="button"
+                          onClick={() => {
+                              if (!promoCode) return;
+                              setAppliedPromo(promoCode);
+                              toast.info(t({ id: 'Menerapkan promo...', en: 'Applying promo...' }));
+                          }}
+                          className="h-11 rounded-xl bg-accent text-white font-black uppercase tracking-widest px-4"
+                      >
+                          {t({ id: 'Pakai', en: 'Apply' })}
+                      </Button>
+                  </div>
+                  {appliedPromo && priceData?.discount_amount && (
+                      <div className="flex items-center gap-2 p-2 px-3 bg-emerald-50 rounded-lg border border-emerald-100">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">
+                              {appliedPromo} {t({ id: 'Berhasil Digunakan', en: 'Applied Successfully' })}
+                          </p>
+                          <button onClick={() => { setAppliedPromo(''); setPromoCode(''); }} className="ml-auto text-emerald-700/50 hover:text-emerald-700"><X className="w-3 h-3" /></button>
+                      </div>
+                  )}
+              </div>
+
+              <div className="glass p-6 md:p-8 lg:p-10 rounded-[2.5rem] md:rounded-[3rem] border-white/40 shadow-2xl space-y-8 overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl -mr-16 -mt-16" />
               <h3 className="font-black text-xl text-primary tracking-tight relative">{t({ id: 'Ringkasan Pesanan', en: 'Booking Summary' })}</h3>
               <div className="relative space-y-6">
@@ -653,7 +700,7 @@ function BookingContent() {
                       <div className="p-4 bg-red-50 rounded-xl border border-red-100"><p className="text-[10px] font-bold text-red-500 uppercase leading-relaxed">{((calculationError as ApiErrorPayload | null)?.response?.data?.message) || t({ id: 'Kesalahan kalkulasi harga', en: 'Price calculation error' })}</p></div>
                   ) : priceData ? (
                       <div className="space-y-4">
-                          {priceData.breakdown.map((item, idx) => (
+                          {priceData.breakdown.filter(item => item.item_type !== 'App\\Models\\Coupon').map((item, idx) => (
                               <div key={idx} className="flex justify-between items-center"><span className="text-xs font-bold text-primary/60">{item.label}</span><span className="text-sm font-black text-primary">Rp {item.value.toLocaleString('id-ID')}</span></div>
                           ))}
                           {activeAddonCount > 0 && (
@@ -668,6 +715,12 @@ function BookingContent() {
                           <div className="space-y-2">
                               <div className="flex justify-between items-center text-[10px] font-bold text-primary/40 uppercase tracking-widest"><span>{t({ id: 'Pajak (PPN 11%)', en: 'Tax (VAT 11%)' })}</span><span>Rp {priceData.tax_amount.toLocaleString('id-ID')}</span></div>
                               <div className="flex justify-between items-center text-[10px] font-bold text-primary/40 uppercase tracking-widest"><span>{t({ id: 'Biaya Aplikasi', en: 'Service Fee' })}</span><span>Rp {priceData.service_fee.toLocaleString('id-ID')}</span></div>
+                              {priceData.discount_amount > 0 && (
+                                <div className="flex justify-between items-center text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                                    <span>{t({ id: 'Promo', en: 'Promo' })} ({appliedPromo})</span>
+                                    <span>- Rp {priceData.discount_amount.toLocaleString('id-ID')}</span>
+                                </div>
+                              )}
                           </div>
                           <div className="pt-6 mt-6 border-t-2 border-dashed border-primary/10 flex justify-between items-end">
                               <div className="flex flex-col"><span className="font-black uppercase tracking-widest text-xs text-primary">{t({ id: 'Total Akhir', en: 'Grand Total' })}</span><span className="text-[8px] font-bold text-primary/30 uppercase tracking-tighter">{t({ id: 'Sudah termasuk pajak & biaya', en: 'Includes taxes & fees' })}</span></div>
@@ -886,6 +939,7 @@ function BookingContent() {
               <div className="flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-primary/30"><Shield size={10} /> {t({ id: 'Transaksi Aman & Terenkripsi', en: 'Secure & Encrypted Transaction' })}</div>
           </div>
       </div>
+    </div>
     </div>
     <Dialog open={showPaymentInstructionModal} onOpenChange={setShowPaymentInstructionModal}>
       <DialogContent className="max-w-md rounded-3xl">

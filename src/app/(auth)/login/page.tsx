@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
-import Image from 'next/image';
 
 import { AuthService } from '@/services/authService';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -33,6 +32,18 @@ function LoginForm() {
   const redirectPath = searchParams.get('redirect') || '/';
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const errorParam = searchParams.get('error');
+
+  useEffect(() => {
+    if (errorParam) {
+      toast.error(errorParam);
+    }
+  }, [errorParam]);
+
+  const getErrorMessage = (err: unknown) => {
+    const anyErr = err as { response?: { data?: { message?: string } }; message?: string };
+    return anyErr?.response?.data?.message || anyErr?.message || t({ id: 'Terjadi kesalahan', en: 'Something went wrong' });
+  };
 
   const loginSchema = z.object({
     email: z.string().email(t({ id: 'Email tidak valid', en: 'Invalid email address' })),
@@ -69,9 +80,9 @@ function LoginForm() {
            router.push(redirectPath);
         }
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || t({ id: 'Login gagal', en: 'Login failed' }));
-      console.error(error);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err) || t({ id: 'Login gagal', en: 'Login failed' }));
+      console.error(err);
     }
   };
 
@@ -84,8 +95,8 @@ function LoginForm() {
       } else {
         toast.error(t({ id: 'Gagal membuka Google login', en: 'Failed to start Google login' }));
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || t({ id: 'Gagal membuka Google login', en: 'Failed to start Google login' }));
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err) || t({ id: 'Gagal membuka Google login', en: 'Failed to start Google login' }));
     } finally {
       setIsGoogleLoading(false);
     }

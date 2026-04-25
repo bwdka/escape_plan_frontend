@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Tent, Calendar, Settings, LogOut, X, MessageCircle, BarChart3, Users, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Tent, Calendar, Settings, LogOut, X, MessageCircle, BarChart3, Users, ClipboardList, Ticket, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -32,11 +32,13 @@ const sidebarGroups = [
     group: { id: 'Properti', en: 'Property' },
     items: [
       { icon: Tent, label: { id: 'Listing Saya', en: 'My Listings' }, href: '/partner/listings' },
+      { icon: Ticket, label: { id: 'Voucher & Promo', en: 'Coupons & Vouchers' }, href: '/partner/coupons' },
     ]
   },
   {
     group: { id: 'Finansial', en: 'Financials' },
     items: [
+      { icon: DollarSign, label: { id: 'Pendapatan', en: 'Earnings' }, href: '/partner/earnings' },
       { icon: BarChart3, label: { id: 'Analitik', en: 'Analytics' }, href: '/partner/analytics' },
     ]
   },

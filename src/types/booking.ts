@@ -78,6 +78,18 @@ export interface BookingItem {
     total_price: number;
 }
 
+export interface BookingReview {
+    id: number;
+    rating: number;
+    cleanliness_rating?: number | null;
+    service_rating?: number | null;
+    location_rating?: number | null;
+    value_rating?: number | null;
+    comment?: string | null;
+    photos?: string[];
+    created_at: string;
+}
+
 export interface BookingDetail {
     id: number;
     booking_code: string;
@@ -93,6 +105,7 @@ export interface BookingDetail {
     glamping_name: string;
     unit_name: string;
     items: BookingItem[];
+    review?: BookingReview | null;
     glamping_thumbnail: string;
     created_at: string;
 }
@@ -115,4 +128,14 @@ export interface MyTripsResponse {
 
 export interface BookingDetailResponse {
     data: BookingDetail;
+}
+
+export interface CreateReviewRequest {
+    rating: number;
+    comment?: string;
+    cleanliness_rating?: number;
+    service_rating?: number;
+    location_rating?: number;
+    value_rating?: number;
+    photos?: string[];
 }

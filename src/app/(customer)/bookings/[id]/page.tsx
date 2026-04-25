@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { useBookingDetail } from "@/hooks/useBooking";
+import { useBookingDetail, useCreateReview } from "@/hooks/useBooking";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -9,12 +9,22 @@ import { Calendar, MapPin, Tent, ArrowLeft, Clock, CheckCircle2, XCircle } from 
 import Image from "next/image";
 import Link from "next/link";
 import { useI18n } from "@/i18n/I18nProvider";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { data: booking, isLoading, isError, refetch } = useBookingDetail(resolvedParams.id);
   const [timeLeft, setTimeLeft] = useState<string>("");
   const { t } = useI18n();
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    cleanliness_rating: 5,
+    service_rating: 5,
+    location_rating: 5,
+    value_rating: 5,
+    comment: '',
+  });
   const blurDataURL =
     "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzAnIGhlaWdodD0nMjInIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMwJyBoZWlnaHQ9JzIyJyBmaWxsPSIjZWRlN2RlIi8+PC9zdmc+";
 
@@ -66,6 +76,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   );
 
   const paymentPayload = booking.payment_payload || null;
+  const createReview = useCreateReview(booking.id);
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
@@ -279,6 +290,121 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                             </Link>
                         </div>
                     </div>
+                )}
+
+                {booking.status === 'COMPLETED' && (
+                  <div className="pt-4 md:pt-6">
+                    <div className="rounded-2xl md:rounded-3xl border border-primary/10 bg-white/70 p-6 md:p-8">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                        {t({ id: 'Ulasan', en: 'Review' })}
+                      </p>
+                      <h3 className="mt-1 text-lg md:text-xl font-black tracking-tight text-primary">
+                        {booking.review
+                          ? t({ id: 'Ulasan kamu sudah terkirim', en: 'Your review is submitted' })
+                          : t({ id: 'Tulis ulasan setelah menginap', en: 'Write a review after your stay' })}
+                      </h3>
+
+                      {booking.review ? (
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div className="rounded-2xl border border-primary/10 bg-white/80 p-4">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">Rating</div>
+                            <div className="mt-1 font-black text-primary">★ {booking.review.rating} / 5</div>
+                            {booking.review.comment ? (
+                              <div className="mt-3 text-primary/70 font-semibold whitespace-pre-wrap">{booking.review.comment}</div>
+                            ) : null}
+                          </div>
+                          <div className="rounded-2xl border border-primary/10 bg-white/80 p-4">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">Detail</div>
+                            <div className="mt-2 space-y-1 text-xs font-bold text-primary/70">
+                              <div>Cleanliness: {booking.review.cleanliness_rating ?? '-'}</div>
+                              <div>Service: {booking.review.service_rating ?? '-'}</div>
+                              <div>Location: {booking.review.location_rating ?? '-'}</div>
+                              <div>Value: {booking.review.value_rating ?? '-'}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <form
+                          className="mt-5 space-y-4"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            createReview.mutate(
+                              {
+                                rating: Number(reviewForm.rating),
+                                cleanliness_rating: Number(reviewForm.cleanliness_rating),
+                                service_rating: Number(reviewForm.service_rating),
+                                location_rating: Number(reviewForm.location_rating),
+                                value_rating: Number(reviewForm.value_rating),
+                                comment: reviewForm.comment?.trim() || undefined,
+                              },
+                              {
+                                onSuccess: () => {
+                                  setReviewForm((prev) => ({ ...prev, comment: '' }));
+                                },
+                              }
+                            );
+                          }}
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {[
+                              { key: 'rating', label: 'Overall' },
+                              { key: 'cleanliness_rating', label: 'Cleanliness' },
+                              { key: 'service_rating', label: 'Service' },
+                              { key: 'location_rating', label: 'Location' },
+                              { key: 'value_rating', label: 'Value' },
+                            ].map((field) => (
+                              <label key={field.key} className="space-y-1">
+                                <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">{field.label}</div>
+                                <select
+                                  className="h-11 w-full rounded-2xl border border-primary/15 bg-white px-3 text-sm font-bold text-primary"
+                                  value={(reviewForm as any)[field.key]}
+                                  onChange={(e) =>
+                                    setReviewForm((prev) => ({ ...prev, [field.key]: Number(e.target.value) }))
+                                  }
+                                >
+                                  {[5, 4, 3, 2, 1].map((v) => (
+                                    <option key={v} value={v}>
+                                      {v}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            ))}
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                              {t({ id: 'Komentar (opsional)', en: 'Comment (optional)' })}
+                            </div>
+                            <Textarea
+                              value={reviewForm.comment}
+                              onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
+                              rows={4}
+                              placeholder={t({ id: 'Ceritain pengalamanmu…', en: 'Tell us about your experience…' })}
+                              className="rounded-2xl bg-white/80"
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="text-[10px] font-bold text-primary/40">
+                              {createReview.isPending
+                                ? t({ id: 'Mengirim…', en: 'Submitting…' })
+                                : createReview.isError
+                                  ? t({ id: 'Gagal mengirim ulasan', en: 'Failed to submit review' })
+                                  : null}
+                            </div>
+                            <Button
+                              type="submit"
+                              className="h-12 rounded-2xl px-8 font-black uppercase tracking-widest text-[10px]"
+                              disabled={createReview.isPending}
+                            >
+                              {t({ id: 'Kirim Ulasan', en: 'Submit Review' })}
+                            </Button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
+                  </div>
                 )}
             </div>
         </div>

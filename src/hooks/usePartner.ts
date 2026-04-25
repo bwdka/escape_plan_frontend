@@ -203,3 +203,76 @@ export const usePartnerBookingAction = () => {
         }
     });
 };
+
+export const usePartnerCoupons = (params?: { q?: string; active?: boolean; page?: number; per_page?: number }) => {
+    return useQuery({
+        queryKey: ['partner-coupons', params],
+        queryFn: async () => {
+            const { data } = await api.get('/partner/coupons', { params });
+            return data;
+        }
+    });
+};
+
+export const useCreatePartnerCoupon = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload: any) => {
+            const { data } = await api.post('/partner/coupons', payload);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['partner-coupons'] });
+        }
+    });
+};
+
+export const useUpdatePartnerCoupon = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, payload }: { id: number; payload: any }) => {
+            const { data } = await api.put(`/partner/coupons/${id}`, payload);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['partner-coupons'] });
+        }
+    });
+};
+
+export const useDeletePartnerCoupon = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: number) => {
+            const { data } = await api.delete(`/partner/coupons/${id}`);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['partner-coupons'] });
+        }
+    });
+};
+
+export const usePartnerWallet = () => {
+    return useQuery({
+        queryKey: ['partner-wallet'],
+        queryFn: async () => {
+            const { data } = await api.get('/partner/wallet');
+            return data;
+        }
+    });
+};
+
+export const useRequestWithdrawal = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload: { amount: number; note?: string }) => {
+            const { data } = await api.post('/partner/withdrawals', payload);
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['partner-wallet'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-withdrawals'] });
+        }
+    });
+};
