@@ -95,15 +95,15 @@ export const useBookingDetail = (id: string) => {
   });
 };
 
-export const useCreateReview = (bookingId: number) => {
+export const useCreateReview = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: CreateReviewRequest) => {
+    mutationFn: async ({ bookingId, ...payload }: CreateReviewRequest & { bookingId: number }) => {
       const { data } = await api.post(`/bookings/${bookingId}/review`, payload);
       return data;
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['booking', String(bookingId)] });
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ['booking', String(variables.bookingId)] });
     },
   });
 };

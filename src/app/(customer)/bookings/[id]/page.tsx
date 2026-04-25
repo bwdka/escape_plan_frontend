@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { data: booking, isLoading, isError, refetch } = useBookingDetail(resolvedParams.id);
+  const createReview = useCreateReview();
   const [timeLeft, setTimeLeft] = useState<string>("");
   const { t } = useI18n();
   const [reviewForm, setReviewForm] = useState({
@@ -76,7 +77,6 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   );
 
   const paymentPayload = booking.payment_payload || null;
-  const createReview = useCreateReview(booking.id);
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
@@ -140,14 +140,16 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                 <div className="space-y-6">
                     <h3 className="font-black text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary/40">{t({ id: 'Ringkasan Pesanan', en: 'Order Summary' })}</h3>
                     <div className="space-y-4">
-                        {booking.items.map((item: any) => (
+                        {Array.isArray(booking.items) && booking.items.map((item: any) => (
                             <div key={item.id} className="flex justify-between items-start text-xs md:text-sm font-bold gap-4">
                                 <span className="text-primary/60">{item.name} x {item.quantity}</span>
                                 <span className="text-primary text-right whitespace-nowrap">Rp {Number(item.total_price).toLocaleString('id-ID')}</span>
                             </div>
                         ))}
                         {(() => {
-                          const itemsTotal = booking.items.reduce((sum: number, item: any) => sum + Number(item.total_price || 0), 0);
+                          const itemsTotal = Array.isArray(booking.items) 
+                            ? booking.items.reduce((sum: number, item: any) => sum + Number(item.total_price || 0), 0)
+                            : 0;
                           const diff = Number(booking.total_price) - itemsTotal;
                           if (diff <= 0) return null;
                           return (
@@ -197,7 +199,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                         {paymentPayload && (
                           <div className="mt-4 bg-white/60 border border-white/70 rounded-2xl md:rounded-3xl p-6 md:p-8">
                             <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-3">{t({ id: 'Instruksi Pembayaran', en: 'Payment Instructions' })}</p>
-                            {paymentPayload.va_numbers && (
+                            {Array.isArray(paymentPayload.va_numbers) && (
                               <div className="space-y-2">
                                 {paymentPayload.va_numbers.map((va: any, idx: number) => (
                                   <div key={idx} className="flex items-center justify-between border-b border-primary/5 py-2">
@@ -225,7 +227,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                                 </div>
                               </div>
                             )}
-                            {paymentPayload.actions && (
+                            {Array.isArray(paymentPayload.actions) && (
                               <div className="mt-3 space-y-2">
                                 {paymentPayload.actions.map((action: any, idx: number) => (
                                   <a key={idx} href={action.url} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-accent underline">
@@ -330,6 +332,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                             e.preventDefault();
                             createReview.mutate(
                               {
+                                bookingId: booking.id,
                                 rating: Number(reviewForm.rating),
                                 cleanliness_rating: Number(reviewForm.cleanliness_rating),
                                 service_rating: Number(reviewForm.service_rating),
