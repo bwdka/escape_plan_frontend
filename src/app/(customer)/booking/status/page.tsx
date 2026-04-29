@@ -15,7 +15,7 @@ type GuestStatusResponse = {
   booking_code: string;
   status: string;
   payment_status: string;
-  payment_payload?: any;
+  payment_payload?: Record<string, unknown>;
   created_at: string;
   guest_name?: string;
   check_in?: string;
@@ -29,6 +29,8 @@ type GuestStatusResponse = {
   subtotal_price?: number | string;
   expired_at?: string;
 };
+type PaymentAction = { name?: string; url?: string };
+type VaNumber = { bank?: string; va_number?: string };
 
 function GuestBookingStatusContent() {
   const { t } = useI18n();
@@ -43,6 +45,7 @@ function GuestBookingStatusContent() {
   const [error, setError] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(Date.now());
   const [hasAuthToken, setHasAuthToken] = useState(false);
+  const [isForceChecking, setIsForceChecking] = useState(false);
 
   const fetchStatus = async () => {
     if (!bookingId || !trackingToken) {
@@ -74,8 +77,9 @@ function GuestBookingStatusContent() {
           store: next.payment_payload?.store || null,
         }));
       }
-    } catch (err: any) {
-      const statusCode = err?.response?.status;
+    } catch (err: unknown) {
+      const maybeErr = err as { response?: { status?: number } };
+      const statusCode = maybeErr?.response?.status;
       if (statusCode === 403) {
         setError(t({ id: 'Link pembayaran tidak valid atau sudah kedaluwarsa.', en: 'This payment link is invalid or has expired.' }));
       } else {
@@ -84,6 +88,23 @@ function GuestBookingStatusContent() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const forceCheckPayment = async () => {
+    setIsForceChecking(true);
+    await fetchStatus();
+    const start = Date.now();
+    const aggressivePoll = setInterval(async () => {
+      await fetchStatus();
+      if (Date.now() - start >= 120000) {
+        clearInterval(aggressivePoll);
+        setIsForceChecking(false);
+      }
+    }, 3000);
+    setTimeout(() => {
+      clearInterval(aggressivePoll);
+      setIsForceChecking(false);
+    }, 121000);
   };
 
   useEffect(() => {
@@ -123,7 +144,10 @@ function GuestBookingStatusContent() {
     return { Icon: Clock3, color: 'text-amber-600', label: t({ id: 'Menunggu Pembayaran', en: 'Waiting for Payment' }) };
   }, [data?.status, t]);
 
-  const paymentActions = data?.payment_payload?.actions || [];
+  const paymentActions = useMemo<PaymentAction[]>(() => {
+    const raw = data?.payment_payload?.actions;
+    return Array.isArray(raw) ? (raw as PaymentAction[]) : [];
+  }, [data?.payment_payload?.actions]);
   const qrString = data?.payment_payload?.qr_string || '';
   const formatRupiah = (value: number) => `Rp ${value.toLocaleString('id-ID')}`;
   const parseAmount = (value: unknown) => {
@@ -176,8 +200,7 @@ function GuestBookingStatusContent() {
     };
   }, [data?.expired_at, data?.payment_payload?.expiry_time, nowMs]);
   const qrActionUrl = useMemo(() => {
-    if (!Array.isArray(paymentActions)) return '';
-    const qrAction = paymentActions.find((action: any) => {
+    const qrAction = paymentActions.find((action) => {
       const name = String(action?.name || '').toLowerCase();
       return name.includes('generate-qr-code') || name.includes('deeplink-redirect');
     });
@@ -362,7 +385,7 @@ function GuestBookingStatusContent() {
                 {t({ id: 'Instruksi Pembayaran', en: 'Payment Instructions' })}
               </p>
 
-              {data.payment_payload?.va_numbers?.map((va: any, idx: number) => (
+              {(Array.isArray(data.payment_payload?.va_numbers) ? (data.payment_payload?.va_numbers as VaNumber[]) : []).map((va, idx: number) => (
                 <div key={idx} className="flex items-center justify-between border-b border-primary/5 py-2 text-sm">
                   <span className="font-bold uppercase text-primary">{va.bank}</span>
                   <span className="font-mono text-primary">{va.va_number}</span>
@@ -448,12 +471,12 @@ function GuestBookingStatusContent() {
               )}
 
               {paymentActions
-                .filter((action: any) => {
+                .filter((action) => {
                   if (!action?.url || action.url === qrActionUrl) return false;
                   const actionName = String(action?.name || '').toLowerCase();
                   return !actionName.includes('generate-qr-code-v2');
                 })
-                .map((action: any, idx: number) => (
+                .map((action, idx: number) => (
                 <a key={idx} href={action.url} target="_blank" rel="noopener noreferrer" className="block text-sm font-bold text-accent underline">
                   {action.name || 'Open Payment Link'}
                 </a>
@@ -466,6 +489,13 @@ function GuestBookingStatusContent() {
           <Button type="button" variant="outline" className="rounded-xl" onClick={fetchStatus}>
             {t({ id: 'Refresh Status', en: 'Refresh Status' })}
           </Button>
+          {data?.status === 'PENDING_PAYMENT' && (
+            <Button type="button" variant="outline" className="rounded-xl" onClick={forceCheckPayment} disabled={isForceChecking}>
+              {isForceChecking
+                ? t({ id: 'Mengecek pembayaran...', en: 'Checking payment...' })
+                : t({ id: 'Saya Sudah Bayar', en: "I've Paid" })}
+            </Button>
+          )}
           <Link href="/search" className="inline-flex items-center justify-center h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-black">
             {t({ id: 'Kembali ke Pencarian', en: 'Back to Search' })}
           </Link>
