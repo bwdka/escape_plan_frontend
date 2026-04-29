@@ -36,11 +36,13 @@ function GuestBookingStatusContent() {
   const searchParams = useSearchParams();
   const bookingId = Number(searchParams.get('booking_id') || 0);
   const trackingToken = searchParams.get('token') || '';
+  const returnToStatus = `/booking/status?booking_id=${bookingId}&token=${encodeURIComponent(trackingToken)}`;
 
   const [data, setData] = useState<GuestStatusResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(Date.now());
+  const [hasAuthToken, setHasAuthToken] = useState(false);
 
   const fetchStatus = async () => {
     if (!bookingId || !trackingToken) {
@@ -72,8 +74,13 @@ function GuestBookingStatusContent() {
           store: next.payment_payload?.store || null,
         }));
       }
-    } catch {
-      setError(t({ id: 'Gagal mengambil status pembayaran', en: 'Failed to load payment status' }));
+    } catch (err: any) {
+      const statusCode = err?.response?.status;
+      if (statusCode === 403) {
+        setError(t({ id: 'Link pembayaran tidak valid atau sudah kedaluwarsa.', en: 'This payment link is invalid or has expired.' }));
+      } else {
+        setError(t({ id: 'Gagal mengambil status pembayaran', en: 'Failed to load payment status' }));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -92,14 +99,19 @@ function GuestBookingStatusContent() {
   }, []);
 
   useEffect(() => {
-    if (!data || data.status !== 'PAID') return;
+    if (typeof window === 'undefined') return;
+    setHasAuthToken(!!localStorage.getItem('token'));
+  }, []);
+
+  useEffect(() => {
+    if (!data || data.status !== 'PAID' || !hasAuthToken) return;
     const target = data.uuid || String(data.id || '');
     if (!target) return;
     const timeout = setTimeout(() => {
       router.push(`/bookings/${target}`);
     }, 1200);
     return () => clearTimeout(timeout);
-  }, [data, router]);
+  }, [data, hasAuthToken, router]);
 
   const statusUi = useMemo(() => {
     if (data?.status === 'PAID') {
@@ -195,6 +207,14 @@ function GuestBookingStatusContent() {
         {!isLoading && error && (
           <div className="p-4 rounded-xl border border-red-200 bg-red-50">
             <p className="text-sm font-bold text-red-600">{error}</p>
+            <div className="mt-3 flex gap-2">
+              <Link href="/search" className="inline-flex items-center justify-center h-9 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
+                {t({ id: 'Buat Booking Baru', en: 'Create New Booking' })}
+              </Link>
+              <Button type="button" variant="outline" className="h-9 rounded-lg text-xs font-black uppercase tracking-widest" onClick={fetchStatus}>
+                {t({ id: 'Coba Lagi', en: 'Try Again' })}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -218,6 +238,50 @@ function GuestBookingStatusContent() {
                 </Badge>
               </div>
             </div>
+            {data.status === 'PAID' && !hasAuthToken && (
+              <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50 space-y-2">
+                <p className="text-sm font-black text-amber-800">
+                  {t({ id: 'Pembayaran berhasil, tapi Anda belum login.', en: 'Payment is successful, but you are not logged in yet.' })}
+                </p>
+                <p className="text-xs font-semibold text-amber-700">
+                  {t({ id: 'Detail booking tetap bisa dilihat di halaman ini. Login untuk menyimpan perjalanan ke akun Anda.', en: 'Your booking details are still available on this page. Log in to save this trip to your account.' })}
+                </p>
+                <div className="flex gap-2">
+                  <Link href={`/login?redirect=${encodeURIComponent(returnToStatus)}`} className="inline-flex items-center justify-center h-9 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
+                    {t({ id: 'Claim Booking', en: 'Claim Booking' })}
+                  </Link>
+                  <Link href={`/register?redirect=${encodeURIComponent(returnToStatus)}`} className="inline-flex items-center justify-center h-9 px-3 rounded-lg border border-primary/20 text-primary text-xs font-black uppercase tracking-widest">
+                    {t({ id: 'Daftar & Claim', en: 'Register & Claim' })}
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {data.status === 'PAID' && (
+              <div className="space-y-3 p-4 rounded-2xl border border-emerald-200 bg-emerald-50/70">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+                  {t({ id: 'Bukti Pembayaran', en: 'Payment Receipt' })}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center justify-between md:block">
+                    <span className="text-emerald-800/70">{t({ id: 'Kode Booking', en: 'Booking Code' })}</span>
+                    <span className="font-black text-emerald-900 md:block">{data.booking_code}</span>
+                  </div>
+                  <div className="flex items-center justify-between md:block">
+                    <span className="text-emerald-800/70">{t({ id: 'Total Dibayar', en: 'Amount Paid' })}</span>
+                    <span className="font-black text-emerald-900 md:block">{formatRupiah(parseAmount(data.total_price ?? data.payment_payload?.gross_amount))}</span>
+                  </div>
+                  <div className="flex items-center justify-between md:block">
+                    <span className="text-emerald-800/70">{t({ id: 'Metode', en: 'Method' })}</span>
+                    <span className="font-black text-emerald-900 md:block">{data.payment_payload?.payment_type || data.payment_payload?.store || 'Payment'}</span>
+                  </div>
+                  <div className="flex items-center justify-between md:block">
+                    <span className="text-emerald-800/70">{t({ id: 'Waktu', en: 'Time' })}</span>
+                    <span className="font-black text-emerald-900 md:block">{formatDateTime(data.payment_payload?.transaction_time || data.created_at) || '-'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {(priceSummary || stayInfo || data.guest_name || data.unit_name || data.glamping_name || paymentDeadline) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
