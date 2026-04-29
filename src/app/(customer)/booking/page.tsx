@@ -194,12 +194,12 @@ function BookingContent() {
 
   useEffect(() => {
     if (userProfile) {
-        form.setValue('guest_name', userProfile.name);
-        form.setValue('guest_email', userProfile.email);
-        form.setValue('guest_phone', userProfile.phone || '');
+        form.setValue('guest_name', userProfile.name, { shouldValidate: true });
+        form.setValue('guest_email', userProfile.email, { shouldValidate: true });
+        form.setValue('guest_phone', userProfile.phone || '', { shouldValidate: true });
     }
-    if (checkInParam) form.setValue('check_in', checkInParam);
-    if (checkOutParam) form.setValue('check_out', checkOutParam);
+    if (checkInParam) form.setValue('check_in', checkInParam, { shouldValidate: true });
+    if (checkOutParam) form.setValue('check_out', checkOutParam, { shouldValidate: true });
   }, [userProfile, checkInParam, checkOutParam, form]);
 
   useEffect(() => {
