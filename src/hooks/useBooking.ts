@@ -103,7 +103,7 @@ export const useCreateReview = () => {
       return data;
     },
     onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['booking', String(variables.bookingId)] });
+      await queryClient.invalidateQueries({ queryKey: ['booking'] });
     },
   });
 };

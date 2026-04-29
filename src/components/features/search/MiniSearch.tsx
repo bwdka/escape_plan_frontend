@@ -41,7 +41,7 @@ export function MiniSearch({ onToggle }: { onToggle?: (expanded: boolean) => voi
       <motion.div 
         layout
         onClick={() => !isExpanded && toggleExpand(true)}
-        className={`flex items-center gap-3 px-4 py-2 rounded-full border border-white/40 bg-white/60 backdrop-blur-xl shadow-lg cursor-pointer hover:bg-white/80 transition-all ${isExpanded ? 'w-[380px]' : 'w-auto'}`}
+        className={`flex items-center gap-3 px-4 py-2 rounded-full border border-primary/20 bg-white/10 backdrop-blur-xl cursor-pointer hover:bg-white/20 hover:shadow-lg transition-all ${isExpanded ? 'w-[380px]' : 'w-auto'}`}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Search className="w-3.5 h-3.5 text-primary" />

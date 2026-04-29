@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { useI18n } from '@/i18n/I18nProvider';
@@ -11,15 +11,28 @@ import { CheckCircle2, Clock3, XCircle, Loader2 } from 'lucide-react';
 
 type GuestStatusResponse = {
   id: number;
+  uuid?: string;
   booking_code: string;
   status: string;
   payment_status: string;
   payment_payload?: any;
   created_at: string;
+  guest_name?: string;
+  check_in?: string;
+  check_out?: string;
+  total_guests?: number;
+  unit_name?: string;
+  glamping_name?: string;
+  total_price?: number | string;
+  service_fee?: number | string;
+  discount_amount?: number | string;
+  subtotal_price?: number | string;
+  expired_at?: string;
 };
 
 function GuestBookingStatusContent() {
   const { t } = useI18n();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const bookingId = Number(searchParams.get('booking_id') || 0);
   const trackingToken = searchParams.get('token') || '';
@@ -27,6 +40,7 @@ function GuestBookingStatusContent() {
   const [data, setData] = useState<GuestStatusResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(Date.now());
 
   const fetchStatus = async () => {
     if (!bookingId || !trackingToken) {
@@ -72,6 +86,21 @@ function GuestBookingStatusContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId, trackingToken]);
 
+  useEffect(() => {
+    const timer = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!data || data.status !== 'PAID') return;
+    const target = data.uuid || String(data.id || '');
+    if (!target) return;
+    const timeout = setTimeout(() => {
+      router.push(`/bookings/${target}`);
+    }, 1200);
+    return () => clearTimeout(timeout);
+  }, [data, router]);
+
   const statusUi = useMemo(() => {
     if (data?.status === 'PAID') {
       return { Icon: CheckCircle2, color: 'text-emerald-600', label: t({ id: 'Pembayaran Berhasil', en: 'Payment Confirmed' }) };
@@ -81,6 +110,71 @@ function GuestBookingStatusContent() {
     }
     return { Icon: Clock3, color: 'text-amber-600', label: t({ id: 'Menunggu Pembayaran', en: 'Waiting for Payment' }) };
   }, [data?.status, t]);
+
+  const paymentActions = data?.payment_payload?.actions || [];
+  const qrString = data?.payment_payload?.qr_string || '';
+  const formatRupiah = (value: number) => `Rp ${value.toLocaleString('id-ID')}`;
+  const parseAmount = (value: unknown) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : 0;
+  };
+  const formatDateTime = (value?: string) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toLocaleString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+  const priceSummary = useMemo(() => {
+    if (!data) return null;
+    const payload = data.payment_payload || {};
+    const total = parseAmount(data.total_price ?? payload.gross_amount ?? payload.total_price);
+    const serviceFee = parseAmount(data.service_fee ?? payload.service_fee);
+    const discount = parseAmount(data.discount_amount ?? payload.discount_amount);
+    const subtotalRaw = data.subtotal_price ?? payload.subtotal_price ?? payload.base_price;
+    const subtotal = subtotalRaw != null ? parseAmount(subtotalRaw) : Math.max(total - serviceFee + discount, 0);
+    if (total <= 0 && subtotal <= 0 && serviceFee <= 0 && discount <= 0) return null;
+    return { subtotal, serviceFee, discount, total };
+  }, [data]);
+  const stayInfo = useMemo(() => {
+    if (!data?.check_in || !data?.check_out) return null;
+    return `${data.check_in} - ${data.check_out}`;
+  }, [data?.check_in, data?.check_out]);
+  const paymentDeadline = useMemo(() => {
+    return formatDateTime(data?.expired_at || data?.payment_payload?.expiry_time || data?.payment_payload?.transaction_time);
+  }, [data?.expired_at, data?.payment_payload?.expiry_time, data?.payment_payload?.transaction_time]);
+  const countdown = useMemo(() => {
+    const rawDeadline = data?.expired_at || data?.payment_payload?.expiry_time;
+    if (!rawDeadline) return null;
+    const deadlineMs = new Date(rawDeadline).getTime();
+    if (!Number.isFinite(deadlineMs)) return null;
+    const remainingMs = Math.max(0, deadlineMs - nowMs);
+    const totalSeconds = Math.floor(remainingMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return {
+      isExpired: remainingMs <= 0,
+      label: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
+    };
+  }, [data?.expired_at, data?.payment_payload?.expiry_time, nowMs]);
+  const qrActionUrl = useMemo(() => {
+    if (!Array.isArray(paymentActions)) return '';
+    const qrAction = paymentActions.find((action: any) => {
+      const name = String(action?.name || '').toLowerCase();
+      return name.includes('generate-qr-code') || name.includes('deeplink-redirect');
+    });
+    return qrAction?.url || '';
+  }, [paymentActions]);
+  const qrImageUrl = useMemo(() => {
+    if (!qrString) return '';
+    return `https://quickchart.io/qr?text=${encodeURIComponent(qrString)}&size=480&margin=2&ecLevel=M`;
+  }, [qrString]);
 
   return (
     <div className="container mx-auto px-4 py-10 md:py-14 max-w-2xl">
@@ -111,10 +205,93 @@ function GuestBookingStatusContent() {
                 <statusUi.Icon size={18} className={statusUi.color} />
                 <p className={`text-sm font-black ${statusUi.color}`}>{statusUi.label}</p>
               </div>
-              <Badge className="rounded-full bg-white border border-primary/15 text-primary font-black">
-                {data.status}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {countdown && data.status === 'PENDING_PAYMENT' && (
+                  <Badge className={`rounded-full font-black ${countdown.isExpired ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
+                    {countdown.isExpired
+                      ? t({ id: 'Kedaluwarsa', en: 'Expired' })
+                      : `${t({ id: 'Sisa', en: 'Left' })} ${countdown.label}`}
+                  </Badge>
+                )}
+                <Badge className="rounded-full bg-white border border-primary/15 text-primary font-black">
+                  {data.status}
+                </Badge>
+              </div>
             </div>
+
+            {(priceSummary || stayInfo || data.guest_name || data.unit_name || data.glamping_name || paymentDeadline) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {priceSummary && (
+                  <div className="space-y-3 p-4 rounded-2xl border border-primary/10 bg-white/70">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                      {t({ id: 'Ringkasan Harga', en: 'Price Summary' })}
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between text-primary/70">
+                        <span>{t({ id: 'Subtotal', en: 'Subtotal' })}</span>
+                        <span className="font-bold text-primary">{formatRupiah(priceSummary.subtotal)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-primary/70">
+                        <span>{t({ id: 'Biaya Layanan', en: 'Service Fee' })}</span>
+                        <span className="font-bold text-primary">{formatRupiah(priceSummary.serviceFee)}</span>
+                      </div>
+                      {priceSummary.discount > 0 && (
+                        <div className="flex items-center justify-between text-emerald-700">
+                          <span>{t({ id: 'Diskon', en: 'Discount' })}</span>
+                          <span className="font-bold">- {formatRupiah(priceSummary.discount)}</span>
+                        </div>
+                      )}
+                      <div className="pt-2 mt-2 border-t border-primary/10 flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                          {t({ id: 'Total Bayar', en: 'Total Payment' })}
+                        </span>
+                        <span className="text-lg font-black text-primary">{formatRupiah(priceSummary.total)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3 p-4 rounded-2xl border border-primary/10 bg-white/70">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                    {t({ id: 'Detail Booking', en: 'Booking Details' })}
+                  </p>
+                  <div className="space-y-2 text-sm text-primary/80">
+                    {data.guest_name && (
+                      <div className="flex items-center justify-between gap-3">
+                        <span>{t({ id: 'Tamu', en: 'Guest' })}</span>
+                        <span className="font-bold text-primary text-right">{data.guest_name}</span>
+                      </div>
+                    )}
+                    {(data.unit_name || data.glamping_name) && (
+                      <div className="flex items-center justify-between gap-3">
+                        <span>{t({ id: 'Akomodasi', en: 'Stay' })}</span>
+                        <span className="font-bold text-primary text-right">{data.unit_name || data.glamping_name}</span>
+                      </div>
+                    )}
+                    {stayInfo && (
+                      <div className="flex items-center justify-between gap-3">
+                        <span>{t({ id: 'Tanggal', en: 'Dates' })}</span>
+                        <span className="font-bold text-primary text-right">{stayInfo}</span>
+                      </div>
+                    )}
+                    {data.total_guests ? (
+                      <div className="flex items-center justify-between gap-3">
+                        <span>{t({ id: 'Jumlah Tamu', en: 'Guests' })}</span>
+                        <span className="font-bold text-primary text-right">{data.total_guests}</span>
+                      </div>
+                    ) : null}
+                    {paymentDeadline && (
+                      <div className="pt-2 mt-2 border-t border-primary/10 flex items-center justify-between gap-3">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                          {t({ id: 'Batas Bayar', en: 'Payment Deadline' })}
+                        </span>
+                        <span className="font-bold text-red-600 text-right">{paymentDeadline}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-3 p-4 rounded-2xl border border-primary/10 bg-white/70">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">
@@ -155,7 +332,64 @@ function GuestBookingStatusContent() {
                 </div>
               )}
 
-              {data.payment_payload?.actions?.map((action: any, idx: number) => (
+              {qrImageUrl && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                    {t({ id: 'QR Pembayaran', en: 'Payment QR' })}
+                  </p>
+                  <div className="mx-auto w-full max-w-[280px] rounded-xl overflow-hidden border border-primary/10 bg-white p-2">
+                    <img
+                      src={qrImageUrl}
+                      alt="Payment QR Code"
+                      className="w-full h-auto block"
+                    />
+                  </div>
+                  <a
+                    href={qrImageUrl}
+                    download={`escape-plan-qr-${data?.booking_code || bookingId}.png`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center h-9 px-3 rounded-lg border border-primary/20 text-xs font-black uppercase tracking-widest text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    {t({ id: 'Download QR', en: 'Download QR' })}
+                  </a>
+                  <a
+                    href={qrActionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-xs font-bold text-accent underline"
+                  >
+                    {t({ id: 'Buka QR di tab baru jika tidak tampil', en: 'Open QR in new tab if it does not load' })}
+                  </a>
+                </div>
+              )}
+
+              {!qrImageUrl && qrActionUrl && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                    {t({ id: 'QR Pembayaran', en: 'Payment QR' })}
+                  </p>
+                  <div className="mx-auto w-full max-w-[280px] aspect-square rounded-xl overflow-hidden border border-primary/10 bg-white">
+                    <iframe
+                      src={qrActionUrl}
+                      title="Payment QR"
+                      className="w-full h-full"
+                      loading="lazy"
+                      referrerPolicy="no-referrer"
+                      scrolling="no"
+                      style={{ overflow: 'hidden' }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {paymentActions
+                .filter((action: any) => {
+                  if (!action?.url || action.url === qrActionUrl) return false;
+                  const actionName = String(action?.name || '').toLowerCase();
+                  return !actionName.includes('generate-qr-code-v2');
+                })
+                .map((action: any, idx: number) => (
                 <a key={idx} href={action.url} target="_blank" rel="noopener noreferrer" className="block text-sm font-bold text-accent underline">
                   {action.name || 'Open Payment Link'}
                 </a>

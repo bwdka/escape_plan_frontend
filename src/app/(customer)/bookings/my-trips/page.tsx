@@ -84,7 +84,7 @@ export default function MyTripsPage() {
                                     </div>
 
                                     <div className="mt-6 md:mt-8 flex justify-end">
-                                        <Link href={`/bookings/${trip.id}`} className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
+                                        <Link href={`/bookings/${trip.uuid || trip.id}`} className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary/40 hover:text-primary transition-colors flex items-center gap-2">
                                             View Details <ArrowRight size={10} className="md:w-3 md:h-3" />
                                         </Link>
                                     </div>

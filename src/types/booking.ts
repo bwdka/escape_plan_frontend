@@ -55,6 +55,7 @@ export interface CreateBookingResponse {
     message: string;
     data: {
         booking_id: number;
+        booking_uuid?: string;
         booking_code: string;
         status: string;
         payment: {
@@ -92,6 +93,7 @@ export interface BookingReview {
 
 export interface BookingDetail {
     id: number;
+    uuid?: string;
     booking_code: string;
     check_in: string;
     check_out: string;
@@ -112,6 +114,7 @@ export interface BookingDetail {
 
 export interface BookingHistoryItem {
     id: number;
+    uuid?: string;
     booking_code: string;
     status: string;
     check_in: string;

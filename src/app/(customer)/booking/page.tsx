@@ -251,16 +251,21 @@ function BookingContent() {
         onSuccess: (res: CreateBookingSuccessPayload) => {
             const bookingId = Number(res.booking_id || 0);
             const safeBookingId = Number.isFinite(bookingId) && bookingId > 0 ? bookingId : null;
+            const trackingToken = res.guest_tracking_token || null;
             setCreatedBookingId(safeBookingId);
-            setGuestTrackingToken(res.guest_tracking_token || null);
+            setGuestTrackingToken(trackingToken);
             setTrackedBookingStatus(res.status || 'PENDING_PAYMENT');
             const instruction = res.payment?.response || null;
             if (typeof window !== 'undefined' && safeBookingId) {
               localStorage.setItem('guest_payment_tracker', JSON.stringify(
-                buildGuestTracker(safeBookingId, res.status || 'PENDING_PAYMENT', instruction, res.guest_tracking_token || null)
+                buildGuestTracker(safeBookingId, res.status || 'PENDING_PAYMENT', instruction, trackingToken)
               ));
             }
             setPaymentInstruction(instruction);
+            if (safeBookingId && trackingToken) {
+              router.push(`/booking/status?booking_id=${safeBookingId}&token=${encodeURIComponent(trackingToken)}`);
+              return;
+            }
             if (instruction) {
               setShowPaymentInstructionModal(true);
               setTimeout(() => {
