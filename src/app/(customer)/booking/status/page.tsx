@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import api from '@/lib/axios';
 import { useI18n } from '@/i18n/I18nProvider';
 import { Badge } from '@/components/ui/badge';
@@ -143,6 +144,17 @@ function GuestBookingStatusContent() {
     }
     return { Icon: Clock3, color: 'text-amber-600', label: t({ id: 'Menunggu Pembayaran', en: 'Waiting for Payment' }) };
   }, [data?.status, t]);
+  const statusHint = useMemo(() => {
+    if (data?.status === 'PAID') {
+      return hasAuthToken
+        ? t({ id: 'Pembayaran terverifikasi. Mengalihkan ke detail perjalanan Anda...', en: 'Payment verified. Redirecting to your trip details...' })
+        : t({ id: 'Pembayaran aman. Silakan claim booking agar masuk ke akun Anda.', en: 'Payment is secured. Claim this booking to attach it to your account.' });
+    }
+    if (data?.status === 'CANCELLED') {
+      return t({ id: 'Waktu pembayaran berakhir atau transaksi dibatalkan.', en: 'Payment time expired or the transaction was cancelled.' });
+    }
+    return t({ id: 'Selesaikan pembayaran sebelum batas waktu berakhir.', en: 'Complete payment before the deadline to keep this booking.' });
+  }, [data?.status, hasAuthToken, t]);
 
   const paymentActions = useMemo<PaymentAction[]>(() => {
     const raw = data?.payment_payload?.actions;
@@ -212,8 +224,8 @@ function GuestBookingStatusContent() {
   }, [qrString]);
 
   return (
-    <div className="container mx-auto px-4 py-10 md:py-14 max-w-2xl">
-      <div className="glass rounded-[2rem] border-white/40 shadow-2xl p-6 md:p-8 space-y-6">
+    <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
+      <div className="glass rounded-[2rem] border-white/40 shadow-2xl p-5 md:p-8 space-y-5 md:space-y-6">
         <div className="space-y-2">
           <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">
             {t({ id: 'Status Pembayaran Guest', en: 'Guest Payment Status' })}
@@ -243,10 +255,11 @@ function GuestBookingStatusContent() {
 
         {!isLoading && data && (
           <>
-            <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-primary/10 bg-white/70">
-              <div className="flex items-center gap-2">
+            <div className="space-y-3 p-4 rounded-2xl border border-primary/10 bg-white/70 transition-all duration-300 animate-in fade-in-50">
+              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 min-w-0">
                 <statusUi.Icon size={18} className={statusUi.color} />
-                <p className={`text-sm font-black ${statusUi.color}`}>{statusUi.label}</p>
+                <p className={`text-sm font-black ${statusUi.color} truncate`}>{statusUi.label}</p>
               </div>
               <div className="flex items-center gap-2">
                 {countdown && data.status === 'PENDING_PAYMENT' && (
@@ -261,19 +274,21 @@ function GuestBookingStatusContent() {
                 </Badge>
               </div>
             </div>
+            <p className="text-xs font-semibold text-primary/60">{statusHint}</p>
+            </div>
             {data.status === 'PAID' && !hasAuthToken && (
-              <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50 space-y-2">
+              <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50 space-y-3">
                 <p className="text-sm font-black text-amber-800">
                   {t({ id: 'Pembayaran berhasil, tapi Anda belum login.', en: 'Payment is successful, but you are not logged in yet.' })}
                 </p>
                 <p className="text-xs font-semibold text-amber-700">
                   {t({ id: 'Detail booking tetap bisa dilihat di halaman ini. Login untuk menyimpan perjalanan ke akun Anda.', en: 'Your booking details are still available on this page. Log in to save this trip to your account.' })}
                 </p>
-                <div className="flex gap-2">
-                  <Link href={`/login?redirect=${encodeURIComponent(returnToStatus)}`} className="inline-flex items-center justify-center h-9 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Link href={`/login?redirect=${encodeURIComponent(returnToStatus)}`} className="inline-flex items-center justify-center h-10 px-4 rounded-lg bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
                     {t({ id: 'Claim Booking', en: 'Claim Booking' })}
                   </Link>
-                  <Link href={`/register?redirect=${encodeURIComponent(returnToStatus)}`} className="inline-flex items-center justify-center h-9 px-3 rounded-lg border border-primary/20 text-primary text-xs font-black uppercase tracking-widest">
+                  <Link href={`/register?redirect=${encodeURIComponent(returnToStatus)}`} className="inline-flex items-center justify-center h-10 px-4 rounded-lg border border-primary/20 text-primary text-xs font-black uppercase tracking-widest">
                     {t({ id: 'Daftar & Claim', en: 'Register & Claim' })}
                   </Link>
                 </div>
@@ -424,11 +439,14 @@ function GuestBookingStatusContent() {
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary/40">
                     {t({ id: 'QR Pembayaran', en: 'Payment QR' })}
                   </p>
-                  <div className="mx-auto w-full max-w-[280px] rounded-xl overflow-hidden border border-primary/10 bg-white p-2">
-                    <img
+                  <div className="mx-auto w-full max-w-[260px] rounded-xl overflow-hidden border border-primary/10 bg-white p-2">
+                    <Image
                       src={qrImageUrl}
                       alt="Payment QR Code"
-                      className="w-full h-auto block"
+                      width={480}
+                      height={480}
+                      unoptimized
+                      className="w-full h-auto block rounded-md"
                     />
                   </div>
                   <a
@@ -485,7 +503,7 @@ function GuestBookingStatusContent() {
           </>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 md:gap-3">
           <Button type="button" variant="outline" className="rounded-xl" onClick={fetchStatus}>
             {t({ id: 'Refresh Status', en: 'Refresh Status' })}
           </Button>
