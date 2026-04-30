@@ -10,6 +10,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import api from '@/lib/axios';
 import { GlampingDetail } from '@/types/glamping';
 import { toast } from 'sonner';
+import { useWishlist } from '@/hooks/useWishlist';
 
 const STORAGE_KEY = 'saved_glampings';
 const PRICE_HISTORY_KEY = 'wishlist_price_history';
@@ -21,13 +22,24 @@ export default function WishlistPage() {
     "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzAnIGhlaWdodD0nMjInIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMwJyBoZWlnaHQ9JzIyJyBmaWxsPSIjZWRlN2RlIi8+PC9zdmc+";
   const [slugs, setSlugs] = useState<string[]>([]);
   const [items, setItems] = useState<GlampingDetail[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { wishlist, isLoading: isWishlistLoading, removeFromWishlist: apiRemoveFromWishlist } = useWishlist();
+  const [isLocalLoading, setIsLocalLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'newest' | 'price_low' | 'price_high'>('newest');
   const [locationFilter, setLocationFilter] = useState('');
   const [removingSlug, setRemovingSlug] = useState<string | null>(null);
   const [pulseSlug, setPulseSlug] = useState<string | null>(null);
+  const [hasAuthToken, setHasAuthToken] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setHasAuthToken(!!localStorage.getItem('token'));
+  }, []);
+
+  useEffect(() => {
+    if (hasAuthToken) {
+        setIsLocalLoading(false);
+        return;
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const parsed = raw ? (JSON.parse(raw) as string[]) : [];
@@ -35,17 +47,43 @@ export default function WishlistPage() {
     } catch {
       setSlugs([]);
     }
-  }, []);
+  }, [hasAuthToken]);
 
   useEffect(() => {
+    if (hasAuthToken) {
+        // If authenticated, we use the wishlist from the hook, but we still need full details
+        // The API /wishlist only returns basic info. We might need to fetch full details if needed,
+        // or the hook could return them. For now, let's fetch details for each slug in wishlist.
+        const fetchWishlistDetails = async () => {
+            if (wishlist.length === 0) {
+                setItems([]);
+                return;
+            }
+            try {
+                const results = await Promise.allSettled(
+                    wishlist.map((item) => api.get(`/glampings/${item.glamping.slug}`))
+                );
+                const data = results
+                    .filter((res): res is PromiseFulfilledResult<any> => res.status === 'fulfilled')
+                    .map((res) => res.value.data?.data as GlampingDetail)
+                    .filter(Boolean);
+                setItems(data);
+            } catch (err) {
+                setItems([]);
+            }
+        };
+        fetchWishlistDetails();
+        return;
+    }
+
     let active = true;
     const fetchWishlist = async () => {
       if (slugs.length === 0) {
         setItems([]);
-        setIsLoading(false);
+        setIsLocalLoading(false);
         return;
       }
-      setIsLoading(true);
+      setIsLocalLoading(true);
       try {
         const results = await Promise.allSettled(
           slugs.map((slug) => api.get(`/glampings/${slug}`))
@@ -58,24 +96,30 @@ export default function WishlistPage() {
       } catch {
         if (active) setItems([]);
       } finally {
-        if (active) setIsLoading(false);
+        if (active) setIsLocalLoading(false);
       }
     };
     fetchWishlist();
     return () => {
       active = false;
     };
-  }, [slugs]);
+  }, [slugs, hasAuthToken, wishlist]);
 
-  const removeFromWishlist = (slug: string) => {
-    setRemovingSlug(slug);
+  const isLoading = hasAuthToken ? isWishlistLoading : isLocalLoading;
+
+  const handleRemove = (item: GlampingDetail) => {
+    setRemovingSlug(item.slug);
     setTimeout(() => {
-      const next = slugs.filter((s) => s !== slug);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      setSlugs(next);
-      setItems((prev) => prev.filter((item) => item.slug !== slug));
+      if (hasAuthToken) {
+          apiRemoveFromWishlist.mutate(item.id);
+      } else {
+          const next = slugs.filter((s) => s !== item.slug);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          setSlugs(next);
+          toast.success(t({ id: 'Dihapus dari wishlist', en: 'Removed from wishlist' }));
+      }
+      setItems((prev) => prev.filter((i) => i.slug !== item.slug));
       setRemovingSlug(null);
-      toast.success(t({ id: 'Dihapus dari wishlist', en: 'Removed from wishlist' }));
     }, 220);
   };
 
@@ -304,7 +348,7 @@ export default function WishlistPage() {
                     onClick={() => {
                       setPulseSlug(glamping.slug);
                       setTimeout(() => setPulseSlug(null), 300);
-                      removeFromWishlist(glamping.slug);
+                      handleRemove(glamping);
                     }}
                   >
                     {t({ id: 'Remove', en: 'Remove' })}

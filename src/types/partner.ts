@@ -2,11 +2,37 @@ export interface PartnerDashboardStats {
     active_glampings: number;
     bookings_this_month: number;
     revenue_this_month: number;
-    upcoming_checkins: number;
+    occupancy_rate: number;
+}
+
+export interface PartnerDashboardTrend {
+    label: string;
+    date: string;
+    revenue: number;
+    bookings: number;
+}
+
+export interface PartnerDashboardActivity {
+    type: 'check-in' | 'check-out';
+    guest_name: string;
+    unit_name: string;
+    date: string;
+}
+
+export interface PartnerDashboardAlert {
+    type: 'warning' | 'info';
+    message: string;
+    action_label?: string;
+    action_url?: string;
 }
 
 export interface DashboardStatsResponse {
-    data: PartnerDashboardStats;
+    data: {
+        stats: PartnerDashboardStats;
+        trends: PartnerDashboardTrend[];
+        upcoming_activities: PartnerDashboardActivity[];
+        alerts: PartnerDashboardAlert[];
+    };
 }
 
 export interface CalendarBookingDetail {
@@ -17,6 +43,7 @@ export interface CalendarBookingDetail {
 export interface CalendarUnitDetail {
     unit_name: string;
     stock_left: number;
+    price: number;
     bookings: CalendarBookingDetail[];
 }
 

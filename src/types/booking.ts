@@ -26,6 +26,7 @@ export interface CalculatePriceResponse {
         addons_price: number;
         extra_guest_price?: number;
         discount_amount?: number;
+        promo_message?: string;
         service_fee: number;
         tax_amount: number;
         total_price: number;

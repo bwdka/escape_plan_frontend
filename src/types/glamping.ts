@@ -7,6 +7,8 @@ export interface Glamping {
   price: number;
   rating: number;
   vibe: string;
+  latitude?: number;
+  longitude?: number;
   access_type?: string;
   pet_friendly?: boolean;
   has_wifi?: boolean;
@@ -59,7 +61,7 @@ export interface Unit {
     price_weekend?: number;
     max_stock: number;
     available_stock: number;
-    photos: string[];
+    photos: Array<string | { url?: string; path?: string }>;
 }
 
 export interface Addon {

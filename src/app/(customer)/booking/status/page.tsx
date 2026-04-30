@@ -16,7 +16,7 @@ type GuestStatusResponse = {
   booking_code: string;
   status: string;
   payment_status: string;
-  payment_payload?: Record<string, unknown>;
+  payment_payload?: PaymentPayload;
   created_at: string;
   guest_name?: string;
   check_in?: string;
@@ -30,6 +30,27 @@ type GuestStatusResponse = {
   subtotal_price?: number | string;
   expired_at?: string;
 };
+
+type PaymentPayload = {
+  va_numbers?: Array<{ bank: string; va_number: string }>;
+  permata_va_number?: string;
+  bill_key?: string;
+  biller_code?: string;
+  payment_code?: string;
+  store?: string;
+  actions?: Array<{ name?: string; url: string }>;
+  qr_string?: string;
+  gross_amount?: number | string;
+  total_price?: number | string;
+  service_fee?: number | string;
+  discount_amount?: number | string;
+  subtotal_price?: number | string;
+  base_price?: number | string;
+  expiry_time?: string;
+  transaction_time?: string;
+  payment_type?: string;
+};
+
 type PaymentAction = { name?: string; url?: string };
 type VaNumber = { bank?: string; va_number?: string };
 
@@ -199,7 +220,7 @@ function GuestBookingStatusContent() {
   const countdown = useMemo(() => {
     const rawDeadline = data?.expired_at || data?.payment_payload?.expiry_time;
     if (!rawDeadline) return null;
-    const deadlineMs = new Date(rawDeadline).getTime();
+    const deadlineMs = new Date(rawDeadline as string).getTime();
     if (!Number.isFinite(deadlineMs)) return null;
     const remainingMs = Math.max(0, deadlineMs - nowMs);
     const totalSeconds = Math.floor(remainingMs / 1000);
@@ -220,7 +241,7 @@ function GuestBookingStatusContent() {
   }, [paymentActions]);
   const qrImageUrl = useMemo(() => {
     if (!qrString) return '';
-    return `https://quickchart.io/qr?text=${encodeURIComponent(qrString)}&size=480&margin=2&ecLevel=M`;
+    return `https://quickchart.io/qr?text=${encodeURIComponent(qrString as string)}&size=480&margin=2&ecLevel=M`;
   }, [qrString]);
 
   return (

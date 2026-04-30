@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useI18n } from "@/i18n/I18nProvider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { MediaUpload } from "@/components/features/partner/MediaUpload";
 import { useParams } from 'next/navigation';
 
 export default function BookingDetailPage() {
@@ -27,6 +28,7 @@ export default function BookingDetailPage() {
     location_rating: 5,
     value_rating: 5,
     comment: '',
+    photos: [] as string[],
   });
   const blurDataURL =
     "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMzAnIGhlaWdodD0nMjInIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzMwJyBoZWlnaHQ9JzIyJyBmaWxsPSIjZWRlN2RlIi8+PC9zdmc+";
@@ -341,10 +343,11 @@ export default function BookingDetailPage() {
                                 location_rating: Number(reviewForm.location_rating),
                                 value_rating: Number(reviewForm.value_rating),
                                 comment: reviewForm.comment?.trim() || undefined,
+                                photos: reviewForm.photos,
                               },
                               {
                                 onSuccess: () => {
-                                  setReviewForm((prev) => ({ ...prev, comment: '' }));
+                                  setReviewForm((prev) => ({ ...prev, comment: '', photos: [] }));
                                 },
                               }
                             );
@@ -375,6 +378,17 @@ export default function BookingDetailPage() {
                                 </select>
                               </label>
                             ))}
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-primary/40">
+                              {t({ id: 'Foto (opsional)', en: 'Photos (optional)' })}
+                            </div>
+                            <MediaUpload 
+                                value={reviewForm.photos} 
+                                onChange={(photos) => setReviewForm(prev => ({ ...prev, photos }))}
+                                folder="reviews"
+                            />
                           </div>
 
                           <div className="space-y-1">

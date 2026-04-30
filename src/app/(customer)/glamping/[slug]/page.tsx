@@ -19,6 +19,7 @@ import { useI18n } from '@/i18n/I18nProvider';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AMENITY_ICON_FALLBACK, AMENITY_ICON_MAP } from '@/lib/amenities';
 import { useCalculatePriceQuery } from '@/hooks/useBooking';
+import { useWishlist } from '@/hooks/useWishlist';
 
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=800&q=80';
 
@@ -26,6 +27,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: glamping, isLoading, isError } = useGlampingDetail(params.slug);
+  const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const sanctuariesRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const sidebarWrapRef = useRef<HTMLDivElement>(null);
@@ -42,6 +44,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   ]);
   const [startDate, endDate] = dates;
   const [isSaved, setIsSaved] = useState(false);
+  const [hasAuthToken, setHasAuthToken] = useState(false);
   const pathname = usePathname();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -100,15 +103,27 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   };
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setHasAuthToken(!!localStorage.getItem('token'));
+  }, []);
+
+  useEffect(() => {
+    if (hasAuthToken) {
+        setIsSaved(wishlist.some(item => item.glamping.slug === params.slug));
+        return;
+    }
     try {
       const raw = localStorage.getItem('saved_glampings');
-      if (!raw) return;
+      if (!raw) {
+          setIsSaved(false);
+          return;
+      }
       const parsed = JSON.parse(raw) as string[];
       setIsSaved(parsed.includes(params.slug));
     } catch {
       setIsSaved(false);
     }
-  }, [params.slug]);
+  }, [params.slug, wishlist, hasAuthToken]);
 
   useEffect(() => {
     if (!glamping || selectedUnit) return;
@@ -250,7 +265,7 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
       sanctuariesRef.current?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
-    handleBook(selectedUnit);
+    if (selectedUnit) handleBook(selectedUnit);
   };
 
   const handleShare = async () => {
@@ -272,6 +287,16 @@ function GlampingDetailContent({ params }: { params: { slug: string } }) {
   };
 
   const toggleSave = () => {
+    if (hasAuthToken) {
+        if (isSaved) {
+            const wishlistItem = wishlist.find(item => item.glamping.slug === params.slug);
+            if (wishlistItem) removeFromWishlist.mutate(wishlistItem.glamping_id);
+        } else {
+            if (glamping) addToWishlist.mutate(glamping.id);
+        }
+        return;
+    }
+
     try {
       const raw = localStorage.getItem('saved_glampings');
       const parsed = raw ? (JSON.parse(raw) as string[]) : [];

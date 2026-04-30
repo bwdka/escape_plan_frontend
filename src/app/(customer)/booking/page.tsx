@@ -181,7 +181,9 @@ function BookingContent() {
     if (!priceData) return;
 
     if ((priceData.discount_amount || 0) <= 0) {
-      toast.error(t({ id: 'Kode promo tidak valid / tidak memenuhi syarat.', en: 'Promo code is invalid / not eligible.' }));
+      toast.error(priceData.promo_message || t({ id: 'Kode promo tidak valid / tidak memenuhi syarat.', en: 'Promo code is invalid / not eligible.' }));
+    } else {
+      toast.success(priceData.promo_message || t({ id: 'Promo berhasil digunakan!', en: 'Promo applied successfully!' }));
     }
   }, [appliedPromo, isCalculating, priceData, t]);
 
@@ -720,10 +722,10 @@ function BookingContent() {
                           <div className="space-y-2">
                               <div className="flex justify-between items-center text-[10px] font-bold text-primary/40 uppercase tracking-widest"><span>{t({ id: 'Pajak (PPN 11%)', en: 'Tax (VAT 11%)' })}</span><span>Rp {priceData.tax_amount.toLocaleString('id-ID')}</span></div>
                               <div className="flex justify-between items-center text-[10px] font-bold text-primary/40 uppercase tracking-widest"><span>{t({ id: 'Biaya Aplikasi', en: 'Service Fee' })}</span><span>Rp {priceData.service_fee.toLocaleString('id-ID')}</span></div>
-                              {priceData.discount_amount > 0 && (
+                              {(priceData.discount_amount ?? 0) > 0 && (
                                 <div className="flex justify-between items-center text-[10px] font-black text-emerald-600 uppercase tracking-widest">
                                     <span>{t({ id: 'Promo', en: 'Promo' })} ({appliedPromo})</span>
-                                    <span>- Rp {priceData.discount_amount.toLocaleString('id-ID')}</span>
+                                    <span>- Rp {(priceData.discount_amount ?? 0).toLocaleString('id-ID')}</span>
                                 </div>
                               )}
                           </div>
